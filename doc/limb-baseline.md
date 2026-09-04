@@ -7,12 +7,12 @@ belief to learn a planner parameter that makes planning faster (Human to Robot).
 **Code base**
 
 - LimbRepositioning3D env: kindergarden, branch `limb/04-limb-joint-limits`
-- PDDLStream planner: kinder-baselines, branch `pddlstream/limb-gravity`
+- PDDLStream planner: kinder-baselines, branch `pddlstream/learning-baseline`
 - Use conda env 'kinder'
 
 **Fixed environment**
 
-- variant `isolated-right-arm`, joint-limits model `box`, muscle tone `spring`, gravity `(0,0,-9.81)`
+- variant `isolated-left-arm`, joint-limits model `box`, muscle tone `spring`, gravity `(0,0,-9.81)`
 
 **Variables**
 
@@ -39,7 +39,7 @@ belief to learn a planner parameter that makes planning faster (Human to Robot).
 
 ## Task distribution `P(task)`
 
-- Sample all three for the single variant `isolated-right-arm`.
+- Sample all three for the single variant `isolated-left-arm`.
 - The robot init should stay inside the robot's joint limits; the human init and goal stay also should
   inside the person's ground-truth RoM.
 
@@ -47,7 +47,7 @@ belief to learn a planner parameter that makes planning faster (Human to Robot).
 
 ### Parameterization
 
-- The three motions the `isolated-right-arm` nominal motion actually loads: hip flexion, hip
+- The three motions the `isolated-left-arm` nominal motion actually loads: hip flexion, hip
   abduction, knee flexion.
 - `theta` is one scale factor per motion, applied to the default range of motion. Every
   other motion keeps its default.
