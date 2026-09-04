@@ -46,10 +46,7 @@ class Belief:
         )
 
     def sample(self, rng: np.random.Generator) -> NDArray[np.float64]:
-        """One `theta` drawn from the belief, clipped to the population's range.
-
-        No real person lies outside `[low, high]`, so such a draw is a ruled-out guess.
-        """
+        """One `theta` drawn from the belief, clipped to the population's range."""
         return np.clip(rng.normal(self.mean, self.stddev), self.low, self.high)
 
     def updated(
