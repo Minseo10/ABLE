@@ -1,0 +1,28 @@
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
+
+# Editors
+.vscode/
+.idea/
+.DS_Store
+
+# Environments
+.venv/
+venv/
+
+# Generated outputs
+figures/
+videos/
+statistics/
+temp/
+
+# Runs kept locally but not published
+data/archive/
+*.partial

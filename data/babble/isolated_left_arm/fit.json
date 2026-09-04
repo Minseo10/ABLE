@@ -1,0 +1,30 @@
+{
+  "nearest_neighbors": {
+    "name": "nearest_neighbors",
+    "train_mse": 1.6856942993020553e-16,
+    "test_mse": 0.08754448296913872,
+    "zero_baseline_mse": 0.07305231448661542,
+    "zero_baseline_train_mse": 0.07756660767910017
+  },
+  "ridge": {
+    "name": "ridge",
+    "train_mse": 0.07377182889745465,
+    "test_mse": 0.07252511292622443,
+    "zero_baseline_mse": 0.07305231448661542,
+    "zero_baseline_train_mse": 0.07756660767910017
+  },
+  "mlp": {
+    "name": "mlp",
+    "train_mse": 0.07380314351228678,
+    "test_mse": 0.0799000412213683,
+    "zero_baseline_mse": 0.07305231448661542,
+    "zero_baseline_train_mse": 0.07756660767910017
+  },
+  "gradient_boosting": {
+    "name": "gradient_boosting",
+    "train_mse": 0.0036461642990792353,
+    "test_mse": 0.08646200966979517,
+    "zero_baseline_mse": 0.07305231448661542,
+    "zero_baseline_train_mse": 0.07756660767910017
+  }
+}

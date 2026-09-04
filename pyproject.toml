@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "limb_baseline"
+version = "0.1.0"
+description = "Simplest baseline for limb manipulation: query a person, then learn to plan faster."
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "scipy",
+    "matplotlib",
+    "pillow",
+    "imageio",
+    "imageio-ffmpeg",
+    "pybullet_helpers>=0.1.0",
+    # Branch pins: both are unreleased work this baseline is written against.
+    "kindergarden @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden.git@limb/04-limb-joint-limits",
+    "kinder_pddlstream_planning @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kinder-baselines.git@pddlstream/learning-baseline#subdirectory=kinder-pddlstream-planning",
+]
+
+[project.optional-dependencies]
+develop = [
+    "pytest>=7.2.2",
+    "ruff",
+    "mypy",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
