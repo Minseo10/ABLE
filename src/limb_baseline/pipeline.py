@@ -13,7 +13,7 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
-from limb_baseline.belief import Belief
+from limb_baseline.belief import Belief, pooled_tau, refit
 from limb_baseline.human import DEFAULT_PRIOR, RoMPrior, default_magnitudes
 from limb_baseline.queries import (
     DEFAULT_QUERY_MODEL,
@@ -56,6 +56,8 @@ class InformationGathering:
 
     posterior: Belief
     outcomes: list[QueryOutcome]
+    floors: NDArray[np.float64] | None = None
+    tau: float = DEFAULT_QUERY_MODEL.tau
 
     @property
     def num_censored(self) -> int:
@@ -77,14 +79,20 @@ def gather_information(
     prior: RoMPrior = DEFAULT_PRIOR,
     model: QueryModel = DEFAULT_QUERY_MODEL,
     simulator: QuerySimulator | None = None,
+    start: Belief | None = None,
+    floors: NDArray[np.float64] | None = None,
+    estimate_tau: bool = False,
 ) -> InformationGathering:
     """Ask `policy.num_queries` questions, updating the belief after each."""
     owned = simulator is None
     simulator = simulator or QuerySimulator(theta, model)
     try:
-        belief = Belief.from_prior(prior)
+        base = start if start is not None else Belief.from_prior(prior)
+        belief = base
         outcomes: list[QueryOutcome] = []
-        floors = np.zeros(len(belief.mean))
+        answers: list[list[float]] = [[] for _ in base.mean]
+        tau = model.tau
+        floors = np.zeros(len(belief.mean)) if floors is None else floors.copy()
         for _ in range(policy.num_queries):
             motion_index, target = policy.choose(belief, rng, floors)
             outcome = simulator.ask(motion_index, target, rng)
@@ -96,10 +104,15 @@ def gather_information(
             if outcome.reached_target:
                 floors[motion_index] = outcome.answer + model.short_fall
             elif outcome.settled:
-                belief = belief.updated(
-                    motion_index, outcome.answer, model.tau, model.short_fall
-                )
-        return InformationGathering(posterior=belief, outcomes=outcomes)
+                answers[motion_index].append(outcome.answer)
+                if estimate_tau:
+                    tau = pooled_tau(answers, model.tau)
+                    belief = refit(base, answers, tau, model.short_fall)
+                else:
+                    belief = belief.updated(
+                        motion_index, outcome.answer, tau, model.short_fall
+                    )
+        return InformationGathering(belief, outcomes, floors, tau)
     finally:
         if owned:
             simulator.close()

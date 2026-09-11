@@ -6,6 +6,7 @@ the person stopped, which `short_fall` offsets back toward their passive bound.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
 
 import numpy as np
@@ -17,6 +18,36 @@ from limb_baseline.human import (
     active_motions,
     default_magnitudes,
 )
+
+
+def pooled_tau(answers: Sequence[Sequence[float]], fallback: float) -> float:
+    """The likelihood's noise, measured from repeat answers about the same motion.
+
+    A person's bound does not move between rounds, so answers about one motion differ
+    only by how hard they pushed. Pooled across motions; `fallback` until a repeat.
+    """
+    residuals = []
+    degrees = 0
+    for repeats in answers:
+        if len(repeats) < 2:
+            continue
+        values = np.asarray(repeats, dtype=np.float64)
+        residuals.append(values - values.mean())
+        degrees += len(values) - 1
+    if degrees == 0:
+        return fallback
+    estimate = float(np.sqrt(np.sum(np.concatenate(residuals) ** 2) / degrees))
+    # Identical answers would divide by zero in the update.
+    return max(estimate, 1e-4)
+
+
+def refit(base: "Belief", answers, tau: float, short_fall: float) -> "Belief":
+    """Fold every answer so far into `base`, so a revised `tau` applies to all of them."""
+    belief = base
+    for index, repeats in enumerate(answers):
+        for answer in repeats:
+            belief = belief.updated(index, answer, tau, short_fall)
+    return belief
 
 
 @dataclass(frozen=True)
