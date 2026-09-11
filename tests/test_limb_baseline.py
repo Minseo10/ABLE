@@ -10,7 +10,7 @@ from kinder.envs.dynamic3d.limbs import (
 )
 from kinder_pddlstream_planning.limbrepositioning3d.stream import MPCConfig
 
-from limb_baseline.belief import Belief
+from limb_baseline.belief import Belief, pooled_tau, refit
 from limb_baseline.dataset import (
     append_row,
     load_dataset,
@@ -32,7 +32,12 @@ from limb_baseline.tasks import DEFAULT_TASK_DISTRIBUTION, inactive_joints
 from limb_baseline.variant import DEFAULT_VARIANT, ENV_VAR, VARIANTS
 from limb_baseline.variant import _build as _build_variant
 from limb_baseline.variant import select as select_variant
-from limb_baseline.warmstart import control_basis, project_torques, segment_features
+from limb_baseline.warmstart import (
+    control_basis,
+    make_scaled_mlp,
+    project_torques,
+    segment_features,
+)
 
 
 def test_theta_scales_the_bound_of_the_joint_each_motion_governs():
@@ -74,6 +79,30 @@ def test_belief_update_moves_toward_the_truth_and_narrows():
             belief = belief.updated(i, answer, model.tau, model.short_fall)
     assert np.all(np.abs(belief.mean - truth) < 0.02)
     assert np.all(belief.stddev < DEFAULT_PRIOR.stddev)
+
+
+def test_pooled_tau_recovers_the_spread_of_repeat_answers():
+    rng = np.random.default_rng(0)
+    truth, tau = np.array([2.9, 3.2, 2.5]), 0.05
+    answers = [list(rng.normal(bound, tau, size=80)) for bound in truth]
+    assert pooled_tau(answers, fallback=1.0) == pytest.approx(tau, rel=0.15)
+
+
+def test_pooled_tau_falls_back_until_a_motion_is_asked_twice():
+    assert pooled_tau([[2.9], [], [2.5]], fallback=0.07) == 0.07
+
+
+def test_refit_matches_updating_answer_by_answer():
+    model = DEFAULT_QUERY_MODEL
+    base = Belief.from_prior(DEFAULT_PRIOR)
+    answers = [[2.80, 2.83], [], [2.30]]
+    one_by_one = base
+    for i, repeats in enumerate(answers):
+        for answer in repeats:
+            one_by_one = one_by_one.updated(i, answer, model.tau, model.short_fall)
+    folded = refit(base, answers, model.tau, model.short_fall)
+    assert np.allclose(folded.mean, one_by_one.mean)
+    assert np.allclose(folded.stddev, one_by_one.stddev)
 
 
 def test_a_noiseless_answer_is_inverted_exactly_in_the_limit():
@@ -158,9 +187,10 @@ def test_projection_reads_only_the_first_horizon():
 
 
 def test_segment_features_drop_the_gripper_joints():
-    features = segment_features(np.zeros(6), np.arange(13.0), np.ones(6), np.zeros(6))
-    assert features.shape == (25,)
+    features = segment_features(np.zeros(6), np.arange(13.0), np.ones(6), np.zeros(6), 4)
+    assert features.shape == (26,)
     assert np.allclose(features[6:13], np.arange(7.0))
+    assert features[-1] == 4.0
 
 
 def test_test_split_shares_no_person_with_training(tmp_path):
@@ -269,3 +299,27 @@ def test_selecting_a_variant_changes_what_theta_means():
 def test_an_unknown_variant_is_rejected():
     with pytest.raises(ValueError, match="Unknown variant"):
         select_variant("sofa-third-arm")
+
+
+def test_a_resumed_belief_keeps_sharpening_across_rounds():
+    """Rounds of gathering compound: a resumed belief is tighter than a fresh one."""
+    prior = Belief.from_prior(DEFAULT_PRIOR)
+    first = prior.updated(0, 0.9 * default_magnitudes()[0], DEFAULT_QUERY_MODEL.tau)
+    second = first.updated(0, 0.9 * default_magnitudes()[0], DEFAULT_QUERY_MODEL.tau)
+    assert second.stddev[0] < first.stddev[0] < prior.stddev[0]
+    assert np.allclose(second.stddev[1:], prior.stddev[1:])
+
+
+def test_fine_tuning_continues_from_the_pretrained_weights():
+    """A round of training keeps the weights it has and freezes the scaler."""
+    rng = np.random.default_rng(0)
+    x, y = rng.normal(size=(40, 6)), rng.normal(size=(40, 3))
+    model = make_scaled_mlp(epochs=20, learning_rate=1e-3, hidden=(8,))
+    model.train(x, y)
+    weights, scaler_mean = model.net.coefs_[0].copy(), model.scaler.mean_.copy()
+
+    # At a vanishing learning rate, continuing barely moves; reinitializing would not.
+    model.net.set_params(max_iter=5, learning_rate_init=1e-12)
+    model.train(x[:3] * 10.0, y[:3])
+    assert np.abs(weights - model.net.coefs_[0]).max() < 1e-6
+    assert np.allclose(scaler_mean, model.scaler.mean_)
