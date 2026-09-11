@@ -47,6 +47,19 @@ def append_row(path: str | Path, row: dict) -> None:
         os.fsync(handle.fileno())
 
 
+def guard_variant(path: str | Path, name: str) -> None:
+    """Refuse to mix variants in one table; a run appends to whatever is there."""
+    path = Path(path)
+    if not path.exists() or path.stat().st_size == 0:
+        return
+    existing = pd.read_csv(path, nrows=1)
+    if "variant" not in existing or existing["variant"].iloc[0] != name:
+        found = existing["variant"].iloc[0] if "variant" in existing else "none recorded"
+        raise SystemExit(
+            f"{path} already holds variant {found!r}, not {name!r}; use a new --tag."
+        )
+
+
 def load_dataset(
     path: str | Path,
 ) -> tuple[NDArray[np.float64], NDArray[np.float64], pd.DataFrame]:
@@ -66,6 +79,13 @@ def load_dataset(
     return features, labels, metadata
 
 
+def split_column(metadata: pd.DataFrame) -> str | None:
+    """What a held-out group is: a person, or a task when the run has only one person."""
+    if "person" in metadata and metadata["person"].nunique() > 1:
+        return "person"
+    return "task_index" if "task_index" in metadata else None
+
+
 def train_test_split_by_person(
     features: NDArray[np.float64],
     labels: NDArray[np.float64],
@@ -76,13 +96,15 @@ def train_test_split_by_person(
     """Split by person: every row of a test person is kept out of training.
 
     Splitting by task would leave a person's other tasks in training, and `theta` and
-    the belief are six of the features, so the model could look them up.
+    the belief are six of the features, so the model could look them up. A single-person
+    run has no such split to make, so it holds out whole tasks instead.
     """
-    people = metadata["person"].to_numpy() if "person" in metadata else np.arange(len(features))
-    unique = np.unique(people)
+    column = split_column(metadata)
+    groups = metadata[column].to_numpy() if column else np.arange(len(features))
+    unique = np.unique(groups)
     rng = np.random.default_rng(seed)
     rng.shuffle(unique)
     cut = max(1, int(round(test_fraction * len(unique))))
-    test_people = set(unique[:cut].tolist())
-    mask = np.array([p in test_people for p in people])
+    held_out = set(unique[:cut].tolist())
+    mask = np.array([g in held_out for g in groups])
     return features[~mask], labels[~mask], features[mask], labels[mask]
