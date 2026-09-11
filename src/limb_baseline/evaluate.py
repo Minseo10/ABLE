@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import os
-import tempfile
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,15 +12,19 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from kinder_pddlstream_planning.limbrepositioning3d.stream import MPCConfig
+
+from kinder_pddlstream_planning.limbrepositioning3d.stream import MPCConfig
+
 from limb_baseline.belief import Belief
-from limb_baseline.dataset import append_row
+from limb_baseline.dataset import append_row, guard_variant
 from limb_baseline.human import DEFAULT_PRIOR
 from limb_baseline.pipeline import QueryPolicy, gather_information
-from limb_baseline.planner import PlannerSettings, run_episode
-from limb_baseline.tasks import ReachableTaskSampler
+from limb_baseline.planner import PlannerSettings, assumed_theta, run_episode
 from limb_baseline.variant import DEFAULT_VARIANT, VARIANTS
 from limb_baseline.variant import current as current_variant
 from limb_baseline.variant import select as select_variant
+from limb_baseline.worker import isolate_worker, task_sampler
 from limb_baseline.warmstart import WarmStartModel
 
 # Person ids for evaluation start here, well clear of any collection sweep.
@@ -46,6 +50,7 @@ BASELINES: tuple[BaselineSpec, ...] = (
     BaselineSpec("belief", True, False, False, "querying alone"),
     BaselineSpec("warm_start", False, True, False, "warm starting alone"),
     BaselineSpec("baseline", True, True, False, "both, with the simplest models"),
+    BaselineSpec("oracle_cold", False, False, True, "ground truth theta, cold start"),
     BaselineSpec("oracle", False, True, True, "ground truth theta, the ceiling"),
 )
 
@@ -65,36 +70,12 @@ def belief_for(
     return gather_information(theta, rng, QueryPolicy(num_queries=num_queries)).posterior
 
 
-_WORKER_DIRECTORY: str | None = None
-
-
-_TASK_SAMPLER: ReachableTaskSampler | None = None
-_SAMPLING_SIM = None
-
-
-def _task_sampler() -> ReachableTaskSampler:
-    """One reachability-testing environment per worker, built on first use."""
-    global _TASK_SAMPLER, _SAMPLING_SIM  # pylint: disable=global-statement
-    if _TASK_SAMPLER is None:
-        from limb_baseline.planner import make_sampling_context
-
-        _SAMPLING_SIM, ctx = make_sampling_context()
-        _TASK_SAMPLER = ReachableTaskSampler(ctx)
-    return _TASK_SAMPLER
-
-
-def _isolate_worker() -> None:
-    """PDDLStream writes `temp/` and `statistics/` relative to the working directory."""
-    global _WORKER_DIRECTORY  # pylint: disable=global-statement
-    if _WORKER_DIRECTORY is None:
-        _WORKER_DIRECTORY = tempfile.mkdtemp(prefix=f"limb-eval-{os.getpid()}-")
-        os.chdir(_WORKER_DIRECTORY)
 
 
 def _work_item(payload) -> dict:
     """Run one (row, person, task)."""
-    spec, person, task_index, model, num_queries, max_time, results_path = payload
-    _isolate_worker()
+    spec, person, task_index, model, num_queries, settings, results_path = payload
+    isolate_worker()
     seed = person * 1000 + task_index
     rng = np.random.default_rng(seed)
     record = {
@@ -108,15 +89,16 @@ def _work_item(payload) -> dict:
         # The true range of motion belongs to the person, not to one of their tasks.
         theta = DEFAULT_PRIOR.sample(np.random.default_rng(person))
         belief = belief_for(spec, theta, rng, num_queries)
-        task = _task_sampler().sample(rng, theta)
+        assumed = assumed_theta(belief, theta, rng, spec.oracle)
+        task = task_sampler().sample(rng, assumed, theta)
         result = run_episode(
             task,
             theta,
             belief=belief,
+            believed_theta=assumed,
             warm_start=model if spec.use_warm_start else None,
             seed=seed,
-            oracle=spec.oracle,
-            settings=PlannerSettings(max_time=max_time),
+            settings=settings,
         )
         record.update(
             {
@@ -144,8 +126,6 @@ def _work_item(payload) -> dict:
 
 def summarize(records: list[dict]) -> str:
     """The evaluation table: one line per row, the four metrics the doc asks for."""
-    import pandas as pd
-
     frame = pd.DataFrame(records)
     lines = [
         f"{'row':<12s} {'success':>8s} {'plan s':>8s} {'mpc steps':>11s} "
@@ -168,19 +148,6 @@ def summarize(records: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def _guard_variant(path: Path, name: str) -> None:
-    """Refuse to mix variants in one table; a run appends to whatever is there."""
-    if not path.exists() or path.stat().st_size == 0:
-        return
-    existing = pd.read_csv(path, nrows=1)
-    if "variant" not in existing or existing["variant"].iloc[0] != name:
-        found = (
-            existing["variant"].iloc[0] if "variant" in existing else "none recorded"
-        )
-        raise SystemExit(
-            f"{path} already holds variant {found!r}, not {name!r}; use a new --tag."
-        )
-
 
 def main() -> None:
     """CLI entry point."""
@@ -195,20 +162,37 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=12)
     parser.add_argument("--num-queries", type=int, default=6)
     parser.add_argument("--max-time", type=float, default=600.0)
+    parser.add_argument("--mpc-rollouts", type=int, default=None,
+                        help="Shrink the MPC's own search so the warm start matters.")
+    parser.add_argument("--mpc-max-control-steps", type=int, default=None,
+                        help="Cap the controller budget one segment may spend.")
     parser.add_argument("--run-dir", type=Path, required=True,
                         help="A collect run directory; eval.csv is written there and "
                              "warm_start.pkl read from it unless --model says otherwise.")
+    parser.add_argument("--out", type=Path, default=None,
+                        help="Where rows are written (default <run-dir>/eval.csv).")
     parser.add_argument("--model", type=Path, default=None,
                         help="Pickled WarmStartModel; rows needing psi are skipped without one.")
     parser.add_argument("--rows", type=str, default="",
                         help="Comma-separated subset of row names; empty runs all.")
+    parser.add_argument("--person", type=int, default=None,
+                        help="Evaluate this one person on held-out tasks, for a run "
+                             "collected from a single person; omit to draw fresh people.")
+    parser.add_argument("--commit-steps", type=int, default=MPCConfig.commit_steps,
+                        help="Control steps executed per MPC solve.")
+    parser.add_argument("--num-rollouts", type=int, default=MPCConfig.num_rollouts,
+                        help="Candidate horizons scored per MPC solve.")
+    parser.add_argument("--directed-gains", type=str, default="",
+                        help="Comma-separated goal-directed gains; empty keeps the default.")
+    parser.add_argument("--task-offset", type=int, default=0,
+                        help="First task index, so --person tasks clear the collected ones.")
     args = parser.parse_args()
     for variable in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
         os.environ.setdefault(variable, "1")
 
     select_variant(args.variant)
-    out = (args.run_dir / "eval.csv").resolve()
-    _guard_variant(out, args.variant)
+    out = (args.out or args.run_dir / "eval.csv").resolve()
+    guard_variant(out, args.variant)
 
     model_path = args.model or args.run_dir / "warm_start.pkl"
     model: WarmStartModel | None = None
@@ -216,16 +200,37 @@ def main() -> None:
         with open(model_path, "rb") as handle:
             model = pickle.load(handle)
 
+    mpc = MPCConfig()
+    overrides = {}
+    if args.mpc_rollouts is not None:
+        overrides["num_rollouts"] = args.mpc_rollouts
+    if args.mpc_max_control_steps is not None:
+        overrides["max_control_steps"] = args.mpc_max_control_steps
+    if overrides:
+        mpc = dataclasses.replace(mpc, **overrides)
+    settings = PlannerSettings(max_time=args.max_time, mpc=mpc)
+
+    mpc_kwargs = {"commit_steps": args.commit_steps,
+                  "num_rollouts": args.num_rollouts}
+    if args.directed_gains:
+        mpc_kwargs["directed_gains"] = tuple(
+            float(g) for g in args.directed_gains.split(",")
+        )
+
     wanted = set(args.rows.split(",")) if args.rows else None
     specs = [s for s in BASELINES if wanted is None or s.name in wanted]
     specs = [s for s in specs if model is not None or not s.use_warm_start]
     if not specs:
         raise SystemExit("no rows to run (rows needing psi require --model)")
 
+    if args.person is None:
+        drawn = [(EVAL_PERSON_OFFSET + i, args.task_offset) for i in range(args.num_tasks)]
+    else:
+        drawn = [(args.person, args.task_offset + i) for i in range(args.num_tasks)]
     payloads = [
-        (spec, EVAL_PERSON_OFFSET + i, 0, model, args.num_queries, args.max_time, out)
+        (spec, person, task_index, model, args.num_queries, settings, out)
         for spec in specs
-        for i in range(args.num_tasks)
+        for person, task_index in drawn
     ]
     records = []
     with mp.get_context("spawn").Pool(processes=args.workers) as pool:

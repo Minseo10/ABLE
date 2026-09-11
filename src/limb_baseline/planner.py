@@ -23,7 +23,11 @@ from kinder_pddlstream_planning.limbrepositioning3d.utils import RolloutLog
 from numpy.typing import NDArray
 
 from limb_baseline.belief import Belief
-from limb_baseline.human import theta_to_joint_limits, theta_to_range_of_motion
+from limb_baseline.human import (
+    DEFAULT_PRIOR,
+    theta_to_joint_limits,
+    theta_to_range_of_motion,
+)
 from limb_baseline.tasks import Task
 from limb_baseline.variant import current as current_variant
 from limb_baseline.variant import scene_config
@@ -77,21 +81,31 @@ class EpisodeResult:
     segments: list["SegmentSample"] = field(default_factory=list)
 
 
-def believed_limits_from(
+def assumed_theta(
     belief: Belief | None,
     theta: NDArray[np.float64],
     rng: np.random.Generator,
     oracle: bool,
-) -> tuple[list[float], list[float]] | None:
-    """What the planner is allowed to treat as the person's range of motion.
+) -> NDArray[np.float64]:
+    """The range of motion the robot acts on: the truth for an oracle, else one draw.
 
-    `oracle` hands it the truth; otherwise one `theta` is drawn and held for the call.
+    One draw serves both the task and the planner's limits, so the goal it is handed
+    always sits inside the range it believes.
     """
     if oracle:
-        return None
+        return np.asarray(theta, dtype=np.float64)
     assert belief is not None
-    lower, upper = theta_to_joint_limits(belief.sample(rng))
+    return belief.sample(rng)
+
+
+def joint_limits(theta: NDArray[np.float64]) -> tuple[list[float], list[float]]:
+    """One person's range of motion, as the context stores its bounds."""
+    lower, upper = theta_to_joint_limits(theta)
     return list(lower), list(upper)
+
+
+# The widest anyone can be: a goal posed against an over-wide belief still builds.
+ENVELOPE = DEFAULT_PRIOR.high
 
 
 def build_episode_env(task: Task, theta: NDArray[np.float64], settings: PlannerSettings):
@@ -130,7 +144,7 @@ def make_sampling_context(settings: PlannerSettings = DEFAULT_PLANNER_SETTINGS):
         robot_init=tuple(config.robot_initial_joints),
         limb_goal=tuple(config.scene.limb_goal_joint_positions),
     )
-    sim = build_episode_env(task, np.ones(3), settings)
+    sim = build_episode_env(task, np.full(3, ENVELOPE), settings)
     sim.reset(seed=0)
     ctx = build_stream_context(
         sim, standoff=settings.standoff, motion_seed=0, mpc=settings.mpc
@@ -153,13 +167,44 @@ def _move_limb_segments(plan) -> list[tuple]:
     return segments
 
 
+def dense_rows(segments, log: RolloutLog, belief_features, mpc: MPCConfig) -> list:
+    """One row per control step: where the limb stood, and the horizon flown from there.
+
+    The log records the state *after* each simulator step, so a control step's own
+    state is the entry before it, and the first falls back to the segment's start.
+    """
+    rows: list[SegmentSample] = []
+    offset = 0
+    for start_state, goal_conf, trajectory in segments:
+        torques = trajectory.robot_torques
+        goal = np.asarray(goal_conf.positions, dtype=np.float64)
+        for step in range(len(torques) // mpc.action_repeat):
+            index = offset + step * mpc.action_repeat - 1
+            if index >= len(log.limb_positions):
+                break
+            if index < offset:
+                limb, robot = start_state.limb_positions, start_state.robot_positions
+            else:
+                limb, robot = log.limb_positions[index], log.robot_positions[index]
+            rows.append(
+                SegmentSample(
+                    features=segment_features(
+                        limb, robot, goal, belief_features, step
+                    ),
+                    psi=project_torques(torques[step * mpc.action_repeat :], mpc),
+                )
+            )
+        offset += len(torques)
+    return rows
+
+
 def run_episode(
     task: Task,
     theta: NDArray[np.float64],
     belief: Belief | None = None,
+    believed_theta: NDArray[np.float64] | None = None,
     warm_start: WarmStartModel | None = None,
     seed: int = 0,
-    oracle: bool = False,
     settings: PlannerSettings = DEFAULT_PLANNER_SETTINGS,
 ) -> EpisodeResult:
     """Plan and execute one episode, returning what it cost and whether it worked."""
@@ -169,13 +214,14 @@ def run_episode(
         belief.as_features() if belief is not None else np.zeros(2 * len(theta))
     )
 
-    sim = build_episode_env(task, theta, settings)
+    sim = build_episode_env(task, np.full(len(theta), ENVELOPE), settings)
     try:
         sim.reset(seed=seed)
         ctx = build_stream_context(
             sim, standoff=settings.standoff, motion_seed=seed, mpc=settings.mpc
         )
-        ctx.believed_joint_limits = believed_limits_from(belief, theta, rng, oracle)
+        ctx.believed_joint_limits = joint_limits(believed_theta)
+        ctx.true_joint_limits = joint_limits(theta)
         ctx.base_pose_hint = task.base_pose
         if warm_start is not None:
             ctx.warm_start = warm_start.as_hook(belief_features)
@@ -211,17 +257,6 @@ def run_episode(
                 * mpc.horizon
                 * mpc.action_repeat
             )
-            result.segments.append(
-                SegmentSample(
-                    features=segment_features(
-                        start_state.limb_positions,
-                        start_state.robot_positions,
-                        np.asarray(goal_conf.positions),
-                        belief_features,
-                    ),
-                    psi=project_torques(trajectory.robot_torques, mpc),
-                )
-            )
 
         reset_to_start(ctx)
         log = RolloutLog()
@@ -230,6 +265,8 @@ def run_episode(
         result.execute_time = time.time() - started
         if not result.goal_reached:
             result.failure_reason = "the executed plan missed the goal"
+
+        result.segments = dense_rows(segments, log, belief_features, mpc)
 
         lower, upper = np.asarray(ctx.true_joint_limits[0]), np.asarray(
             ctx.true_joint_limits[1]
@@ -242,6 +279,13 @@ def run_episode(
             result.rom_margin = min(margins)
         result.rom_violation_steps = sum(m < 0.0 for m in margins)
         result.worst_rom_violation = max((-m for m in margins if m < 0.0), default=0.0)
+        # Reaching the goal through the person is not a success.
+        if result.rom_violation_steps:
+            result.goal_reached = False
+            result.failure_reason = (
+                f"drove the limb {result.worst_rom_violation:.3f} rad past the "
+                "person's true anatomical limit"
+            )
         return result
     finally:
         sim.close()

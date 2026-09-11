@@ -11,25 +11,23 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import os
-import tempfile
 import time
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 from limb_baseline.babble import BabbleSettings, run_babble_episode
 from limb_baseline.belief import Belief
-from limb_baseline.dataset import append_row, row_from_episode
+from limb_baseline.dataset import append_row, guard_variant, row_from_episode
 from limb_baseline.human import DEFAULT_PRIOR
 from limb_baseline.pipeline import QueryPolicy, gather_information
-from limb_baseline.planner import PlannerSettings, run_episode
-from limb_baseline.tasks import ReachableTaskSampler
+from limb_baseline.planner import PlannerSettings, assumed_theta, run_episode
 from limb_baseline.variant import DEFAULT_VARIANT, VARIANTS
 from limb_baseline.variant import current as current_variant
 from limb_baseline.variant import select as select_variant
+from limb_baseline.worker import isolate_worker, task_sampler
 
 METHODS = ("pddlstream", "babble")
 
@@ -48,46 +46,18 @@ class CollectConfig:
     babble: BabbleSettings = dataclasses.field(default_factory=BabbleSettings)
 
 
-_WORKER_DIRECTORY: str | None = None
-
-
-_TASK_SAMPLER: ReachableTaskSampler | None = None
-_SAMPLING_SIM = None
-
-
-def _task_sampler() -> ReachableTaskSampler:
-    """One reachability-testing environment per worker, built on first use."""
-    global _TASK_SAMPLER, _SAMPLING_SIM  # pylint: disable=global-statement
-    if _TASK_SAMPLER is None:
-        from limb_baseline.planner import make_sampling_context
-
-        _SAMPLING_SIM, ctx = make_sampling_context()
-        _TASK_SAMPLER = ReachableTaskSampler(ctx)
-    return _TASK_SAMPLER
-
-
-def _isolate_worker() -> None:
-    """Give this process its own working directory.
-
-    PDDLStream writes `temp/` and `statistics/` relative to the working directory, and
-    workers sharing one race on those and lose episodes to `FileExistsError`.
-    """
-    global _WORKER_DIRECTORY  # pylint: disable=global-statement
-    if _WORKER_DIRECTORY is None:
-        _WORKER_DIRECTORY = tempfile.mkdtemp(prefix=f"limb-worker-{os.getpid()}-")
-        os.chdir(_WORKER_DIRECTORY)
 
 
 def _plan_demonstration(
-    task, theta, belief, seed: int, config: CollectConfig
+    task, theta, belief, assumed, seed: int, config: CollectConfig
 ) -> tuple[dict, list]:
     """Plan and execute one task, returning what it did and the rows it earned."""
     result = run_episode(
         task,
         theta,
         belief=belief,
+        believed_theta=assumed,
         seed=seed,
-        oracle=config.oracle,
         settings=PlannerSettings(max_time=config.max_time),
     )
     record = {
@@ -107,7 +77,7 @@ def _plan_demonstration(
 
 
 def _babble_demonstration(
-    task, theta, belief, seed: int, config: CollectConfig
+    task, theta, belief, assumed, seed: int, config: CollectConfig
 ) -> tuple[dict, list]:
     """Babble the limb around from one start, returning what it did and its rows."""
     started = time.time()
@@ -115,6 +85,7 @@ def _babble_demonstration(
         task,
         theta,
         belief=belief,
+        believed_theta=assumed,
         seed=seed,
         settings=PlannerSettings(max_time=config.max_time),
         babble=config.babble,
@@ -143,7 +114,7 @@ def _babble_demonstration(
 def _work_item(payload: tuple[int, int, CollectConfig]) -> dict:
     """Run one (person, task) and return what it did, recording it on the way."""
     person, task_index, config = payload
-    _isolate_worker()
+    isolate_worker()
     seed = person * 1000 + task_index
     rng = np.random.default_rng(seed)
     record: dict = {
@@ -163,13 +134,18 @@ def _work_item(payload: tuple[int, int, CollectConfig]) -> dict:
                 theta, rng, QueryPolicy(num_queries=config.num_queries)
             )
             belief, num_censored = gathered.posterior, gathered.num_censored
-        sampler = _task_sampler()
+        sampler = task_sampler()
+        assumed = assumed_theta(belief, theta, rng, config.oracle)
         if config.method == "babble":
             task = sampler.sample_init(rng, theta)
-            outcome, segments = _babble_demonstration(task, theta, belief, seed, config)
+            outcome, segments = _babble_demonstration(
+                task, theta, belief, assumed, seed, config
+            )
         else:
-            task = sampler.sample(rng, theta)
-            outcome, segments = _plan_demonstration(task, theta, belief, seed, config)
+            task = sampler.sample(rng, assumed, theta)
+            outcome, segments = _plan_demonstration(
+                task, theta, belief, assumed, seed, config
+            )
         # Last of the shared columns, as it was before there was a second method.
         reason = outcome.pop("failure_reason", "")
         record.update(outcome)
@@ -217,13 +193,15 @@ def collect(
     tasks_per_person: int,
     workers: int,
     config: CollectConfig,
+    task_offset: int = 0,
+    person_offset: int = 0,
 ) -> list[dict]:
     """Run the sweep across a process pool, one PyBullet client per worker."""
     import multiprocessing as mp
 
     payloads = [
-        (person, task_index, config)
-        for person in range(num_people)
+        (person, task_offset + task_index, config)
+        for person in range(person_offset, person_offset + num_people)
         for task_index in range(tasks_per_person)
     ]
     records: list[dict] = []
@@ -245,19 +223,6 @@ def collect(
     return records
 
 
-def _guard_variant(path: Path, name: str) -> None:
-    """Refuse to mix variants in one table; a run appends to whatever is there."""
-    if not path.exists() or path.stat().st_size == 0:
-        return
-    existing = pd.read_csv(path, nrows=1)
-    if "variant" not in existing or existing["variant"].iloc[0] != name:
-        found = (
-            existing["variant"].iloc[0] if "variant" in existing else "none recorded"
-        )
-        raise SystemExit(
-            f"{path} already holds variant {found!r}, not {name!r}; use a new --tag."
-        )
-
 
 def main() -> None:
     """CLI entry point."""
@@ -266,7 +231,11 @@ def main() -> None:
         "--variant", type=str, default=DEFAULT_VARIANT, choices=VARIANTS
     )
     parser.add_argument("--num-people", type=int, default=50)
+    parser.add_argument("--person-offset", type=int, default=0,
+                        help="First person id; theta is drawn from it.")
     parser.add_argument("--tasks-per-person", type=int, default=5)
+    parser.add_argument("--task-offset", type=int, default=0,
+                        help="First task index, so a top-up run draws fresh tasks.")
     parser.add_argument("--workers", type=int, default=12)
     parser.add_argument("--num-queries", type=int, default=6)
     parser.add_argument("--max-time", type=float, default=600.0)
@@ -303,7 +272,7 @@ def main() -> None:
     run_dir = (args.data_dir / args.method / args.tag).resolve()
     run_dir.mkdir(parents=True, exist_ok=True)
     for path in (run_dir / "demos.csv", run_dir / "attempts.csv"):
-        _guard_variant(path, args.variant)
+        guard_variant(path, args.variant)
     config = CollectConfig(
         demos_path=run_dir / "demos.csv",
         attempts_path=run_dir / "attempts.csv",
@@ -319,7 +288,8 @@ def main() -> None:
             max_draws=args.babble_max_draws,
         ),
     )
-    records = collect(args.num_people, args.tasks_per_person, args.workers, config)
+    records = collect(args.num_people, args.tasks_per_person, args.workers, config,
+                      args.task_offset, args.person_offset)
     solved = sum(bool(r.get("goal_reached")) for r in records)
     print(f"\n=== {solved}/{len(records)} episodes reached the goal ===")
     print(f"demos    -> {config.demos_path.resolve()}")

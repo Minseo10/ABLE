@@ -58,38 +58,53 @@ class Task:
 class TaskDistribution:
     """`P(task)` for the single variant, as a box to sample inside.
 
-    Active joints are drawn from the middle `inner_fraction` of the person's range: a
-    configuration on the limit leaves the MPC no room to overshoot into.
+    Active joints are drawn from the middle `inner_fraction` of the believed range, so
+    at 1.0 a goal may sit on the limit and a belief wider than the truth poses a goal
+    outside the person.
     """
 
-    inner_fraction: float = 0.6
+    inner_fraction: float = 1.0
     min_separation: float = 0.5
     # Above this the MPC does not converge; every episode solved so far was under 1.6.
     max_separation: float = 1.5
     robot_jitter: float = 0.2
     max_attempts: int = 1000
 
+    def inner_range(
+        self, theta: NDArray[np.float64]
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        """The box the limb's active joints are drawn from."""
+        lower, upper = theta_to_joint_limits(theta)
+        margin = 0.5 * (1.0 - self.inner_fraction) * (upper - lower)
+        return lower + margin, upper - margin
+
     def sample(
         self,
         rng: np.random.Generator,
         theta: NDArray[np.float64],
+        true_theta: NDArray[np.float64] | None = None,
         robot_limits: tuple[NDArray[np.float64], NDArray[np.float64]] | None = None,
     ) -> Task:
-        """Draw one task for the person `theta`."""
+        """Draw one task: the goal against `theta`, the start inside `true_theta`.
+
+        The person really is somewhere inside their own range, so only the goal may
+        fall outside it when the belief is wider than the truth.
+        """
         scene = scene_config().scene
         nominal_limb = np.asarray(scene.limb_init_joint_positions, dtype=np.float64)
         nominal_robot = np.asarray(
             scene_config().robot_initial_joints, dtype=np.float64
         )
-        lower, upper = theta_to_joint_limits(theta)
-        margin = 0.5 * (1.0 - self.inner_fraction) * (upper - lower)
-        inner_low, inner_high = lower + margin, upper - margin
+        inner_low, inner_high = self.inner_range(theta)
+        start_low, start_high = self.inner_range(
+            theta if true_theta is None else true_theta
+        )
 
         for _ in range(self.max_attempts):
             limb_init = nominal_limb.copy()
             limb_goal = nominal_limb.copy()
             for j in active_joints():
-                limb_init[j] = rng.uniform(inner_low[j], inner_high[j])
+                limb_init[j] = rng.uniform(start_low[j], start_high[j])
                 limb_goal[j] = rng.uniform(inner_low[j], inner_high[j])
             separation = joint_position_distance(
                 LIMB_JOINT_INFOS, list(limb_init), list(limb_goal)
@@ -211,14 +226,6 @@ class ReachableTaskSampler:
                 seed = solution
         return True
 
-    def _inner_range(
-        self, theta: NDArray[np.float64]
-    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        """The box the limb's active joints are drawn from, off the person's edge."""
-        lower, upper = theta_to_joint_limits(theta)
-        margin = 0.5 * (1.0 - self.distribution.inner_fraction) * (upper - lower)
-        return lower + margin, upper - margin
-
     def _draw_limb_conf(
         self,
         rng: np.random.Generator,
@@ -249,7 +256,7 @@ class ReachableTaskSampler:
 
         For collection that has no goal to plan to, such as hindsight babbling.
         """
-        low, high = self._inner_range(theta)
+        low, high = self.distribution.inner_range(theta)
         for _ in range(self.max_init_draws):
             limb_init = self._draw_limb_conf(rng, low, high)
             base_conf = self._base_pose_for(limb_init)
@@ -266,11 +273,19 @@ class ReachableTaskSampler:
             f"{self.max_init_draws} draws"
         )
 
-    def sample(self, rng: np.random.Generator, theta: NDArray[np.float64]) -> Task:
-        """One task for this person that some base pose can carry out."""
-        low, high = self._inner_range(theta)
+    def sample(
+        self,
+        rng: np.random.Generator,
+        theta: NDArray[np.float64],
+        true_theta: NDArray[np.float64] | None = None,
+    ) -> Task:
+        """One task that some base pose can carry out; see `TaskDistribution.sample`."""
+        low, high = self.distribution.inner_range(theta)
+        start_low, start_high = self.distribution.inner_range(
+            theta if true_theta is None else true_theta
+        )
         for _ in range(self.max_init_draws):
-            limb_init = self._draw_limb_conf(rng, low, high)
+            limb_init = self._draw_limb_conf(rng, start_low, start_high)
             base_conf = self._base_pose_for(limb_init)
             if base_conf is None:
                 continue

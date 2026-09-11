@@ -44,9 +44,11 @@ from pybullet_helpers.joint import JointPositions
 from limb_baseline.belief import Belief
 from limb_baseline.planner import (
     DEFAULT_PLANNER_SETTINGS,
+    ENVELOPE,
     PlannerSettings,
     SegmentSample,
     build_episode_env,
+    joint_limits,
 )
 from limb_baseline.tasks import DEFAULT_TASK_DISTRIBUTION, Task
 from limb_baseline.warmstart import control_basis, segment_features
@@ -243,6 +245,7 @@ def run_babble_episode(
     task: Task,
     theta: NDArray[np.float64],
     belief: Belief | None = None,
+    believed_theta: NDArray[np.float64] | None = None,
     seed: int = 0,
     settings: PlannerSettings = DEFAULT_PLANNER_SETTINGS,
     babble: BabbleSettings = DEFAULT_BABBLE_SETTINGS,
@@ -254,12 +257,14 @@ def run_babble_episode(
         belief.as_features() if belief is not None else np.zeros(2 * len(theta))
     )
 
-    sim = build_episode_env(task, theta, settings)
+    sim = build_episode_env(task, np.full(len(theta), ENVELOPE), settings)
     try:
         sim.reset(seed=seed)
         ctx = build_stream_context(
             sim, standoff=settings.standoff, motion_seed=seed, mpc=settings.mpc
         )
+        ctx.believed_joint_limits = joint_limits(believed_theta)
+        ctx.true_joint_limits = joint_limits(theta)
         reset_to_start(ctx)
         result.grasped = _engage_at(ctx, task)
         if not result.grasped:
