@@ -108,6 +108,9 @@ def main() -> None:
     chosen = best_model(reports, models)
     with open(model_path, "wb") as handle:
         pickle.dump(chosen, handle)
+    for name, model in models.items():
+        with open(args.run_dir / f"warm_start_{name}.pkl", "wb") as handle:
+            pickle.dump(model, handle)
     print(f"\nbest model: {chosen.name}")
     print(f"report -> {report_path.resolve()}")
     print(f"model  -> {model_path.resolve()}")
