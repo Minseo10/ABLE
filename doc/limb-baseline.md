@@ -134,21 +134,37 @@ b'(theta)  =  p(r_i | q_i, theta) * b(theta) / Z
 
 ## Stage 3: Learn to Plan better
 
-Learn a model `g` to
-update `b(psi)` →`b(~psi)` based on `P(tasks)` and `b'(theta)`
+Collect demonstrations with **no** warm start, then fit `g_w` to them.
 
-- **Input of learned model**: the limb's
-  current joint configuration, the robot's current joint configuration, the goal limb configuration, and
-  the belief of theta.
-- **Output of learned model**: the MPC's initial nominal control points, `num_control_points x
-  NUM_ROBOT_JOINTS`. This is `psi`.
-- **Data**:
-  - Sample people and tasks
-  - Run the PDDLStream planner for demonstrations
-  - Record the
-  features and the fitted control points from every successful episode. The label is the
-  executed torque sequence projected back onto control points.
-  - Keep the dataset as an append-only table on disk, one row per successful episode
+```
+theta ~ p(theta)                 a person
+b'    = b(theta | Q, R)          their posterior after K queries (Stages 1-2)
+th~   ~ b'                       one hypothesis, drawn once per episode
+task  ~ P(task | th~)            a goal inside the range the robot believes in
+plan  = planner(task, th~; -)    no warm start, so the label is the planner's own work
+```
+
+`th~` is drawn once and used for both the task and the planner's joint limits, so the
+goal the planner is handed always sits inside the range of motion it believes in. The
+simulator still enforces the true `theta`; the gap is what `rom_violation_steps` counts.
+
+Every `move_limb` segment of a successful plan is one training row:
+
+```
+x    = (limb_init, robot_init, limb_goal, mu', sigma')
+psi* = proj(executed torques)    first horizon, on the control-point basis
+```
+
+```
+w* = argmin_w  sum_{(x, psi*) in D} || g_w(x) - psi* ||^2
+```
+
+`g_w : x -> psi`, with `psi` of shape `num_control_points x NUM_ROBOT_JOINTS`. There is
+no belief over `psi` and nothing about `psi` is updated -- it is produced fresh for every
+segment, and only `w` persists between tasks. The belief enters as a *feature*, in `x`.
+
+- **Data**: one row per successful episode segment, appended to a CSV on disk as it is
+  collected, so a worker dying mid-sweep costs one row rather than the sweep.
 - **Model design**: any multi-output regressor in scikit-learn library (nearest neighbors, logistic regression, MLP, etc.)
 - **Cost function**:
   - Simplest idea: Mean squared error on the control points.
@@ -157,12 +173,52 @@ update `b(psi)` →`b(~psi)` based on `P(tasks)` and `b'(theta)`
 
 ## Stage 4: plan to solve better
 
-`task ~ P(tasks) → planner (task, ~theta, ~psi)`
+The same draw, now with the warm start switched on:
 
-- Given new task, plan with the learned belief and the learned warm start.
+```
+th~  ~ b';  task ~ P(task | th~)
+psi  = g_w*(x)                     per segment, from the same features
+plan = planner(task, th~; psi)  -> execute
+```
 
+Scored against Stage 3's planner on the same tasks (`psi = -`): plan time, MPC simulator
+steps, goal reached, ROM violation steps.
 
 We can repeat Stage 1 from Stage 4.
+
+## Personalization: two pipelines
+
+Stages 1-4 above learn `psi` once, over a population. Personalization asks a different
+question: for one specific person, is a factory warm-up worth anything?
+
+- **Pre-training (factory learning).** Fit one MLP on `m` people x `n` tasks. General;
+  nothing about it is specific to the person the robot will meet.
+- **Fine-tuning (personalize).** For one person, loop: `K` more queries fold into the
+  belief that person already has, `K` demonstrations are collected under it, the network
+  keeps training from the weights it has, then held-out tasks are planned and executed.
+
+**Version 1** starts each person from the pretrained network. **Version 2** has no factory
+stage: the same network from random weights, given more demonstrations per round to
+compensate. Nothing else differs, so the gap between them is what pretraining is worth.
+
+Both loop:
+
+```
+v1:  pretrain -> [ queries -> belief -> fine-tune -> plan and execute ] x R
+v2:              [ queries -> belief -> train     -> plan and execute ] x R   (larger K)
+```
+
+Details that make the comparison mean something:
+
+- The belief **carries over** between rounds, so `R` rounds of `K` queries compound.
+- The feature scaler is fit **once** and frozen -- from the factory data in v1, from the
+  person's first batch in v2. Refitting it each round would move what a feature value
+  means out from under weights already learned.
+- Demonstrations are planned **without** a warm start, so the label stays what the slow
+  planner does.
+- Evaluation uses the **same** held-out tasks every round.
+- Run v2 at a per-round size matched to v1 as well as a larger one. Without the matched
+  arm, a tie cannot separate "pretraining bought nothing" from "more data made up for it".
 
 
 ## Evaluation

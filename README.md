@@ -46,11 +46,51 @@ python scripts/make_figures.py --run-dir data/babble/isolated_left_arm \
     --compare-dir data/pddlstream/isolated_left_arm
 ```
 
+## Personalization
+
+Two ways to reach a warm start for one specific person, compared round by round. Both
+loop the same four steps -- ask queries, update the belief, train `psi` on that person's
+demonstrations, plan and execute held-out tasks -- and differ only in where the network's
+weights start.
+
+| Version | Round 0 weights | Scaler | Data per round |
+| --- | --- | --- | --- |
+| 1, factory pretrained | fit on `m` people x `n` tasks | from the factory data, frozen | small |
+| 2, from scratch | random | fit on the person's first batch, then frozen | larger |
+
+```bash
+# Factory learning: one MLP over an existing collect run.
+python -m limb_baseline.personalize pretrain --run-dir data/pddlstream/isolated_left_arm
+
+# Version 1: personalize from the factory model.
+python -m limb_baseline.personalize run --version v1 --variant isolated-left-arm \
+    --pretrained data/pddlstream/isolated_left_arm/pretrained.pkl \
+    --out-dir data/personalize/compare --num-people 5 --rounds 5 --tasks-per-round 5
+
+# Version 2, matched and larger. Both write into the same rounds.csv.
+python -m limb_baseline.personalize run --version v2_matched \
+    --variant isolated-left-arm --out-dir data/personalize/compare --num-people 5 --rounds 5 --tasks-per-round 5
+python -m limb_baseline.personalize run --version v2_large \
+    --variant isolated-left-arm --out-dir data/personalize/compare --num-people 5 --rounds 5 --tasks-per-round 15
+
+python scripts/make_personalize_figures.py --run-dir data/personalize/compare
+```
+
+Run the matched arm as well as the larger one: without it, a tie between v1 and v2 cannot
+distinguish "pretraining bought nothing" from "the extra data made up for it".
+
+Demonstrations are planned *without* a warm start in both versions, so the label is what
+the slow planner does rather than what the model already predicts. Evaluation uses the
+same held-out tasks every round, so the curve moves only when the belief or `psi` does.
+`--replay` mixes factory rows back into each fine-tune (as a multiple of the person's own
+rows) if the handful of personal rows turns out to destabilise the net; it is off by
+default.
+
 ## Layout
 
 | Path | What |
 | --- | --- |
-| `src/limb_baseline/` | The package: human model, queries, belief, tasks, both collectors, fit, evaluate |
+| `src/limb_baseline/` | The package: human model, queries, belief, tasks, both collectors, fit, evaluate, personalize |
 | `scripts/` | Figure and video rendering |
 | `data/` | Published runs, one directory per collection method |
 | `doc/` | Design document |
