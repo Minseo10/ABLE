@@ -17,7 +17,7 @@ from PIL import Image, ImageDraw
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from limb_baseline.belief import Belief  # noqa: E402
+from limb_baseline.belief import Belief, pooled_tau, refit  # noqa: E402
 from limb_baseline.human import (  # noqa: E402
     active_motions,
     DEFAULT_PRIOR,
@@ -102,15 +102,18 @@ class Recorder:
 
         left, right, top = 14, self.width - 14, self.height - 34
         draw.rectangle([left, top, right, top + 12], outline=DROP)
-        scale = (right - left) / max(self.target, 1e-6)
-        filled = left + scale * float(np.clip(reach, 0.0, self.target))
+        # The axis runs to whichever of target and bound is larger, so neither marker clips.
+        span = max(self.target, self.bound)
+        scale = (right - left) / max(span, 1e-6)
+        filled = left + scale * float(np.clip(reach, 0.0, span))
         draw.rectangle([left, top, filled, top + 12], fill=KEEP)
-        wall = left + scale * min(self.bound, self.target)
+        wall = left + scale * self.bound
         draw.line([wall, top - 7, wall, top + 19], fill=BLUE, width=3)
         label_x = max(left, min(wall - 52, right - 116))
         draw.text((label_x, top + 22), "their bound (hidden)", fill=BLUE)
-        draw.line([right, top - 7, right, top + 19], fill=RED, width=3)
-        draw.text((right - 40, top - 21), "target", fill=RED)
+        goal = left + scale * self.target
+        draw.line([goal, top - 7, goal, top + 19], fill=RED, width=3)
+        draw.text((max(left, min(goal - 18, right - 36)), top - 21), "target", fill=RED)
         draw.text((left, top - 21), "0", fill=FAINT)
         return np.asarray(image)
 
@@ -130,9 +133,12 @@ def run(args) -> None:
     policy = QueryPolicy(num_queries=args.num_queries)
     sim = QuerySimulator(theta, model)
     recorder = Recorder(sim, stride=args.stride)
-    belief = Belief.from_prior(DEFAULT_PRIOR)
+    base = Belief.from_prior(DEFAULT_PRIOR)
+    belief = base
 
     floors = np.zeros(len(active_motions()))
+    answers: list[list[float]] = [[] for _ in active_motions()]
+    tau = model.tau
     means = [belief.mean.copy()]
     stddevs = [belief.stddev.copy()]
     queried: list[int] = []
@@ -151,28 +157,30 @@ def run(args) -> None:
             if plausible and outcome.reached_target:
                 floors[motion_index] = outcome.answer + model.short_fall
             elif plausible and outcome.settled:
-                belief = belief.updated(
-                    motion_index, outcome.answer, model.tau, model.short_fall
-                )
+                # Repeat answers about a motion measure the noise, so refold them all.
+                answers[motion_index].append(outcome.answer)
+                tau = pooled_tau(answers, model.tau)
+                belief = refit(base, answers, tau, model.short_fall)
             means.append(belief.mean.copy())
             stddevs.append(belief.stddev.copy())
             queried.append(motion_index)
             reached.append(outcome.reached_target)
             print(
                 f"  round {round_index + 1}: {motion} target {target:.2f} "
-                f"stopped {outcome.answer:.3f} (bound {bound:.3f})"
+                f"stopped {outcome.answer:.3f} (bound {bound:.3f}) tau {tau:.4f}"
             )
     finally:
         sim.close()
 
     # One folder per seed, so a sweep does not overwrite its own figures.
     plot_belief(
-        np.array(means), np.array(stddevs), queried, reached, theta,
+        np.array(means), np.array(stddevs), queried, reached, theta, tau, model.tau,
         args.fig / "belief_update" / f"seed{args.seed}",
     )
 
 
-def plot_belief(means, stddevs, queried, reached, theta, out: Path) -> None:
+def plot_belief(means, stddevs, queried, reached, theta, tau, assumed,
+                out: Path) -> None:
     """One panel per motion, stepping through only the queries about that motion."""
     fig, axes = plt.subplots(len(active_motions()), 1, figsize=(6.4, 6.0))
     for i, (ax, motion) in enumerate(zip(axes, active_motions(), strict=True)):
@@ -187,7 +195,8 @@ def plot_belief(means, stddevs, queried, reached, theta, out: Path) -> None:
                     mfc="white" if reached[r] else KEEP)
         ax.axhline(theta[i], color=INK, lw=1.2, ls="--")
         ax.text(0.02, 0.86, motion.replace("_", " "), transform=ax.transAxes,
-                fontsize=9, color=FAINT)
+                fontsize=9, color=FAINT,
+                bbox=dict(facecolor="white", edgecolor="none", pad=1.5))
         ax.set_xticks(xs)
         ax.set_xticklabels(["prior"] + [f"q{r + 1}" for r in rounds])
         ax.set_xlim(-0.25, max(len(rounds), 1) + 0.25)
@@ -197,6 +206,10 @@ def plot_belief(means, stddevs, queried, reached, theta, out: Path) -> None:
         for side in ("top", "right"):
             ax.spines[side].set_visible(False)
     axes[-1].set_xlabel("query about this motion")
+    fig.text(0.5, -0.01,
+             f"noise measured from repeat answers:  "
+             f"$\\hat{{\\tau}} = {tau:.3f}$ rad   (assumed $\\sigma_u/k = {assumed:.3f}$)",
+             ha="center", fontsize=9, color=FAINT)
     handles = [
         plt.Line2D([], [], color=KEEP, lw=1.8, label="belief mean ±1σ"),
         plt.Line2D([], [], color=INK, lw=1.2, ls="--", label="true theta"),

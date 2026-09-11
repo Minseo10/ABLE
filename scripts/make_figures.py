@@ -44,12 +44,13 @@ plt.rcParams.update(
     }
 )
 
-ROWS = ("pddlstream", "belief", "warm_start", "baseline", "oracle")
+ROWS = ("pddlstream", "belief", "warm_start", "baseline", "oracle_cold", "oracle")
 ROW_LABELS = {
     "pddlstream": "plain",
     "belief": "query",
     "warm_start": "warm",
     "baseline": "both",
+    "oracle_cold": "oracle cold",
     "oracle": "oracle",
 }
 
@@ -78,42 +79,26 @@ def _save(fig, stem: str, out: Path) -> None:
 
 
 def figure_models(report: dict, out: Path) -> None:
-    """Prediction error on people the model trained on versus people it has not."""
+    """Prediction error on people the model trained on versus people it has not.
+
+    Divided by the zero predictor's error, so runs whose torques differ in size are
+    on one scale: 1.0 is no better than the zeros the MPC already starts from.
+    """
     order = sorted(report, key=lambda k: report[k]["test_mse"])
-    baseline = report[order[0]]["zero_baseline_mse"]
+    test_zero = report[order[0]]["zero_baseline_mse"]
+    train_zero = report[order[0]].get("zero_baseline_train_mse") or test_zero
+    train = [report[k]["train_mse"] / train_zero for k in order]
+    test = [report[k]["test_mse"] / test_zero for k in order]
     x = np.arange(len(order))
     fig, ax = plt.subplots(figsize=(7.2, 3.6))
-    ax.bar(x - 0.19, [report[k]["train_mse"] for k in order], 0.36,
-           color=DROP, label="training data")
-    ax.bar(x + 0.19, [report[k]["test_mse"] for k in order], 0.36,
-           color=KEEP, label="test data")
-    train_baseline = report[order[0]].get("zero_baseline_train_mse") or 0.0
-    top = 1.18 * max([report[k]["test_mse"] for k in order]
-                     + [baseline, train_baseline])
-    ax.set_ylim(0, top)
-    ax.axhline(baseline, color=WARN, lw=1.4, ls="--")
-    y_test, y_train = baseline, train_baseline
-    gap = 0.07 * top
-    # The two baselines can nearly coincide; separate the labels, keeping their order.
-    if train_baseline and abs(baseline - train_baseline) < gap:
-        middle = 0.5 * (baseline + train_baseline)
-        above = baseline >= train_baseline
-        y_test = middle + (gap / 2 if above else -gap / 2)
-        y_train = middle + (-gap / 2 if above else gap / 2)
-    ax.text(len(order) - 0.45, y_test, "  no warm start (test)",
-            color=WARN, va="center", fontsize=9)
-    if train_baseline:
-        ax.axhline(train_baseline, color=FAINT, lw=1.4, ls=":")
-        ax.text(len(order) - 0.45, y_train, "  no warm start (train)",
-                color=FAINT, va="center", fontsize=9)
-    for i, k in enumerate(order):
-        if report[k]["train_mse"] < 0.002:
-            ax.text(i - 0.19, 0.002, "0.000", ha="center", fontsize=9, color=FAINT)
-        gain = 100 * (baseline - report[k]["test_mse"]) / baseline
-        ax.text(i + 0.19, report[k]["test_mse"] + 0.002, f"{gain:+.1f}%",
-                ha="center", fontsize=9, color=KEEP if gain > 0 else WARN)
+    ax.bar(x - 0.19, train, 0.36, color=DROP, label="training data")
+    ax.bar(x + 0.19, test, 0.36, color=KEEP, label="test data")
+    ax.set_ylim(0, 1.18 * max(test + [1.0]))
+    for i, value in enumerate(train):
+        if value < 0.01:
+            ax.text(i - 0.19, 0.01, "0.00", ha="center", fontsize=9, color=FAINT)
     ax.set_xticks(x, [LABELS.get(k, k) for k in order])
-    ax.set_ylabel("prediction error (MSE)")
+    ax.set_ylabel("prediction error (NMSE)")
     ax.grid(axis="y", color=GRID, lw=0.8)
     ax.set_axisbelow(True)
     ax.legend(frameon=False, loc="upper left", fontsize=9)
@@ -209,7 +194,7 @@ def figure_eval(evaluation: pd.DataFrame, out: Path) -> None:
     tops = []
     for i, row in enumerate(rows):
         sub = evaluation[evaluation.row == row]
-        k, n = int(sub.solved.sum()), len(sub)
+        k, n = int(sub.goal_reached.sum()), len(sub)
         low, high = _wilson(k, n)
         tops.append(high)
         ax1.bar(i, k / n, 0.55, color=DROP if row == "pddlstream" else KEEP)
@@ -227,7 +212,7 @@ def figure_eval(evaluation: pd.DataFrame, out: Path) -> None:
     steps = evaluation.pivot_table(index=["person", "task_index"], columns="row",
                                    values="mpc_simulator_steps")
     solved = evaluation.pivot_table(index=["person", "task_index"], columns="row",
-                                    values="solved")
+                                    values="goal_reached")
     both = steps[(solved.pddlstream == 1) & (solved.warm_start == 1)] / 1000
     lim = [0, 1.06 * max(both.max())]
     ax2.plot(lim, lim, color=FAINT, lw=1, ls="--")
@@ -247,7 +232,7 @@ def figure_eval(evaluation: pd.DataFrame, out: Path) -> None:
 def figure_failures(evaluation: pd.DataFrame, out: Path) -> None:
     """Table image: what each failure was, and whose stage it happened in."""
     rows = _present(evaluation)
-    lost = evaluation[~evaluation.solved].copy()
+    lost = evaluation[~evaluation.goal_reached].copy()
     owned = lost.failure_reason.fillna("").map(_failure)
     lost["owner"] = [o for o, _ in owned]
     lost["reason"] = [r for _, r in owned]
@@ -376,6 +361,57 @@ def figure_data(paths: dict[str, str], out: Path) -> None:
     _save(fig, "data_distribution", out)
 
 
+def figure_learning_curve(path: str, out: Path, repeats: int = 5) -> None:
+    """Training and test error against how many rows the model was given.
+
+    Averaged over `repeats` draws of each subset, with a band of one standard
+    deviation; 1.0 is the zero predictor the MPC already starts from.
+    """
+    from limb_baseline.warmstart import make_regressors
+
+    X, Y, meta = load_dataset(path)
+    xtr, ytr, xte, yte = train_test_split_by_person(X, Y, meta, seed=0)
+    fractions = np.linspace(0.15, 1.0, 8)
+    counts = [max(int(f * len(xtr)), 5) for f in fractions]
+    test_zero = float(np.mean(yte ** 2))
+    names = list(make_regressors())
+
+    fig, axes = plt.subplots(1, len(names), figsize=(4.0 * len(names), 3.5), sharey=True)
+    top = 1.0
+    for ax, name in zip(np.atleast_1d(axes), names, strict=True):
+        train = np.zeros((repeats, len(counts)))
+        test = np.zeros_like(train)
+        for r in range(repeats):
+            order = np.random.default_rng(r).permutation(len(xtr))
+            for k, take in enumerate(counts):
+                rows = order[:take]
+                model = make_regressors()[name].fit(xtr[rows], ytr[rows])
+                train[r, k] = float(np.mean((model.predict(xtr[rows]) - ytr[rows]) ** 2)
+                                    ) / float(np.mean(ytr[rows] ** 2))
+                test[r, k] = float(np.mean((model.predict(xte) - yte) ** 2)) / test_zero
+        ax.axhline(1.0, color=FAINT, lw=1.0, ls=":", zorder=1)
+        for values, colour, label in ((train, DROP, "training data"),
+                                      (test, KEEP, "test data")):
+            mean, spread = values.mean(0), values.std(0)
+            ax.fill_between(counts, mean - spread, mean + spread, color=colour,
+                            alpha=0.18, lw=0)
+            ax.plot(counts, mean, marker="o", ms=4, lw=1.8, color=colour, label=label)
+            top = max(top, float((mean + spread).max()))
+        ax.set_xlabel("training rows")
+        ax.set_title(LABELS.get(name, name), loc="left", fontsize=11)
+        ax.grid(color=GRID, lw=0.8, which="both")
+        ax.set_axisbelow(True)
+    # Log: the early spike is several times the zero predictor and would flatten the rest.
+    ticks = [t for t in (0.125, 0.25, 0.5, 1, 2, 4, 8) if t <= 1.6 * top]
+    axes_list = list(np.atleast_1d(axes))
+    axes_list[0].set_ylabel("prediction error (NMSE)")
+    axes_list[0].set_yscale("log")
+    axes_list[0].set_yticks(ticks, [f"{t:g}" for t in ticks])
+    axes_list[0].set_ylim(0.1, 1.15 * top)
+    axes_list[0].legend(frameon=False, fontsize=9, loc="lower left")
+    _save(fig, "learning_curve", out)
+
+
 def figure_learning(path: str, out: Path) -> None:
     """Whether more rows would help, and what the iterative fits do while training."""
     from limb_baseline.warmstart import make_regressors
@@ -387,6 +423,8 @@ def figure_learning(path: str, out: Path) -> None:
     palette = {"ridge": KEEP, "mlp": WARN, "gradient_boosting": INK,
                "nearest_neighbors": FAINT}
 
+    zero = float(np.mean(yte ** 2))
+
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.6, 3.8))
     fig.subplots_adjust(wspace=0.3)
     for name in make_regressors():
@@ -394,36 +432,36 @@ def figure_learning(path: str, out: Path) -> None:
         for fraction in fractions:
             take = order[: max(int(fraction * len(xtr)), 5)]
             model = make_regressors()[name].fit(xtr[take], ytr[take])
-            curve.append(float(np.mean((model.predict(xte) - yte) ** 2)))
+            curve.append(float(np.mean((model.predict(xte) - yte) ** 2)) / zero)
         ax1.plot(fractions * len(xtr), curve, marker="o", ms=4, lw=1.6,
                  color=palette[name], label=LABELS.get(name, name))
-    zero = float(np.mean(yte ** 2))
-    ax1.axhline(zero, color=WARN, lw=1.2, ls="--")
-    ax1.text(fractions[0] * len(xtr), zero, " no warm start", color=WARN,
-             va="bottom", ha="left", fontsize=9)
     ax1.set_xlabel("training rows")
-    ax1.set_ylabel("test error (MSE)")
+    ax1.set_ylabel("test error (NMSE)")
     ax1.grid(color=GRID, lw=0.8)
     ax1.set_axisbelow(True)
     ax1.legend(frameon=False, fontsize=8)
     ax1.set_title("Does more data help", loc="left", fontsize=11)
 
+    # lbfgs keeps no loss curve, so the panel carries the boosted trees alone then.
     mlp = make_regressors()["mlp"].fit(xtr, ytr).named_steps["mlpregressor"]
-    ax2.plot(np.arange(1, len(mlp.loss_curve_) + 1), mlp.loss_curve_,
-             color=WARN, lw=1.6)
+    if hasattr(mlp, "loss_curve_"):
+        ax2.plot(np.arange(1, len(mlp.loss_curve_) + 1), mlp.loss_curve_,
+                 color=WARN, lw=1.6)
+        ax2.set_ylabel("neural net training loss", color=WARN)
+        ax2.tick_params(axis="y", colors=WARN)
+    else:
+        ax2.set_yticks([])
     ax2.set_xlabel("iteration")
-    ax2.set_ylabel("neural net training loss", color=WARN)
-    ax2.tick_params(axis="y", colors=WARN)
 
     gbt = make_regressors()["gradient_boosting"].fit(xtr, ytr)
     stages = [list(e.staged_predict(xte)) for e in gbt.estimators_]
     depth = min(len(s) for s in stages)
     errs = [float(np.mean([(stages[j][i] - yte[:, j]) ** 2
-                           for j in range(len(stages))]))
+                           for j in range(len(stages))])) / zero
             for i in range(depth)]
     twin = ax2.twinx()
     twin.plot(np.arange(1, depth + 1), errs, color=INK, lw=1.6)
-    twin.set_ylabel("boosted trees test error", color=INK)
+    twin.set_ylabel("boosted trees test error (NMSE)", color=INK)
     twin.grid(False)
     ax2.grid(color=GRID, lw=0.8)
     ax2.set_axisbelow(True)
@@ -438,7 +476,7 @@ def figure_timing(evaluation: pd.DataFrame, out: Path) -> None:
     lines = []
     for row in rows:
         sub = evaluation[evaluation.row == row]
-        won = sub[sub.solved]
+        won = sub[sub.goal_reached]
         lines.append((ROW_LABELS[row], [
             f"{len(won)}/{len(sub)}",
             f"{won.plan_time.mean():.1f}",
@@ -480,23 +518,22 @@ def print_tables(report: dict, demos: pd.DataFrame, attempts: pd.DataFrame,
         print(f"median plan time {attempts.plan_time.median():.0f}s | {moved}")
 
     print("\n=== prediction error ===")
-    print(f"{'model':<20}{'training':>12}{'test':>13}{'vs no warm start':>19}")
+    print(f"{'model':<20}{'training':>12}{'test':>13}{'vs zero predictor':>21}")
     baseline = next(iter(report.values()))["zero_baseline_mse"]
     for k in sorted(report, key=lambda k: report[k]["test_mse"]):
         r = report[k]
         gain = 100 * (baseline - r["test_mse"]) / baseline
         print(f"{LABELS.get(k, k):<20}{r['train_mse']:>12.5f}"
-              f"{r['test_mse']:>13.5f}{gain:>18.1f}%")
+              f"{r['test_mse']:>13.5f}{gain:>20.1f}%")
 
     if evaluation is None:
         return
     print("\n=== evaluation ===")
     # Averaged over solved tasks only: a failed task records no controller steps,
     # so a per-episode mean just counts how many failures a row happened to have.
-    for row in [r for r in ("pddlstream", "belief", "warm_start", "baseline",
-                            "oracle") if r in set(evaluation.row)]:
+    for row in _present(evaluation):
         s = evaluation[evaluation.row == row]
-        won = s[s.solved]
+        won = s[s.goal_reached]
         print(f"{row:<12}solved {len(won)}/{len(s)}  "
               f"when solved: plan {won.plan_time.mean():6.1f}s  "
               f"controller steps {won.mpc_simulator_steps.mean():,.0f}  "
@@ -504,7 +541,7 @@ def print_tables(report: dict, demos: pd.DataFrame, attempts: pd.DataFrame,
               + (f"  min clearance {s.rom_margin.min():.3f} rad"
                  if "rom_margin" in s and s.rom_margin.notna().any() else ""))
     print("\n=== why the failures failed ===")
-    lost = evaluation[~evaluation.solved].copy()
+    lost = evaluation[~evaluation.goal_reached].copy()
     owned = lost.failure_reason.fillna("").map(_failure)
     lost["owner"] = [o for o, _ in owned]
     lost["reason"] = [r for _, r in owned]
@@ -526,7 +563,7 @@ def print_tables(report: dict, demos: pd.DataFrame, attempts: pd.DataFrame,
             print(f"{reason:<34}{cells}")
 
     p = evaluation.pivot_table(index=["person", "task_index"], columns="row",
-                               values="solved")
+                               values="goal_reached")
     a = int(((p.pddlstream == 1) & (p.warm_start == 0)).sum())
     b = int(((p.pddlstream == 0) & (p.warm_start == 1)).sum())
     print(f"tasks that flipped: {a} lost, {b} won, "
@@ -556,6 +593,7 @@ def main() -> None:
     figure_models(report, out)
     figure_signal(str(run / "demos.csv"), out)
     figure_learning(str(run / "demos.csv"), out)
+    figure_learning_curve(str(run / "demos.csv"), out)
     if args.compare_dir:
         figure_data({run.parent.name: str(run / "demos.csv"),
                      args.compare_dir.parent.name: str(args.compare_dir / "demos.csv")}, out)
