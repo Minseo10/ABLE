@@ -1,0 +1,101 @@
+row,person,task_index,seed,solved,goal_reached,plan_time,mpc_simulator_steps,num_control_steps,num_segments,rom_violation_steps,worst_rom_violation,belief_error,separation,failure_reason
+pddlstream,1000003,0,1000003000,True,True,108.64,202752,22,1,0,0.0,0.16896,0.7677,
+pddlstream,1000017,0,1000017000,True,True,145.43,239616,26,1,0,0.0,0.163221,0.8936,
+pddlstream,1000020,0,1000020000,True,True,134.67,221184,24,1,0,0.0,0.127171,0.867,
+pddlstream,1000024,0,1000024000,True,True,170.47,276480,30,1,0,0.0,0.133215,1.0905,
+pddlstream,1000022,0,1000022000,True,True,201.54,387072,42,1,0,0.0,0.121117,0.8386,
+pddlstream,1000026,0,1000026000,True,True,194.0,331776,36,1,0,0.0,0.12354,0.6083,
+pddlstream,1000015,0,1000015000,True,True,201.11,340992,37,1,0,0.0,0.163773,1.4238,
+pddlstream,1000025,0,1000025000,True,True,266.83,470016,51,1,0,0.0,0.153538,0.981,
+pddlstream,1000027,0,1000027000,True,True,280.52,460800,50,1,0,0.0,0.15274,1.1915,
+pddlstream,1000007,0,1000007000,True,True,290.44,497664,54,1,0,0.0,0.146542,1.1535,
+pddlstream,1000000,0,1000000000,True,True,292.04,534528,58,1,0,0.0,0.122146,1.4009,
+pddlstream,1000006,0,1000006000,True,True,293.16,497664,54,1,0,0.0,0.199038,0.684,
+pddlstream,1000004,0,1000004000,False,False,311.56,0,0,0,0,0.0,0.196896,0.5924,no limb motion was attempted (planner ran out of time)
+pddlstream,1000008,0,1000008000,False,False,329.94,0,0,0,0,0.0,0.14862,0.6367,no limb motion was attempted (planner ran out of time)
+pddlstream,1000005,0,1000005000,False,False,335.26,0,0,0,0,0.0,0.145486,1.4226,no limb motion was attempted (planner ran out of time)
+pddlstream,1000002,0,1000002000,False,False,334.47,0,0,0,0,0.0,0.262217,0.6324,no limb motion was attempted (planner ran out of time)
+pddlstream,1000018,0,1000018000,False,False,347.18,0,0,0,0,0.0,0.075205,1.2272,no limb motion was attempted (planner ran out of time)
+pddlstream,1000019,0,1000019000,False,False,382.55,0,0,0,0,0.0,0.116578,0.5242,no limb motion was attempted (planner ran out of time)
+pddlstream,1000001,0,1000001000,False,False,351.8,0,0,0,0,0.0,0.134204,1.0996,no limb motion was attempted (planner ran out of time)
+pddlstream,1000013,0,1000013000,False,False,387.79,0,0,0,0,0.0,0.153793,1.4491,no limb motion was attempted (planner ran out of time)
+pddlstream,1000030,0,1000030000,True,True,276.82,451584,49,1,0,0.0,0.067677,0.9997,
+pddlstream,1000034,0,1000034000,True,True,223.0,350208,38,1,0,0.0,0.173109,1.3557,
+pddlstream,1000035,0,1000035000,True,True,203.92,387072,42,1,0,0.0,0.146229,0.8948,
+pddlstream,1000029,0,1000029000,False,False,325.09,0,0,0,0,0.0,0.298212,0.5498,no limb motion was attempted (planner ran out of time)
+pddlstream,1000041,0,1000041000,True,True,151.42,221184,24,1,0,0.0,0.177818,1.2588,
+pddlstream,1000028,0,1000028000,True,True,290.88,470016,51,1,0,0.0,0.198703,1.1655,
+pddlstream,1000038,0,1000038000,True,True,155.43,294912,32,1,0,0.0,0.132934,1.4563,
+pddlstream,1000044,0,1000044000,True,True,143.3,239616,26,1,0,0.0,0.263962,0.8018,
+pddlstream,1000014,0,1000014000,False,False,509.88,0,0,0,0,0.0,0.140263,1.2652,no limb motion was attempted (planner ran out of time)
+pddlstream,1000011,0,1000011000,False,False,523.61,0,0,0,0,0.0,0.206003,1.1461,"replayed open-loop to 0.346, outside the tolerance"
+pddlstream,1000047,0,1000047000,True,True,150.19,248832,27,1,0,0.0,0.060021,0.8275,
+pddlstream,1000033,0,1000033000,False,False,315.73,0,0,0,0,0.0,0.214078,1.1756,no limb motion was attempted (planner ran out of time)
+pddlstream,1000021,0,1000021000,False,False,577.24,0,0,0,0,0.0,0.099799,1.4723,"replayed open-loop to 1.034, outside the tolerance"
+pddlstream,1000037,0,1000037000,False,False,305.22,0,0,0,0,0.0,0.189927,1.2966,no limb motion was attempted (planner ran out of time)
+pddlstream,1000046,0,1000046000,True,True,216.15,368640,40,1,0,0.0,0.030398,0.9125,
+warm_start,1000003,0,1000003000,True,True,118.99,184320,20,1,0,0.0,0.16896,0.7677,
+pddlstream,1000049,0,1000049000,True,True,166.67,276480,30,1,0,0.0,0.068557,0.9692,
+warm_start,1000002,0,1000002000,True,True,138.56,211968,23,1,0,0.0,0.262217,0.5358,
+pddlstream,1000048,0,1000048000,True,True,209.85,368640,40,1,0,0.0,0.090543,0.8772,
+pddlstream,1000012,0,1000012000,False,False,658.88,0,0,0,0,0.0,0.173038,1.4716,replayed open-loop past the person's torque limits
+pddlstream,1000043,0,1000043000,False,False,318.32,0,0,0,0,0.0,0.105802,1.2164,no limb motion was attempted (planner ran out of time)
+pddlstream,1000039,0,1000039000,False,False,387.42,0,0,0,0,0.0,0.218539,0.6834,no limb motion was attempted (planner ran out of time)
+pddlstream,1000045,0,1000045000,False,False,300.34,0,0,0,0,0.0,0.217739,0.7512,no limb motion was attempted (planner ran out of time)
+pddlstream,1000010,0,1000010000,False,False,688.78,0,0,0,0,0.0,0.244045,1.036,no limb motion was attempted (planner ran out of time)
+pddlstream,1000032,0,1000032000,False,False,479.69,0,0,0,0,0.0,0.287536,0.9208,loaded a limb joint past the person's torque limit
+pddlstream,1000040,0,1000040000,False,False,419.52,0,0,0,0,0.0,0.214561,1.4392,no limb motion was attempted (planner ran out of time)
+warm_start,1000004,0,1000004000,True,True,269.22,506880,55,1,0,0.0,0.196896,0.5924,
+warm_start,1000017,0,1000017000,True,True,122.36,202752,22,1,0,0.0,0.163221,0.8936,
+warm_start,1000000,0,1000000000,False,False,315.75,0,0,0,0,0.0,0.122146,1.4009,no limb motion was attempted (planner ran out of time)
+pddlstream,1000023,0,1000023000,False,False,799.42,0,0,0,0,0.0,0.252032,1.423,"replayed open-loop to 0.699, outside the tolerance"
+warm_start,1000011,0,1000011000,True,True,225.28,350208,38,1,0,0.0,0.206003,1.3154,
+warm_start,1000005,0,1000005000,False,False,333.96,0,0,0,0,0.0,0.145486,1.4226,no limb motion was attempted (planner ran out of time)
+pddlstream,1000036,0,1000036000,False,False,576.7,0,0,0,0,0.0,0.238058,0.9476,no limb motion was attempted (planner ran out of time)
+warm_start,1000008,0,1000008000,False,False,327.52,0,0,0,0,0.0,0.14862,0.6367,no limb motion was attempted (planner ran out of time)
+warm_start,1000015,0,1000015000,True,True,188.14,340992,37,1,0,0.0,0.163773,1.4238,
+warm_start,1000001,0,1000001000,False,False,403.71,0,0,0,0,0.0,0.134204,1.0996,no limb motion was attempted (planner ran out of time)
+warm_start,1000024,0,1000024000,True,True,131.73,248832,27,1,0,0.0,0.133215,1.0905,
+warm_start,1000006,0,1000006000,False,False,353.55,0,0,0,0,0.0,0.199038,1.4746,no limb motion was attempted (planner ran out of time)
+warm_start,1000022,0,1000022000,True,True,190.44,387072,42,1,0,0.0,0.121117,0.8386,
+pddlstream,1000009,0,1000009000,False,False,915.75,0,0,0,0,0.0,0.134078,1.2943,replayed open-loop past the person's torque limits
+warm_start,1000021,0,1000021000,True,True,290.16,497664,54,1,0,0.0,0.099799,1.4723,
+pddlstream,1000031,0,1000031000,False,False,832.22,0,0,0,0,0.0,0.149713,1.0513,"replayed open-loop to 2.493, outside the tolerance"
+warm_start,1000013,0,1000013000,False,False,412.58,0,0,0,0,0.0,0.153793,1.4491,no limb motion was attempted (planner ran out of time)
+pddlstream,1000042,0,1000042000,False,False,690.81,0,0,0,0,0.0,0.077145,1.0435,no limb motion was attempted (planner ran out of time)
+warm_start,1000018,0,1000018000,False,False,364.09,0,0,0,0,0.0,0.075205,1.2272,no limb motion was attempted (planner ran out of time)
+warm_start,1000007,0,1000007000,False,False,513.84,0,0,0,0,0.0,0.146542,1.1535,no limb motion was attempted (planner ran out of time)
+warm_start,1000019,0,1000019000,False,False,359.69,0,0,0,0,0.0,0.116578,0.5242,no limb motion was attempted (planner ran out of time)
+warm_start,1000023,0,1000023000,False,False,315.75,0,0,0,0,0.0,0.252032,1.423,no limb motion was attempted (planner ran out of time)
+warm_start,1000025,0,1000025000,True,True,269.56,470016,51,1,0,0.0,0.153538,0.981,
+warm_start,1000034,0,1000034000,True,True,152.28,221184,24,1,0,0.0,0.173109,1.1681,
+warm_start,1000035,0,1000035000,True,True,143.86,202752,22,1,0,0.0,0.146229,0.8948,
+warm_start,1000010,0,1000010000,False,False,493.88,0,0,0,0,0.0,0.244045,1.036,no limb motion was attempted (planner ran out of time)
+warm_start,1000027,0,1000027000,False,False,302.06,0,0,0,0,0.0,0.15274,0.6318,bent a joint of the limb past its anatomical limit
+warm_start,1000009,0,1000009000,False,False,586.34,0,0,0,0,0.0,0.134078,1.2943,no limb motion was attempted (planner ran out of time)
+warm_start,1000026,0,1000026000,False,False,311.94,0,0,0,0,0.0,0.12354,1.0251,no limb motion was attempted (planner ran out of time)
+warm_start,1000030,0,1000030000,True,True,291.3,451584,49,1,0,0.0,0.067677,0.9997,
+warm_start,1000014,0,1000014000,False,False,519.61,0,0,0,0,0.0,0.140263,1.2652,no limb motion was attempted (planner ran out of time)
+warm_start,1000029,0,1000029000,False,False,326.1,0,0,0,0,0.0,0.298212,0.5498,no limb motion was attempted (planner ran out of time)
+warm_start,1000012,0,1000012000,False,False,565.81,0,0,0,0,0.0,0.173038,1.4716,"replayed open-loop to 1.053, outside the tolerance"
+warm_start,1000044,0,1000044000,True,True,106.95,239616,26,1,0,0.0,0.263962,0.8018,
+warm_start,1000048,0,1000048000,True,True,112.36,267264,29,1,0,0.0,0.090543,0.8772,
+warm_start,1000033,0,1000033000,False,False,307.99,0,0,0,0,0.0,0.214078,1.1756,no limb motion was attempted (planner ran out of time)
+warm_start,1000049,0,1000049000,True,True,153.92,276480,30,1,0,0.0,0.068557,0.9692,
+warm_start,1000046,0,1000046000,True,True,190.02,368640,40,1,0,0.0,0.030398,0.9125,
+warm_start,1000038,0,1000038000,True,True,224.18,497664,54,1,0,0.0,0.132934,1.4563,
+warm_start,1000040,0,1000040000,True,True,254.54,562176,61,1,0,0.0,0.214561,1.4392,
+warm_start,1000037,0,1000037000,False,False,367.47,0,0,0,0,0.0,0.189927,1.2966,no limb motion was attempted (planner ran out of time)
+warm_start,1000028,0,1000028000,False,False,443.58,0,0,0,0,0.0,0.198703,0.9404,no limb motion was attempted (planner ran out of time)
+warm_start,1000036,0,1000036000,False,False,393.53,0,0,0,0,0.0,0.238058,0.9476,no limb motion was attempted (planner ran out of time)
+warm_start,1000032,0,1000032000,False,False,438.87,0,0,0,0,0.0,0.287536,0.9208,loaded a limb joint past the person's torque limit
+warm_start,1000041,0,1000041000,True,True,298.31,626688,68,1,0,0.0,0.177818,1.2588,
+warm_start,1000039,0,1000039000,False,False,348.65,0,0,0,0,0.0,0.218539,0.6834,no limb motion was attempted (planner ran out of time)
+warm_start,1000045,0,1000045000,False,False,309.1,0,0,0,0,0.0,0.217739,0.7512,no limb motion was attempted (planner ran out of time)
+warm_start,1000043,0,1000043000,False,False,327.01,0,0,0,0,0.0,0.105802,1.1157,no limb motion was attempted (planner ran out of time)
+warm_start,1000020,0,1000020000,False,False,673.43,0,0,0,0,0.0,0.127171,1.4441,"replayed open-loop to 0.197, outside the tolerance"
+warm_start,1000031,0,1000031000,False,False,525.73,0,0,0,0,0.0,0.149713,1.0513,"replayed open-loop to 2.493, outside the tolerance"
+warm_start,1000042,0,1000042000,False,False,367.97,0,0,0,0,0.0,0.077145,1.0435,no limb motion was attempted (planner ran out of time)
+warm_start,1000047,0,1000047000,False,False,353.8,0,0,0,0,0.0,0.060021,0.8275,"replayed open-loop to 0.108, outside the tolerance"
+pddlstream,1000016,0,1000016000,False,False,2131.97,0,0,0,0,0.0,0.248032,1.4155,stalled at an error of 0.943
+warm_start,1000016,0,1000016000,False,False,1667.05,0,0,0,0,0.0,0.248032,1.4155,stalled at an error of 0.943

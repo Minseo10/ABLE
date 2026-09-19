@@ -1,0 +1,182 @@
+pybullet build time: Mar 13 2026 19:11:15
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootStreams: [sample-grasp:('?l',)->('?g',), sample-base-pose:('?l', '?g', '?ql1', '?ql2')->('?q',), plan-grasp-motion:('?l', '?g', '?q', '?ql')->('?at', '?s'), plan-base-motion:('?q1', '?q2')->('?bt',), plan-limb-motion:('?s1', '?ql2')->('?tt', '?s2'), check-human-joint-limits:('?s1', '?ql2', '?tt', '?s2')->(), check-human-torque-limits:('?s1', '?ql2', '?tt', '?s2')->(), check-robot-torque-limits:('?s1', '?ql2', '?tt', '?s2')->()]
+Functions: []
+Negated: []
+Optimizers: []
+
+Iteration: 1 | Complexity: 0 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.000 | Sample Time: 0.000 | Total Time: 0.000
+Attempt: 1 | Results: 0 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 0 to 1
+
+Iteration: 2 | Complexity: 1 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.002 | Sample Time: 0.000 | Total Time: 0.002
+Attempt: 1 | Results: 2 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 1 to 2
+
+Iteration: 3 | Complexity: 2 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.003 | Sample Time: 0.000 | Total Time: 0.003
+Attempt: 1 | Results: 3 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 2 to 3
+
+Iteration: 4 | Complexity: 3 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.005 | Sample Time: 0.000 | Total Time: 0.005
+Attempt: 1 | Results: 7 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 3 to 4
+
+Iteration: 5 | Complexity: 4 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.007 | Sample Time: 0.000 | Total Time: 0.007
+Attempt: 1 | Results: 12 | Depth: 1 | Success: False | Time: 0.010
+Attempt: 2 | Results: 15 | Depth: 0 | Success: True | Time: 0.021
+Stream plan (8, 8, 0.001): [sample-grasp:(limb)->(#g0), sample-base-pose:(limb, #g0, qL8752, qL9184)->(#q0), plan-grasp-motion:(limb, #g0, #q0, qL8752)->(#a0, #s0), plan-limb-motion:(#s0, qL9184)->(#t0, #s1), check-human-torque-limits:(#s0, qL9184, #t0, #s1)->(), check-human-joint-limits:(#s0, qL9184, #t0, #s1)->(), check-robot-torque-limits:(#s0, qL9184, #t0, #s1)->(), plan-base-motion:(SE2Pose(x=-1.8025716081486887, y=0.8860367643240575, rot=-0.9312), #q0)->(#b0)]
+Action plan (3, 3.000): [move_base(SE2Pose(x=-1.8025716081486887, y=0.8860367643240575, rot=-0.9312), #b0, #q0), grasp(limb, #g0, #q0, #a0, #s0), move_limb(limb, #g0, #q0, #s0, qL8752, qL9184, #t0, #s1)]
+iter=0, outs=1) sample-grasp:(limb)->[(g5072(slide=0.100, roll=0.00))]
+iter=0, outs=1) sample-base-pose:(limb, g5072(slide=0.100, roll=0.00), qL8752, qL9184)->[(SE2Pose(x=-0.7192016174119098, y=0.8265583263234049, rot=-2.3561944901923453))]
+iter=0, outs=1) plan-grasp-motion:(limb, g5072(slide=0.100, roll=0.00), SE2Pose(x=-0.7192016174119098, y=0.8265583263234049, rot=-2.3561944901923453), qL8752)->[(at9504(waypoints=31), s7328)]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=0, outs=0) plan-limb-motion:(s7328, qL9184)->[]
+Sampling for up to -32.196 seconds
+Sampling while complexity <= 4
+
+Iteration: 6 | Complexity: 4 | Skeletons: 1 | Skeleton Queue: 4 | Disabled: 0 | Evaluations: 16 | Eager Calls: 0 | Cost: inf | Search Time: 0.029 | Sample Time: 32.223 | Total Time: 32.252
+Attempt: 1 | Results: 8 | Depth: 0 | Success: False | Time: 0.003
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 4 to 5
+Sampling for up to -32.192 seconds
+Sampling while complexity <= 5
+iter=1, outs=1) sample-grasp:(limb)->[(g4544(slide=0.100, roll=3.14))]
+iter=0, outs=1) sample-base-pose:(limb, g4544(slide=0.100, roll=3.14), qL8752, qL9184)->[(SE2Pose(x=-1.1719982895413383, y=0.19730214232207316, rot=0.0))]
+iter=0, outs=1) plan-grasp-motion:(limb, g4544(slide=0.100, roll=3.14), SE2Pose(x=-1.1719982895413383, y=0.19730214232207316, rot=0.0), qL8752)->[(at4288(waypoints=21), s2416)]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=0, outs=0) plan-limb-motion:(s2416, qL9184)->[]
+
+Iteration: 7 | Complexity: 5 | Skeletons: 1 | Skeleton Queue: 7 | Disabled: 0 | Evaluations: 23 | Eager Calls: 0 | Cost: inf | Search Time: 0.032 | Sample Time: 68.217 | Total Time: 68.249
+Attempt: 1 | Results: 16 | Depth: 0 | Success: False | Time: 0.011
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 5 to 6
+Sampling for up to -68.174 seconds
+Sampling while complexity <= 6
+iter=1, outs=1) sample-base-pose:(limb, g5072(slide=0.100, roll=0.00), qL8752, qL9184)->[(SE2Pose(x=-0.9172332606460742, y=0.5667914427833715, rot=-1.5707963267948968))]
+iter=0, outs=1) plan-grasp-motion:(limb, g5072(slide=0.100, roll=0.00), SE2Pose(x=-0.9172332606460742, y=0.5667914427833715, rot=-1.5707963267948968), qL8752)->[(at5792(waypoints=21), s6656)]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=0, outs=0) plan-limb-motion:(s6656, qL9184)->[]
+iter=2, outs=1) sample-grasp:(limb)->[(g4464(slide=0.092, roll=3.14))]
+iter=0, outs=1) sample-base-pose:(limb, g4464(slide=0.092, roll=3.14), qL8752, qL9184)->[(SE2Pose(x=-0.6708483802011302, y=0.5941807949890343, rot=0.7853981633974483))]
+iter=0, outs=1) plan-grasp-motion:(limb, g4464(slide=0.092, roll=3.14), SE2Pose(x=-0.6708483802011302, y=0.5941807949890343, rot=0.7853981633974483), qL8752)->[(at7760(waypoints=21), s1664)]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=0, outs=0) plan-limb-motion:(s1664, qL9184)->[]
+
+Iteration: 8 | Complexity: 6 | Skeletons: 1 | Skeleton Queue: 12 | Disabled: 0 | Evaluations: 36 | Eager Calls: 0 | Cost: inf | Search Time: 0.044 | Sample Time: 141.972 | Total Time: 142.016
+Attempt: 1 | Results: 34 | Depth: 0 | Success: False | Time: 0.014
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 6 to 7
+Sampling for up to -141.915 seconds
+Sampling while complexity <= 7
+iter=inf, outs=0) plan-grasp-motion:(limb, g5072(slide=0.100, roll=0.00), SE2Pose(x=-0.7192016174119098, y=0.8265583263234049, rot=-2.3561944901923453), qL8752)->[]
+iter=1, outs=1) sample-base-pose:(limb, g4544(slide=0.100, roll=3.14), qL8752, qL9184)->[(SE2Pose(x=-0.9206837204775549, y=0.49870604196849166, rot=1.3089969389957472))]
+iter=0, outs=1) plan-grasp-motion:(limb, g4544(slide=0.100, roll=3.14), SE2Pose(x=-0.9206837204775549, y=0.49870604196849166, rot=1.3089969389957472), qL8752)->[(at2544(waypoints=31), s5136)]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=0, outs=0) plan-limb-motion:(s5136, qL9184)->[]
+iter=3, outs=1) sample-grasp:(limb)->[(g3040(slide=0.175, roll=0.00))]
+iter=0, outs=1) sample-base-pose:(limb, g3040(slide=0.175, roll=0.00), qL8752, qL9184)->[(SE2Pose(x=-0.903979969487894, y=0.3689947603226731, rot=-2.3561944901923453))]
+iter=0, outs=1) plan-grasp-motion:(limb, g3040(slide=0.175, roll=0.00), SE2Pose(x=-0.903979969487894, y=0.3689947603226731, rot=-2.3561944901923453), qL8752)->[(at2944(waypoints=21), s2608)]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=0, outs=0) plan-limb-motion:(s2608, qL9184)->[]
+
+Iteration: 9 | Complexity: 7 | Skeletons: 1 | Skeleton Queue: 16 | Disabled: 0 | Evaluations: 49 | Eager Calls: 0 | Cost: inf | Search Time: 0.063 | Sample Time: 212.781 | Total Time: 212.844
+Attempt: 1 | Results: 60 | Depth: 0 | Success: False | Time: 0.017
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 7 to 8
+Sampling for up to -212.702 seconds
+Sampling while complexity <= 8
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=1, outs=0) plan-limb-motion:(s7328, qL9184)->[]
+iter=inf, outs=0) plan-grasp-motion:(limb, g4544(slide=0.100, roll=3.14), SE2Pose(x=-1.1719982895413383, y=0.19730214232207316, rot=0.0), qL8752)->[]
+iter=1, outs=1) sample-base-pose:(limb, g4464(slide=0.092, roll=3.14), qL8752, qL9184)->[(SE2Pose(x=-0.6167907152560398, y=0.5225128705227957, rot=2.6179938779914944))]
+iter=0, outs=1) plan-grasp-motion:(limb, g4464(slide=0.092, roll=3.14), SE2Pose(x=-0.6167907152560398, y=0.5225128705227957, rot=2.6179938779914944), qL8752)->[(at6272(waypoints=31), s7824)]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=0, outs=0) plan-limb-motion:(s7824, qL9184)->[]
+iter=2, outs=1) sample-base-pose:(limb, g5072(slide=0.100, roll=0.00), qL8752, qL9184)->[(SE2Pose(x=-0.4815847425831099, y=0.7809525686930558, rot=-0.5235987755982995))]
+iter=0, outs=1) plan-grasp-motion:(limb, g5072(slide=0.100, roll=0.00), SE2Pose(x=-0.4815847425831099, y=0.7809525686930558, rot=-0.5235987755982995), qL8752)->[(at7792(waypoints=21), s6496)]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=0, outs=0) plan-limb-motion:(s6496, qL9184)->[]
+iter=4, outs=1) sample-grasp:(limb)->[(g3584(slide=0.223, roll=0.00))]
+iter=0, outs=1) sample-base-pose:(limb, g3584(slide=0.223, roll=0.00), qL8752, qL9184)->[(SE2Pose(x=-0.6344661469643931, y=0.766345673052274, rot=1.0471975511965974))]
+iter=0, outs=1) plan-grasp-motion:(limb, g3584(slide=0.223, roll=0.00), SE2Pose(x=-0.6344661469643931, y=0.766345673052274, rot=1.0471975511965974), qL8752)->[(at4960(waypoints=23), s96)]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=0, outs=0) plan-limb-motion:(s96, qL9184)->[]
+
+Iteration: 10 | Complexity: 8 | Skeletons: 1 | Skeleton Queue: 22 | Disabled: 0 | Evaluations: 68 | Eager Calls: 0 | Cost: inf | Search Time: 0.086 | Sample Time: 356.230 | Total Time: 356.316
+Attempt: 1 | Results: 114 | Depth: 0 | Success: False | Time: 0.024
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 8 to 9
+Sampling for up to -356.119 seconds
+Sampling while complexity <= 9
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=1, outs=0) plan-limb-motion:(s2416, qL9184)->[]
+iter=inf, outs=0) plan-grasp-motion:(limb, g4464(slide=0.092, roll=3.14), SE2Pose(x=-0.6708483802011302, y=0.5941807949890343, rot=0.7853981633974483), qL8752)->[]
+iter=inf, outs=0) plan-grasp-motion:(limb, g5072(slide=0.100, roll=0.00), SE2Pose(x=-0.9172332606460742, y=0.5667914427833715, rot=-1.5707963267948968), qL8752)->[]
+iter=1, outs=1) sample-base-pose:(limb, g3040(slide=0.175, roll=0.00), qL8752, qL9184)->[(SE2Pose(x=-0.9230088279603277, y=0.40876570562156417, rot=2.0943951023931953))]
+iter=0, outs=1) plan-grasp-motion:(limb, g3040(slide=0.175, roll=0.00), SE2Pose(x=-0.9230088279603277, y=0.40876570562156417, rot=2.0943951023931953), qL8752)->[(at7488(waypoints=31), s8160)]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=0, outs=0) plan-limb-motion:(s8160, qL9184)->[]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=2, outs=0) plan-limb-motion:(s7328, qL9184)->[]
+iter=2, outs=1) sample-base-pose:(limb, g4544(slide=0.100, roll=3.14), qL8752, qL9184)->[(SE2Pose(x=-0.7408221897363696, y=0.5447834694767992, rot=1.5707963267948966))]
+iter=0, outs=1) plan-grasp-motion:(limb, g4544(slide=0.100, roll=3.14), SE2Pose(x=-0.7408221897363696, y=0.5447834694767992, rot=1.5707963267948966), qL8752)->[(at9840(waypoints=31), s3072)]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=0, outs=0) plan-limb-motion:(s3072, qL9184)->[]
+iter=5, outs=1) sample-grasp:(limb)->[(g7312(slide=0.211, roll=3.14))]
+iter=0, outs=1) sample-base-pose:(limb, g7312(slide=0.211, roll=3.14), qL8752, qL9184)->[(SE2Pose(x=-0.6488044259542077, y=0.7526701201491807, rot=2.8797932657906435))]
+iter=0, outs=1) plan-grasp-motion:(limb, g7312(slide=0.211, roll=3.14), SE2Pose(x=-0.6488044259542077, y=0.7526701201491807, rot=2.8797932657906435), qL8752)->[(at8368(waypoints=31), s256)]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=0, outs=0) plan-limb-motion:(s256, qL9184)->[]
+
+Iteration: 11 | Complexity: 9 | Skeletons: 1 | Skeleton Queue: 27 | Disabled: 0 | Evaluations: 87 | Eager Calls: 0 | Cost: inf | Search Time: 0.112 | Sample Time: 524.117 | Total Time: 524.229
+Attempt: 1 | Results: 186 | Depth: 0 | Success: False | Time: 0.035
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 9 to 10
+Sampling for up to -523.970 seconds
+Sampling while complexity <= 10
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=1, outs=0) plan-limb-motion:(s6656, qL9184)->[]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=1, outs=0) plan-limb-motion:(s1664, qL9184)->[]
+iter=inf, outs=0) plan-grasp-motion:(limb, g3040(slide=0.175, roll=0.00), SE2Pose(x=-0.903979969487894, y=0.3689947603226731, rot=-2.3561944901923453), qL8752)->[]
+iter=inf, outs=0) plan-grasp-motion:(limb, g4544(slide=0.100, roll=3.14), SE2Pose(x=-0.9206837204775549, y=0.49870604196849166, rot=1.3089969389957472), qL8752)->[]
+iter=1, outs=1) sample-base-pose:(limb, g3584(slide=0.223, roll=0.00), qL8752, qL9184)->[(SE2Pose(x=-0.6354515195022288, y=1.0008033894395332, rot=-1.5707963267948968))]
+iter=0, outs=1) plan-grasp-motion:(limb, g3584(slide=0.223, roll=0.00), SE2Pose(x=-0.6354515195022288, y=1.0008033894395332, rot=-1.5707963267948968), qL8752)->[(at5168(waypoints=21), s3712)]
+plan-limb-motion: MPC rollout loaded a limb joint past the person's torque limit.
+iter=0, outs=0) plan-limb-motion:(s3712, qL9184)->[]
+Summary: {complexity: 10, cost: inf, evaluations: 93, iterations: 11, length: inf, run_time: 615.347, sample_time: 615.199, search_time: 0.148, skeletons: 1, solutions: 0, solved: False, timeout: True}
+
+Total External Statistics
+External: sample-grasp | n: 6 | p_success: 1.000 | overhead: 0.000
+External: sample-base-pose | n: 13 | p_success: 1.000 | overhead: 1.418
+External: plan-grasp-motion | n: 19 | p_success: 0.700 | overhead: 0.075
+External: plan-base-motion | n: 0 | p_success: 1.000 | overhead: 0.000
+External: plan-limb-motion | n: 18 | p_success: 0.053 | overhead: 31.255
+External: check-human-joint-limits | n: 0 | p_success: 1.000 | overhead: 0.000
+External: check-human-torque-limits | n: 0 | p_success: 1.000 | overhead: 0.000
+External: check-robot-torque-limits | n: 0 | p_success: 1.000 | overhead: 0.000
+Wrote: statistics/py3/limbrepositioning3d.pkl
+
+Solved: False
+Cost: inf
+Length: inf
+Deferred: 0
+Evaluations: 2
+No plan found; replaying the closest attempt (loaded a limb joint past the person's torque limit) for the GIF.
+Reached goal: False
+exit=0 wall=622

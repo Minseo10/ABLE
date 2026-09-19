@@ -1,0 +1,301 @@
+row,variant,person,task_index,seed,solved,goal_reached,plan_time,mpc_simulator_steps,num_control_steps,num_segments,rom_violation_steps,worst_rom_violation,rom_margin,belief_error,separation,failure_reason
+pddlstream,isolated-left-arm,0,2001,2001,True,True,108.36,230400,25,1,0,0.0,0.331905,0.096063,1.3931,
+pddlstream,isolated-left-arm,0,2008,2008,True,True,136.95,248832,27,1,0,0.0,0.292984,0.096063,0.7605,
+pddlstream,isolated-left-arm,0,2005,2005,True,True,167.47,304128,33,1,0,0.0,0.286457,0.096063,0.8191,
+pddlstream,isolated-left-arm,0,2015,2015,True,True,141.75,193536,21,1,0,0.0,0.332879,0.096063,1.0877,
+pddlstream,isolated-left-arm,0,2000,2000,True,True,263.69,497664,54,1,0,0.0,0.281995,0.096063,1.4995,
+pddlstream,isolated-left-arm,0,2016,2016,True,True,176.84,239616,26,1,0,0.0,0.341245,0.096063,0.6254,
+pddlstream,isolated-left-arm,0,2004,2004,True,True,356.63,552960,60,1,0,0.0,0.327596,0.096063,1.4461,
+pddlstream,isolated-left-arm,0,2009,2009,True,True,426.48,681984,74,1,0,0.0,0.325399,0.096063,1.0405,
+pddlstream,isolated-left-arm,0,2007,2007,True,True,431.58,700416,76,1,0,0.0,0.323985,0.096063,1.2432,
+pddlstream,isolated-left-arm,0,2002,2002,True,True,492.97,746496,81,1,0,0.0,0.313496,0.096063,0.8737,
+pddlstream,isolated-left-arm,0,2020,2020,True,True,211.12,267264,29,1,0,0.0,0.32692,0.096063,0.9961,
+pddlstream,isolated-left-arm,0,2021,2021,True,True,178.4,230400,25,1,0,0.0,0.339575,0.096063,0.6005,
+pddlstream,isolated-left-arm,0,2013,2013,True,True,553.43,811008,88,1,0,0.0,0.299008,0.096063,0.898,
+pddlstream,isolated-left-arm,0,2006,2006,False,False,625.05,0,0,0,0,0.0,nan,0.096063,0.5758,no limb motion was attempted (planner ran out of time)
+pddlstream,isolated-left-arm,0,2010,2010,False,False,635.84,0,0,0,0,0.0,nan,0.096063,0.7191,no limb motion was attempted (planner ran out of time)
+pddlstream,isolated-left-arm,0,2003,2003,False,False,637.94,0,0,0,0,0.0,nan,0.096063,0.6021,no limb motion was attempted (planner ran out of time)
+pddlstream,isolated-left-arm,0,2014,2014,False,False,643.62,0,0,0,0,0.0,nan,0.096063,1.4211,"reached the goal, but the search ran out of time"
+pddlstream,isolated-left-arm,0,2017,2017,True,True,505.62,654336,71,1,0,0.0,0.307248,0.096063,1.3564,
+pddlstream,isolated-left-arm,0,2028,2028,True,True,136.67,175104,19,1,0,0.0,0.32975,0.096063,0.5758,
+pddlstream,isolated-left-arm,0,2018,2018,True,True,521.11,691200,75,1,0,0.0,0.33611,0.096063,1.3502,
+pddlstream,isolated-left-arm,0,2024,2024,True,True,284.9,368640,40,1,0,0.0,0.339701,0.096063,0.5785,
+pddlstream,isolated-left-arm,0,2025,2025,True,True,291.28,368640,40,1,0,0.0,0.316162,0.096063,1.0797,
+pddlstream,isolated-left-arm,0,2031,2031,True,True,236.45,313344,34,1,0,0.0,0.299898,0.096063,0.9247,
+pddlstream,isolated-left-arm,0,2026,2026,True,True,345.66,460800,50,1,0,0.0,0.305966,0.096063,1.1846,
+pddlstream,isolated-left-arm,0,2022,2022,True,True,461.38,608256,66,1,0,0.0,0.329222,0.096063,0.7349,
+pddlstream,isolated-left-arm,0,2011,2011,False,False,892.83,0,0,0,0,0.0,nan,0.096063,1.2108,"replayed open-loop to 1.570, outside the tolerance"
+pddlstream,isolated-left-arm,0,2034,2034,True,True,176.45,258048,28,1,0,0.0,0.341371,0.096063,0.5442,
+pddlstream,isolated-left-arm,0,2030,2030,True,True,319.79,451584,49,1,0,0.0,0.282974,0.096063,1.2159,
+pddlstream,isolated-left-arm,0,2029,2029,True,True,386.93,562176,61,1,0,0.0,0.309162,0.096063,1.4093,
+pddlstream,isolated-left-arm,0,2027,2027,True,True,537.0,764928,83,1,0,0.0,0.308852,0.096063,1.4455,
+pddlstream,isolated-left-arm,0,2036,2036,True,True,283.13,414720,45,1,0,0.0,0.254591,0.096063,1.2107,
+pddlstream,isolated-left-arm,0,2040,2040,True,True,229.93,331776,36,1,0,0.0,0.335687,0.096063,0.9623,
+pddlstream,isolated-left-arm,0,2038,2038,True,True,242.05,331776,36,1,0,0.0,0.32041,0.096063,0.8216,
+pddlstream,isolated-left-arm,0,2012,2012,False,False,1151.4,0,0,0,0,0.0,nan,0.096063,1.4288,"replayed open-loop to 1.329, outside the tolerance"
+pddlstream,isolated-left-arm,0,2035,2035,True,True,366.04,534528,58,1,0,0.0,0.327142,0.096063,1.3754,
+pddlstream,isolated-left-arm,0,2039,2039,True,True,263.58,368640,40,1,0,0.0,0.3286,0.096063,0.699,
+pddlstream,isolated-left-arm,0,2033,2033,True,True,399.25,626688,68,1,0,0.0,0.323961,0.096063,1.3703,
+pddlstream,isolated-left-arm,0,2043,2043,True,True,155.68,221184,24,1,0,0.0,0.332144,0.096063,0.96,
+pddlstream,isolated-left-arm,0,2037,2037,True,True,308.64,442368,48,1,0,0.0,0.286709,0.096063,1.0953,
+belief,isolated-left-arm,0,2003,2003,True,True,149.04,202752,22,1,0,0.0,0.340013,0.029754,0.5823,
+pddlstream,isolated-left-arm,0,2023,2023,False,False,916.94,0,0,0,0,0.0,nan,0.096063,1.3086,"replayed open-loop to 0.190, outside the tolerance"
+pddlstream,isolated-left-arm,0,2045,2045,True,True,254.19,377856,41,1,0,0.0,0.310878,0.096063,0.8843,
+pddlstream,isolated-left-arm,0,2047,2047,True,True,263.33,433152,47,1,0,0.0,0.331925,0.096063,0.9273,
+pddlstream,isolated-left-arm,0,2048,2048,True,True,254.97,387072,42,1,0,0.0,0.24675,0.096063,1.0257,
+belief,isolated-left-arm,0,2005,2005,True,True,145.91,221184,24,1,0,0.0,0.320096,0.036794,1.0717,
+pddlstream,isolated-left-arm,0,2044,2044,True,True,406.61,599040,65,1,0,0.0,0.30402,0.096063,1.0086,
+pddlstream,isolated-left-arm,0,2019,2019,False,False,1246.42,0,0,0,0,0.0,nan,0.096063,1.4392,replayed open-loop past the person's torque limits
+belief,isolated-left-arm,0,2004,2004,True,True,184.96,285696,31,1,0,0.0,0.332863,0.012118,0.9934,
+belief,isolated-left-arm,0,2001,2001,True,True,415.33,626688,68,1,0,0.0,0.319688,0.018821,1.3082,
+pddlstream,isolated-left-arm,0,2041,2041,False,False,657.54,0,0,0,0,0.0,nan,0.096063,1.1577,no limb motion was attempted (planner ran out of time)
+belief,isolated-left-arm,0,2010,2010,True,True,160.0,230400,25,1,0,0.0,0.341421,0.010811,0.5919,
+belief,isolated-left-arm,0,2012,2012,True,True,152.88,258048,28,1,0,0.0,0.335707,0.007586,0.6451,
+belief,isolated-left-arm,0,2011,2011,True,True,204.54,285696,31,1,0,0.0,0.333836,0.012222,0.9804,
+belief,isolated-left-arm,0,2013,2013,True,True,218.67,322560,35,1,0,0.0,0.320879,0.096063,1.0111,
+belief,isolated-left-arm,0,2006,2006,True,True,391.32,552960,60,1,0,0.0,0.323285,0.017901,1.4352,
+pddlstream,isolated-left-arm,0,2046,2046,False,False,649.54,0,0,0,0,0.0,nan,0.096063,0.8196,no limb motion was attempted (planner ran out of time)
+pddlstream,isolated-left-arm,0,2049,2049,False,False,644.27,0,0,0,0,0.0,nan,0.096063,1.3117,no limb motion was attempted (planner ran out of time)
+pddlstream,isolated-left-arm,0,2032,2032,False,False,1152.14,0,0,0,0,0.0,nan,0.096063,1.3789,replayed open-loop past the person's torque limits
+belief,isolated-left-arm,0,2000,2000,False,False,670.35,0,0,0,0,0.0,nan,0.007024,0.9812,"reached the goal, but the search ran out of time"
+belief,isolated-left-arm,0,2017,2017,True,True,205.4,322560,35,1,0,0.0,0.331217,0.030987,0.8465,
+belief,isolated-left-arm,0,2002,2002,False,False,697.36,0,0,0,0,0.0,nan,0.0126,1.2453,"reached the goal, but the search ran out of time"
+belief,isolated-left-arm,0,2016,2016,True,True,251.94,359424,39,1,0,0.0,0.295491,0.005444,1.3844,
+belief,isolated-left-arm,0,2015,2015,True,True,320.39,506880,55,1,0,0.0,0.321623,0.011347,1.4645,
+belief,isolated-left-arm,0,2028,2028,True,True,131.7,184320,20,1,0,0.0,0.31445,0.02785,0.531,
+belief,isolated-left-arm,0,2007,2007,False,False,700.34,0,0,0,0,0.0,nan,0.020391,1.4395,"reached the goal, but the search ran out of time"
+belief,isolated-left-arm,0,2025,2025,True,True,288.7,423936,46,1,0,0.0,0.331936,0.017585,0.9665,
+belief,isolated-left-arm,0,2023,2023,True,True,361.19,562176,61,1,0,0.0,0.304437,0.019445,1.4784,
+belief,isolated-left-arm,0,2008,2008,False,False,827.13,0,0,0,0,0.0,nan,0.016051,1.1609,"replayed open-loop to 0.214, outside the tolerance"
+belief,isolated-left-arm,0,2024,2024,True,True,524.19,764928,83,1,0,0.0,0.33233,0.025595,1.1069,
+belief,isolated-left-arm,0,2019,2019,False,False,640.97,0,0,0,0,0.0,nan,0.010591,0.8095,no limb motion was attempted (planner ran out of time)
+belief,isolated-left-arm,0,2022,2022,False,False,611.38,0,0,0,0,0.0,nan,0.023856,1.0963,no limb motion was attempted (planner ran out of time)
+belief,isolated-left-arm,0,2033,2033,True,True,241.61,331776,36,1,0,0.0,0.336251,0.029043,0.7429,
+belief,isolated-left-arm,0,2032,2032,True,True,300.93,470016,51,1,0,0.0,0.340059,0.096063,0.5006,
+belief,isolated-left-arm,0,2031,2031,True,True,373.97,543744,59,1,0,0.0,0.317814,0.015668,0.7906,
+belief,isolated-left-arm,0,2020,2020,False,False,761.18,0,0,0,0,0.0,nan,0.010233,1.3659,"replayed open-loop to 0.745, outside the tolerance"
+belief,isolated-left-arm,0,2036,2036,True,True,140.27,211968,23,1,0,0.0,0.321006,0.02146,1.2137,
+belief,isolated-left-arm,0,2026,2026,False,False,652.21,0,0,0,0,0.0,nan,0.015195,1.2173,replayed open-loop past the person's torque limits
+belief,isolated-left-arm,0,2040,2040,True,True,136.54,202752,22,1,0,0.0,0.343503,0.029673,0.5468,
+belief,isolated-left-arm,0,2038,2038,True,True,233.07,331776,36,1,0,0.0,0.324495,0.016533,0.939,
+belief,isolated-left-arm,0,2034,2034,True,True,411.95,589824,64,1,0,0.0,0.334021,0.029529,1.107,
+belief,isolated-left-arm,0,2030,2030,False,False,648.14,0,0,0,0,0.0,nan,0.036356,1.4239,no limb motion was attempted (planner ran out of time)
+belief,isolated-left-arm,0,2039,2039,True,True,287.41,442368,48,1,0,0.0,0.313119,0.096063,0.9795,
+belief,isolated-left-arm,0,2037,2037,True,True,388.7,589824,64,1,0,0.0,0.329594,0.03468,1.048,
+belief,isolated-left-arm,0,2029,2029,False,False,862.28,0,0,0,0,0.0,nan,0.0231,1.4967,"reached the goal, but the search ran out of time"
+belief,isolated-left-arm,0,2035,2035,False,False,601.62,0,0,0,0,0.0,nan,0.016235,1.0554,no limb motion was attempted (planner ran out of time)
+belief,isolated-left-arm,0,2045,2045,True,True,346.03,525312,57,1,0,0.0,0.32522,0.096063,0.6834,
+belief,isolated-left-arm,0,2014,2014,False,False,1420.61,0,0,0,0,0.0,nan,0.013411,1.4684,"replayed open-loop to 0.224, outside the tolerance"
+belief,isolated-left-arm,0,2047,2047,True,True,353.38,506880,55,1,0,0.0,0.301992,0.010235,1.3683,
+belief,isolated-left-arm,0,2048,2048,True,True,372.71,534528,58,1,0,0.0,0.315672,0.011382,0.6823,
+warm_start,isolated-left-arm,0,2001,2001,True,True,162.33,230400,25,1,0,0.0,0.331905,0.096063,1.3931,
+belief,isolated-left-arm,0,2021,2021,False,False,1363.0,0,0,0,0,0.0,nan,0.016163,1.4844,diverged at an error of 1.109
+belief,isolated-left-arm,0,2042,2042,False,False,619.56,0,0,0,0,0.0,nan,0.024448,1.0616,"reached the goal, but the search ran out of time"
+belief,isolated-left-arm,0,2046,2046,True,True,504.25,755712,82,1,0,0.0,0.304121,0.013074,1.4437,
+warm_start,isolated-left-arm,0,2000,2000,True,True,352.58,497664,54,1,0,0.0,0.281995,0.096063,1.4995,
+belief,isolated-left-arm,0,2041,2041,False,False,667.37,0,0,0,0,0.0,nan,0.026304,1.2497,no limb motion was attempted (planner ran out of time)
+belief,isolated-left-arm,0,2049,2049,True,True,429.94,626688,68,1,0,0.0,0.31115,0.012111,1.3934,
+warm_start,isolated-left-arm,0,2005,2005,True,True,218.1,304128,33,1,0,0.0,0.286457,0.096063,0.8191,
+warm_start,isolated-left-arm,0,2008,2008,True,True,181.24,248832,27,1,0,0.0,0.292984,0.096063,0.7605,
+belief,isolated-left-arm,0,2043,2043,False,False,797.48,0,0,0,0,0.0,nan,0.019804,1.4281,"reached the goal, but the search ran out of time"
+warm_start,isolated-left-arm,0,2002,2002,True,True,367.8,543744,59,1,0,0.0,0.304413,0.096063,0.8737,
+warm_start,isolated-left-arm,0,2004,2004,True,True,364.14,552960,60,1,0,0.0,0.327596,0.096063,1.4461,
+warm_start,isolated-left-arm,0,2015,2015,True,True,118.8,193536,21,1,0,0.0,0.332879,0.096063,1.0877,
+warm_start,isolated-left-arm,0,2016,2016,True,True,134.8,202752,22,1,0,0.0,0.338467,0.096063,0.6254,
+warm_start,isolated-left-arm,0,2007,2007,True,True,448.05,718848,78,1,0,0.0,0.317242,0.096063,1.2432,
+warm_start,isolated-left-arm,0,2009,2009,True,True,448.35,681984,74,1,0,0.0,0.325399,0.096063,1.0405,
+belief,isolated-left-arm,0,2044,2044,False,False,1019.43,0,0,0,0,0.0,nan,0.010224,1.3629,"replayed open-loop to 0.108, outside the tolerance"
+warm_start,isolated-left-arm,0,2003,2003,False,False,646.66,0,0,0,0,0.0,nan,0.096063,0.6021,no limb motion was attempted (planner ran out of time)
+belief,isolated-left-arm,0,2009,2009,False,False,2207.03,0,0,0,0,0.0,nan,0.01854,1.2667,diverged at an error of 0.827
+warm_start,isolated-left-arm,0,2011,2011,True,True,565.05,829440,90,1,0,0.0,0.312451,0.096063,1.2108,
+warm_start,isolated-left-arm,0,2006,2006,False,False,626.82,0,0,0,0,0.0,nan,0.096063,0.5758,no limb motion was attempted (planner ran out of time)
+warm_start,isolated-left-arm,0,2010,2010,False,False,604.48,0,0,0,0,0.0,nan,0.096063,0.7191,no limb motion was attempted (planner ran out of time)
+warm_start,isolated-left-arm,0,2021,2021,True,True,165.19,230400,25,1,0,0.0,0.339575,0.096063,0.6005,
+warm_start,isolated-left-arm,0,2020,2020,True,True,190.12,267264,29,1,0,0.0,0.32692,0.096063,0.9961,
+belief,isolated-left-arm,0,2027,2027,False,False,1934.71,0,0,0,0,0.0,nan,0.008188,1.2777,diverged at an error of 0.302
+warm_start,isolated-left-arm,0,2017,2017,True,True,431.39,654336,71,1,0,0.0,0.307248,0.096063,1.3564,
+warm_start,isolated-left-arm,0,2013,2013,True,True,562.18,811008,88,1,0,0.0,0.299008,0.096063,0.898,
+warm_start,isolated-left-arm,0,2018,2018,True,True,435.14,691200,75,1,0,0.0,0.33611,0.096063,1.3502,
+warm_start,isolated-left-arm,0,2028,2028,True,True,131.48,175104,19,1,0,0.0,0.32975,0.096063,0.5758,
+warm_start,isolated-left-arm,0,2024,2024,True,True,263.66,368640,40,1,0,0.0,0.339701,0.096063,0.5785,
+warm_start,isolated-left-arm,0,2026,2026,True,True,174.81,239616,26,1,0,0.0,0.330531,0.096063,1.1846,
+warm_start,isolated-left-arm,0,2034,2034,True,True,165.96,258048,28,1,0,0.0,0.341371,0.096063,0.5442,
+warm_start,isolated-left-arm,0,2031,2031,True,True,218.0,313344,34,1,0,0.0,0.299898,0.096063,0.9247,
+warm_start,isolated-left-arm,0,2029,2029,True,True,321.1,470016,51,1,0,0.0,0.324282,0.096063,1.3342,
+warm_start,isolated-left-arm,0,2030,2030,True,True,314.98,451584,49,1,0,0.0,0.282974,0.096063,1.2159,
+warm_start,isolated-left-arm,0,2022,2022,True,True,504.87,792576,86,1,0,0.0,0.318837,0.096063,0.7349,
+warm_start,isolated-left-arm,0,2036,2036,True,True,224.39,304128,33,1,0,0.0,0.319993,0.096063,1.2107,
+warm_start,isolated-left-arm,0,2025,2025,True,True,411.71,599040,65,1,0,0.0,0.3206,0.096063,1.0797,
+warm_start,isolated-left-arm,0,2027,2027,True,True,463.64,764928,83,1,0,0.0,0.308852,0.096063,1.4455,
+warm_start,isolated-left-arm,0,2038,2038,True,True,217.89,313344,34,1,0,0.0,0.332843,0.096063,0.8216,
+warm_start,isolated-left-arm,0,2014,2014,False,False,993.22,0,0,0,0,0.0,nan,0.096063,1.4211,"replayed open-loop to 0.435, outside the tolerance"
+warm_start,isolated-left-arm,0,2033,2033,True,True,429.73,626688,68,1,0,0.0,0.323961,0.096063,1.3703,
+warm_start,isolated-left-arm,0,2012,2012,False,False,1105.92,0,0,0,0,0.0,nan,0.096063,1.4288,"replayed open-loop to 1.329, outside the tolerance"
+warm_start,isolated-left-arm,0,2039,2039,True,True,259.6,368640,40,1,0,0.0,0.3286,0.096063,0.699,
+warm_start,isolated-left-arm,0,2040,2040,True,True,228.44,331776,36,1,0,0.0,0.335687,0.096063,0.9623,
+warm_start,isolated-left-arm,0,2035,2035,True,True,497.09,746496,81,1,0,0.0,0.313012,0.096063,1.3754,
+warm_start,isolated-left-arm,0,2037,2037,True,True,361.6,562176,61,1,0,0.0,0.318483,0.096063,1.0953,
+warm_start,isolated-left-arm,0,2043,2043,True,True,348.53,552960,60,1,0,0.0,0.28476,0.096063,0.96,
+warm_start,isolated-left-arm,0,2023,2023,False,False,869.54,0,0,0,0,0.0,nan,0.096063,1.3086,"replayed open-loop to 0.190, outside the tolerance"
+warm_start,isolated-left-arm,0,2048,2048,True,True,257.58,387072,42,1,0,0.0,0.24675,0.096063,1.0257,
+warm_start,isolated-left-arm,0,2047,2047,True,True,276.78,433152,47,1,0,0.0,0.331925,0.096063,0.9273,
+baseline,isolated-left-arm,0,2003,2003,True,True,135.38,202752,22,1,0,0.0,0.340013,0.029754,0.5823,
+warm_start,isolated-left-arm,0,2045,2045,True,True,375.04,562176,61,1,0,0.0,0.255808,0.096063,0.8843,
+warm_start,isolated-left-arm,0,2019,2019,False,False,1187.4,0,0,0,0,0.0,nan,0.096063,1.4392,replayed open-loop past the person's torque limits
+warm_start,isolated-left-arm,0,2044,2044,True,True,484.05,737280,80,1,0,0.0,0.315715,0.096063,1.0086,
+baseline,isolated-left-arm,0,2004,2004,True,True,197.34,285696,31,1,0,0.0,0.332863,0.012118,0.9934,
+baseline,isolated-left-arm,0,2005,2005,True,True,163.35,221184,24,1,0,0.0,0.320096,0.036794,1.0717,
+warm_start,isolated-left-arm,0,2042,2042,False,False,620.35,0,0,0,0,0.0,nan,0.096063,1.4334,no limb motion was attempted (planner ran out of time)
+warm_start,isolated-left-arm,0,2041,2041,False,False,649.32,0,0,0,0,0.0,nan,0.096063,1.1577,no limb motion was attempted (planner ran out of time)
+baseline,isolated-left-arm,0,2001,2001,True,True,438.94,626688,68,1,0,0.0,0.319688,0.018821,1.3082,
+baseline,isolated-left-arm,0,2010,2010,True,True,149.74,221184,24,1,0,0.0,0.342965,0.010811,0.5919,
+baseline,isolated-left-arm,0,2012,2012,True,True,192.63,258048,28,1,0,0.0,0.335707,0.007586,0.6451,
+warm_start,isolated-left-arm,0,2046,2046,False,False,632.45,0,0,0,0,0.0,nan,0.096063,0.8196,no limb motion was attempted (planner ran out of time)
+baseline,isolated-left-arm,0,2006,2006,True,True,382.08,552960,60,1,0,0.0,0.323285,0.017901,1.4352,
+baseline,isolated-left-arm,0,2000,2000,False,False,628.31,0,0,0,0,0.0,nan,0.007024,0.9812,"reached the goal, but the search ran out of time"
+warm_start,isolated-left-arm,0,2049,2049,False,False,639.43,0,0,0,0,0.0,nan,0.096063,1.3117,no limb motion was attempted (planner ran out of time)
+baseline,isolated-left-arm,0,2013,2013,True,True,238.35,322560,35,1,0,0.0,0.320879,0.096063,1.0111,
+warm_start,isolated-left-arm,0,2032,2032,False,False,1215.03,0,0,0,0,0.0,nan,0.096063,1.3789,replayed open-loop past the person's torque limits
+baseline,isolated-left-arm,0,2016,2016,True,True,255.51,396288,43,1,0,0.0,0.315532,0.005444,1.3844,
+baseline,isolated-left-arm,0,2002,2002,False,False,696.18,0,0,0,0,0.0,nan,0.0126,1.2453,"replayed open-loop to 0.370, outside the tolerance"
+baseline,isolated-left-arm,0,2017,2017,True,True,232.66,405504,44,1,0,0.0,0.321094,0.030987,0.8465,
+baseline,isolated-left-arm,0,2007,2007,True,True,550.92,884736,96,1,0,0.0,0.292067,0.020391,1.4395,
+baseline,isolated-left-arm,0,2015,2015,True,True,350.68,506880,55,1,0,0.0,0.321623,0.011347,1.4645,
+baseline,isolated-left-arm,0,2011,2011,False,False,600.12,0,0,0,0,0.0,nan,0.012222,1.4618,no limb motion was attempted (planner ran out of time)
+baseline,isolated-left-arm,0,2025,2025,True,True,201.8,285696,31,1,0,0.0,0.282234,0.017585,1.4963,
+baseline,isolated-left-arm,0,2028,2028,True,True,161.1,248832,27,1,0,0.0,0.337807,0.02785,0.531,
+baseline,isolated-left-arm,0,2023,2023,True,True,369.35,562176,61,1,0,0.0,0.304437,0.019445,1.4784,
+baseline,isolated-left-arm,0,2008,2008,False,False,840.07,0,0,0,0,0.0,nan,0.016051,1.1609,"replayed open-loop to 0.214, outside the tolerance"
+baseline,isolated-left-arm,0,2018,2018,False,False,612.91,0,0,0,0,0.0,nan,0.01865,1.0746,no limb motion was attempted (planner ran out of time)
+baseline,isolated-left-arm,0,2022,2022,False,False,605.89,0,0,0,0,0.0,nan,0.023856,1.0963,no limb motion was attempted (planner ran out of time)
+baseline,isolated-left-arm,0,2019,2019,False,False,647.47,0,0,0,0,0.0,nan,0.010591,0.8095,no limb motion was attempted (planner ran out of time)
+baseline,isolated-left-arm,0,2024,2024,True,True,514.48,792576,86,1,0,0.0,0.301138,0.025595,1.1069,
+baseline,isolated-left-arm,0,2033,2033,True,True,163.03,248832,27,1,0,0.0,0.335961,0.029043,0.7429,
+baseline,isolated-left-arm,0,2032,2032,True,True,288.71,470016,51,1,0,0.0,0.340059,0.096063,0.5006,
+baseline,isolated-left-arm,0,2020,2020,False,False,766.41,0,0,0,0,0.0,nan,0.010233,1.3659,"replayed open-loop to 0.745, outside the tolerance"
+baseline,isolated-left-arm,0,2036,2036,True,True,141.87,193536,21,1,0,0.0,0.319806,0.02146,1.2137,
+baseline,isolated-left-arm,0,2037,2037,True,True,199.96,267264,29,1,0,0.0,0.337007,0.03468,1.048,
+baseline,isolated-left-arm,0,2040,2040,True,True,134.81,202752,22,1,0,0.0,0.343503,0.029673,0.5468,
+baseline,isolated-left-arm,0,2034,2034,True,True,380.33,589824,64,1,0,0.0,0.334021,0.029529,1.107,
+baseline,isolated-left-arm,0,2026,2026,False,False,783.24,0,0,0,0,0.0,nan,0.015195,1.2173,"replayed open-loop to 0.438, outside the tolerance"
+baseline,isolated-left-arm,0,2030,2030,False,False,662.89,0,0,0,0,0.0,nan,0.036356,1.4239,no limb motion was attempted (planner ran out of time)
+baseline,isolated-left-arm,0,2031,2031,False,False,631.94,0,0,0,0,0.0,nan,0.015668,0.7906,"reached the goal, but the search ran out of time"
+baseline,isolated-left-arm,0,2039,2039,True,True,281.95,442368,48,1,0,0.0,0.313119,0.096063,0.9795,
+baseline,isolated-left-arm,0,2042,2042,True,True,324.09,470016,51,1,0,0.0,0.319896,0.024448,1.0616,
+baseline,isolated-left-arm,0,2029,2029,False,False,903.85,0,0,0,0,0.0,nan,0.0231,1.4773,"replayed open-loop to 0.275, outside the tolerance"
+baseline,isolated-left-arm,0,2014,2014,False,False,1441.03,0,0,0,0,0.0,nan,0.013411,1.4684,"replayed open-loop to 0.224, outside the tolerance"
+baseline,isolated-left-arm,0,2035,2035,False,False,654.08,0,0,0,0,0.0,nan,0.016235,1.0554,no limb motion was attempted (planner ran out of time)
+baseline,isolated-left-arm,0,2045,2045,True,True,367.98,525312,57,1,0,0.0,0.32522,0.096063,0.6834,
+baseline,isolated-left-arm,0,2047,2047,True,True,345.95,506880,55,1,0,0.0,0.301992,0.010235,1.3683,
+baseline,isolated-left-arm,0,2021,2021,False,False,1377.87,0,0,0,0,0.0,nan,0.016163,1.4844,diverged at an error of 1.109
+baseline,isolated-left-arm,0,2038,2038,False,False,694.76,0,0,0,0,0.0,nan,0.016533,1.3783,no limb motion was attempted (planner ran out of time)
+oracle_cold,isolated-left-arm,0,2001,2001,True,True,154.48,230400,25,1,0,0.0,0.331905,0.0,1.3931,
+baseline,isolated-left-arm,0,2041,2041,False,False,666.17,0,0,0,0,0.0,nan,0.026304,1.2497,no limb motion was attempted (planner ran out of time)
+baseline,isolated-left-arm,0,2046,2046,True,True,514.97,755712,82,1,0,0.0,0.304121,0.013074,1.4437,
+oracle_cold,isolated-left-arm,0,2005,2005,True,True,191.1,304128,33,1,0,0.0,0.286457,0.0,0.8191,
+oracle_cold,isolated-left-arm,0,2000,2000,True,True,358.84,497664,54,1,0,0.0,0.281995,0.0,1.4995,
+oracle_cold,isolated-left-arm,0,2008,2008,True,True,165.91,248832,27,1,0,0.0,0.292984,0.0,0.7605,
+baseline,isolated-left-arm,0,2049,2049,True,True,438.26,626688,68,1,0,0.0,0.31115,0.012111,1.3934,
+baseline,isolated-left-arm,0,2048,2048,False,False,665.61,0,0,0,0,0.0,nan,0.011382,0.6823,"replayed open-loop to 0.666, outside the tolerance"
+oracle_cold,isolated-left-arm,0,2004,2004,True,True,362.95,497664,54,1,0,0.0,0.314431,0.0,1.4461,
+baseline,isolated-left-arm,0,2043,2043,False,False,832.58,0,0,0,0,0.0,nan,0.019804,1.4281,"replayed open-loop to 0.130, outside the tolerance"
+oracle_cold,isolated-left-arm,0,2007,2007,True,True,394.18,543744,59,1,0,0.0,0.309154,0.0,1.2432,
+oracle_cold,isolated-left-arm,0,2002,2002,True,True,514.3,746496,81,1,0,0.0,0.313496,0.0,0.8737,
+oracle_cold,isolated-left-arm,0,2016,2016,True,True,141.09,184320,20,1,0,0.0,0.338684,0.0,0.6254,
+oracle_cold,isolated-left-arm,0,2015,2015,True,True,148.92,193536,21,1,0,0.0,0.332879,0.0,1.0877,
+baseline,isolated-left-arm,0,2044,2044,False,False,1017.84,0,0,0,0,0.0,nan,0.010224,1.3629,"replayed open-loop to 0.108, outside the tolerance"
+baseline,isolated-left-arm,0,2009,2009,False,False,2284.74,0,0,0,0,0.0,nan,0.01854,1.2667,diverged at an error of 0.827
+oracle_cold,isolated-left-arm,0,2003,2003,False,False,631.43,0,0,0,0,0.0,nan,0.0,0.6021,no limb motion was attempted (planner ran out of time)
+oracle_cold,isolated-left-arm,0,2009,2009,True,True,451.68,681984,74,1,0,0.0,0.325399,0.0,1.0405,
+oracle_cold,isolated-left-arm,0,2006,2006,False,False,630.55,0,0,0,0,0.0,nan,0.0,0.5758,no limb motion was attempted (planner ran out of time)
+oracle_cold,isolated-left-arm,0,2020,2020,True,True,180.7,267264,29,1,0,0.0,0.32692,0.0,0.9961,
+oracle_cold,isolated-left-arm,0,2013,2013,True,True,477.06,811008,88,1,0,0.0,0.299008,0.0,0.898,
+oracle_cold,isolated-left-arm,0,2021,2021,True,True,159.57,230400,25,1,0,0.0,0.339575,0.0,0.6005,
+baseline,isolated-left-arm,0,2027,2027,False,False,1971.5,0,0,0,0,0.0,nan,0.008188,1.2777,diverged at an error of 0.302
+oracle_cold,isolated-left-arm,0,2010,2010,False,False,628.81,0,0,0,0,0.0,nan,0.0,0.7191,no limb motion was attempted (planner ran out of time)
+oracle_cold,isolated-left-arm,0,2024,2024,True,True,252.75,368640,40,1,0,0.0,0.339701,0.0,0.5785,
+oracle_cold,isolated-left-arm,0,2017,2017,True,True,458.53,654336,71,1,0,0.0,0.307248,0.0,1.3564,
+oracle_cold,isolated-left-arm,0,2028,2028,True,True,123.55,175104,19,1,0,0.0,0.32975,0.0,0.5758,
+oracle_cold,isolated-left-arm,0,2018,2018,True,True,475.41,691200,75,1,0,0.0,0.33611,0.0,1.3502,
+oracle_cold,isolated-left-arm,0,2025,2025,True,True,355.54,497664,54,1,0,0.0,0.303909,0.0,1.0797,
+oracle_cold,isolated-left-arm,0,2026,2026,True,True,322.52,460800,50,1,0,0.0,0.305966,0.0,1.1846,
+oracle_cold,isolated-left-arm,0,2031,2031,True,True,224.88,313344,34,1,0,0.0,0.299898,0.0,0.9247,
+oracle_cold,isolated-left-arm,0,2034,2034,True,True,174.29,258048,28,1,0,0.0,0.341371,0.0,0.5442,
+oracle_cold,isolated-left-arm,0,2030,2030,True,True,295.96,451584,49,1,0,0.0,0.282974,0.0,1.2159,
+oracle_cold,isolated-left-arm,0,2022,2022,True,True,535.98,792576,86,1,0,0.0,0.318837,0.0,0.7349,
+oracle_cold,isolated-left-arm,0,2029,2029,True,True,337.27,488448,53,1,0,0.0,0.321433,0.0,1.4093,
+oracle_cold,isolated-left-arm,0,2014,2014,False,False,827.67,0,0,0,0,0.0,nan,0.0,1.4211,"replayed open-loop to 0.541, outside the tolerance"
+oracle_cold,isolated-left-arm,0,2027,2027,True,True,505.89,764928,83,1,0,0.0,0.308852,0.0,1.4455,
+oracle_cold,isolated-left-arm,0,2033,2033,True,True,410.13,626688,68,1,0,0.0,0.323961,0.0,1.3703,
+oracle_cold,isolated-left-arm,0,2038,2038,True,True,218.65,322560,35,1,0,0.0,0.285276,0.0,0.8216,
+oracle_cold,isolated-left-arm,0,2035,2035,True,True,350.29,534528,58,1,0,0.0,0.327142,0.0,1.3754,
+oracle_cold,isolated-left-arm,0,2040,2040,True,True,232.26,331776,36,1,0,0.0,0.335687,0.0,0.9623,
+oracle_cold,isolated-left-arm,0,2039,2039,True,True,254.65,368640,40,1,0,0.0,0.3286,0.0,0.699,
+oracle_cold,isolated-left-arm,0,2012,2012,False,False,1146.01,0,0,0,0,0.0,nan,0.0,1.4288,"replayed open-loop to 1.329, outside the tolerance"
+oracle_cold,isolated-left-arm,0,2036,2036,True,True,448.36,672768,73,1,0,0.0,0.281516,0.0,1.2107,
+oracle_cold,isolated-left-arm,0,2042,2042,True,True,298.51,442368,48,1,0,0.0,0.25773,0.0,1.4334,
+oracle_cold,isolated-left-arm,0,2023,2023,False,False,898.18,0,0,0,0,0.0,nan,0.0,1.3086,"replayed open-loop to 0.190, outside the tolerance"
+oracle_cold,isolated-left-arm,0,2037,2037,True,True,432.01,645120,70,1,0,0.0,0.305046,0.0,1.0953,
+oracle_cold,isolated-left-arm,0,2043,2043,True,True,305.11,423936,46,1,0,0.0,0.326925,0.0,0.96,
+oracle_cold,isolated-left-arm,0,2045,2045,True,True,292.84,433152,47,1,0,0.0,0.31045,0.0,0.8843,
+oracle,isolated-left-arm,0,2001,2001,True,True,153.41,230400,25,1,0,0.0,0.331905,0.0,1.3931,
+oracle_cold,isolated-left-arm,0,2048,2048,True,True,264.62,387072,42,1,0,0.0,0.24675,0.0,1.0257,
+oracle_cold,isolated-left-arm,0,2011,2011,False,False,1434.13,0,0,0,0,0.0,nan,0.0,1.2108,"replayed open-loop to 0.923, outside the tolerance"
+oracle_cold,isolated-left-arm,0,2047,2047,True,True,288.67,433152,47,1,0,0.0,0.331925,0.0,0.9273,
+oracle_cold,isolated-left-arm,0,2019,2019,False,False,1247.9,0,0,0,0,0.0,nan,0.0,1.4392,replayed open-loop past the person's torque limits
+oracle,isolated-left-arm,0,2005,2005,True,True,200.68,304128,33,1,0,0.0,0.286457,0.0,0.8191,
+oracle_cold,isolated-left-arm,0,2041,2041,False,False,660.83,0,0,0,0,0.0,nan,0.0,1.1577,no limb motion was attempted (planner ran out of time)
+oracle,isolated-left-arm,0,2000,2000,True,True,342.8,497664,54,1,0,0.0,0.281995,0.0,1.4995,
+oracle,isolated-left-arm,0,2008,2008,True,True,164.4,248832,27,1,0,0.0,0.292984,0.0,0.7605,
+oracle,isolated-left-arm,0,2004,2004,True,True,354.32,506880,55,1,0,0.0,0.322795,0.0,1.4461,
+oracle,isolated-left-arm,0,2002,2002,True,True,409.05,571392,62,1,0,0.0,0.317831,0.0,0.8737,
+oracle_cold,isolated-left-arm,0,2046,2046,False,False,646.68,0,0,0,0,0.0,nan,0.0,0.8196,no limb motion was attempted (planner ran out of time)
+oracle_cold,isolated-left-arm,0,2032,2032,False,False,1131.4,0,0,0,0,0.0,nan,0.0,1.3789,replayed open-loop past the person's torque limits
+oracle_cold,isolated-left-arm,0,2049,2049,False,False,639.94,0,0,0,0,0.0,nan,0.0,1.3117,no limb motion was attempted (planner ran out of time)
+oracle,isolated-left-arm,0,2015,2015,True,True,129.98,193536,21,1,0,0.0,0.332879,0.0,1.0877,
+oracle,isolated-left-arm,0,2007,2007,True,True,389.5,589824,64,1,0,0.0,0.33514,0.0,1.2432,
+oracle,isolated-left-arm,0,2009,2009,True,True,428.01,681984,74,1,0,0.0,0.325399,0.0,1.0405,
+oracle,isolated-left-arm,0,2003,2003,False,False,635.44,0,0,0,0,0.0,nan,0.0,0.6021,no limb motion was attempted (planner ran out of time)
+oracle,isolated-left-arm,0,2021,2021,True,True,154.59,230400,25,1,0,0.0,0.339575,0.0,0.6005,
+oracle_cold,isolated-left-arm,0,2044,2044,False,False,925.0,0,0,0,0,0.0,nan,0.0,1.0086,"replayed open-loop to 0.175, outside the tolerance"
+oracle,isolated-left-arm,0,2020,2020,True,True,202.7,304128,33,1,0,0.0,0.33447,0.0,0.9961,
+oracle,isolated-left-arm,0,2006,2006,False,False,636.37,0,0,0,0,0.0,nan,0.0,0.5758,no limb motion was attempted (planner ran out of time)
+oracle,isolated-left-arm,0,2011,2011,True,True,451.22,635904,69,1,0,0.0,0.311672,0.0,1.2108,
+oracle,isolated-left-arm,0,2014,2014,True,True,471.84,728064,79,1,0,0.0,0.299375,0.0,1.4211,
+oracle,isolated-left-arm,0,2013,2013,True,True,570.78,811008,88,1,0,0.0,0.299008,0.0,0.898,
+oracle,isolated-left-arm,0,2028,2028,True,True,126.07,175104,19,1,0,0.0,0.32975,0.0,0.5758,
+oracle,isolated-left-arm,0,2010,2010,False,False,639.02,0,0,0,0,0.0,nan,0.0,0.7191,no limb motion was attempted (planner ran out of time)
+oracle,isolated-left-arm,0,2018,2018,True,True,416.89,580608,63,1,0,0.0,0.321107,0.0,1.3502,
+oracle,isolated-left-arm,0,2017,2017,True,True,436.51,654336,71,1,0,0.0,0.307248,0.0,1.3564,
+oracle,isolated-left-arm,0,2016,2016,True,True,536.46,838656,91,1,0,0.0,0.321579,0.0,0.6254,
+oracle,isolated-left-arm,0,2024,2024,True,True,262.54,368640,40,1,0,0.0,0.339701,0.0,0.5785,
+oracle,isolated-left-arm,0,2026,2026,True,True,237.05,322560,35,1,0,0.0,0.248665,0.0,1.1846,
+oracle,isolated-left-arm,0,2025,2025,True,True,300.83,414720,45,1,0,0.0,0.324486,0.0,1.0797,
+oracle,isolated-left-arm,0,2034,2034,True,True,155.66,258048,28,1,0,0.0,0.341371,0.0,0.5442,
+oracle,isolated-left-arm,0,2031,2031,True,True,212.39,313344,34,1,0,0.0,0.299898,0.0,0.9247,
+oracle,isolated-left-arm,0,2022,2022,True,True,566.28,792576,86,1,0,0.0,0.318837,0.0,0.7349,
+oracle,isolated-left-arm,0,2037,2037,True,True,193.94,322560,35,1,0,0.0,0.328403,0.0,1.0953,
+oracle,isolated-left-arm,0,2030,2030,True,True,292.91,451584,49,1,0,0.0,0.282974,0.0,1.2159,
+oracle,isolated-left-arm,0,2029,2029,True,True,411.93,635904,69,1,0,0.0,0.315902,0.0,1.3342,
+oracle,isolated-left-arm,0,2027,2027,True,True,522.83,764928,83,1,0,0.0,0.308852,0.0,1.4455,
+oracle,isolated-left-arm,0,2038,2038,True,True,294.23,433152,47,1,0,0.0,0.331413,0.0,0.5194,
+oracle,isolated-left-arm,0,2040,2040,True,True,225.42,331776,36,1,0,0.0,0.335687,0.0,0.9623,
+oracle,isolated-left-arm,0,2035,2035,True,True,384.12,534528,58,1,0,0.0,0.327142,0.0,1.3754,
+oracle,isolated-left-arm,0,2043,2043,True,True,154.21,258048,28,1,0,0.0,0.316611,0.0,0.96,
+oracle,isolated-left-arm,0,2039,2039,True,True,254.4,368640,40,1,0,0.0,0.3286,0.0,0.699,
+oracle,isolated-left-arm,0,2033,2033,True,True,433.95,626688,68,1,0,0.0,0.323961,0.0,1.3703,
+oracle,isolated-left-arm,0,2012,2012,False,False,1103.74,0,0,0,0,0.0,nan,0.0,1.4288,"replayed open-loop to 1.329, outside the tolerance"
+oracle,isolated-left-arm,0,2036,2036,True,True,456.77,737280,80,1,0,0.0,0.295002,0.0,1.2107,
+oracle,isolated-left-arm,0,2042,2042,True,True,288.23,442368,48,1,0,0.0,0.25773,0.0,1.4334,
+oracle,isolated-left-arm,0,2045,2045,True,True,188.08,377856,41,1,0,0.0,0.335526,0.0,0.8843,
+oracle,isolated-left-arm,0,2023,2023,False,False,831.09,0,0,0,0,0.0,nan,0.0,1.3086,"replayed open-loop to 0.190, outside the tolerance"
+oracle,isolated-left-arm,0,2048,2048,True,True,151.82,387072,42,1,0,0.0,0.24675,0.0,1.0257,
+oracle,isolated-left-arm,0,2047,2047,True,True,171.95,433152,47,1,0,0.0,0.331925,0.0,0.9273,
+oracle,isolated-left-arm,0,2044,2044,True,True,300.78,543744,59,1,0,0.0,0.295253,0.0,1.0086,
+oracle,isolated-left-arm,0,2019,2019,False,False,1044.6,0,0,0,0,0.0,nan,0.0,1.4392,replayed open-loop past the person's torque limits
+oracle,isolated-left-arm,0,2032,2032,False,False,784.1,0,0,0,0,0.0,nan,0.0,1.3789,replayed open-loop past the person's torque limits
+oracle,isolated-left-arm,0,2041,2041,False,False,604.12,0,0,0,0,0.0,nan,0.0,1.1577,no limb motion was attempted (planner ran out of time)
+oracle,isolated-left-arm,0,2049,2049,False,False,607.83,0,0,0,0,0.0,nan,0.0,1.3117,no limb motion was attempted (planner ran out of time)
+oracle,isolated-left-arm,0,2046,2046,False,False,630.11,0,0,0,0,0.0,nan,0.0,0.8196,no limb motion was attempted (planner ran out of time)
+belief,isolated-left-arm,0,2018,2018,False,False,627.51,0,0,0,0,0.0,nan,0.01865,1.0746,no limb motion was attempted (planner ran out of time)
+pddlstream,isolated-left-arm,0,2042,2042,False,False,600.49,0,0,0,0,0.0,nan,0.096063,1.4334,no limb motion was attempted (planner ran out of time)

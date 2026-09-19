@@ -1,0 +1,23 @@
+{
+  "ridge": {
+    "name": "ridge",
+    "train_mse": 0.6641007400901512,
+    "test_mse": 0.7277776844552107,
+    "zero_baseline_mse": 0.9628598434874769,
+    "zero_baseline_train_mse": 0.9158475037784594
+  },
+  "mlp": {
+    "name": "mlp",
+    "train_mse": 0.4029540336330972,
+    "test_mse": 0.6218786111009839,
+    "zero_baseline_mse": 0.9628598434874769,
+    "zero_baseline_train_mse": 0.9158475037784594
+  },
+  "gradient_boosting": {
+    "name": "gradient_boosting",
+    "train_mse": 0.31302484241829576,
+    "test_mse": 0.6559131012098699,
+    "zero_baseline_mse": 0.9628598434874769,
+    "zero_baseline_train_mse": 0.9158475037784594
+  }
+}

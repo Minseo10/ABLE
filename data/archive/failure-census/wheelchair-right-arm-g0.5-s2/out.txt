@@ -1,0 +1,108 @@
+pybullet build time: Mar 13 2026 19:11:15
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootTraceback (most recent call last):
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/stream.py", line 919, in _score
+    commanded = commanded_robot_torque(self._sim, torque)
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/utils.py", line 350, in commanded_robot_torque
+    return np.asarray(correction, dtype=np.float64) + hold_torque(sim)
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/utils.py", line 336, in hold_torque
+    return arm_gravity_torque(sim) + limb_hold_torque(sim)
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/utils.py", line 331, in arm_gravity_torque
+    return _gravity_torque(sim, sim.robot.arm)[:NUM_ROBOT_JOINTS]
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/run.py", line 872, in <module>
+    main()
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/run.py", line 852, in main
+    success = solve_and_execute(
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/run.py", line 553, in solve_and_execute
+    plan = plan_limbrepositioning3d(ctx, max_time=max_time, verbose=verbose)
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/run.py", line 365, in plan_limbrepositioning3d
+    solution = solve(
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/site-packages/pddlstream/algorithms/meta.py", line 139, in solve
+    return solve_adaptive(
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/site-packages/pddlstream/algorithms/focused.py", line 293, in solve_adaptive
+    return solve_abstract(problem, max_skeletons=max_skeletons, search_sample_ratio=search_sample_ratio,
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/site-packages/pddlstream/algorithms/focused.py", line 231, in solve_abstract
+    if skeleton_queue.process(stream_plan, opt_plan, cost, complexity_limit, allocated_sample_time) is INFEASIBLE:
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/site-packages/pddlstream/algorithms/skeleton.py", line 436, in process
+    self.greedily_process()
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/site-packages/pddlstream/algorithms/skeleton.py", line 355, in greedily_process
+    num_new += self.process_root()
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/site-packages/pddlstream/algorithms/skeleton.py", line 343, in process_root
+    readd, is_new = self._process_binding(binding)
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/site-packages/pddlstream/algorithms/skeleton.py", line 332, in _process_binding
+    new_results, _ = process_instance(self.store, self.domain, instance, disable=self.disable)
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/site-packages/pddlstream/algorithms/disabled.py", line 60, in process_instance
+    new_results, new_facts = instance.next_results(verbose=store.verbose)
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/site-packages/pddlstream/language/stream.py", line 308, in next_results
+    new_values, new_facts = self._next_outputs()
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/site-packages/pddlstream/language/stream.py", line 287, in _next_outputs
+    self.history.append(self._next_wild())
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/site-packages/pddlstream/language/stream.py", line 276, in _next_wild
+    output, self.enumerated = get_next(self._generator, default=[])
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/site-packages/pddlstream/language/generator.py", line 46, in get_next
+    new_values = next(generator)
+  File "/home/minseo/anaconda3/envs/kinder/lib/python3.10/site-packages/pddlstream/language/generator.py", line 63, in <genexpr>
+    return from_list_gen_fn(lambda *args, **kwargs: ([] if ov is None else [ov]
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/run.py", line 237, in wrapped
+    item = next(iterator)
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/utils.py", line 76, in wrap
+    item = next(iterator)
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/stream.py", line 548, in plan_limb_motion
+    yield _limb_motion_attempt(ctx, s1, q2)
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/stream.py", line 605, in _limb_motion_attempt
+    committed = mpc.step()
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/stream.py", line 835, in step
+    scores = [self._score(start, self._expand(cp)) for cp in candidates]
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/stream.py", line 835, in <listcomp>
+    scores = [self._score(start, self._expand(cp)) for cp in candidates]
+  File "/home/minseo/research/kinder-baselines/kinder-pddlstream-planning/src/kinder_pddlstream_planning/limbrepositioning3d/stream.py", line 919, in _score
+    commanded = commanded_robot_torque(self._sim, torque)
+KeyboardInterrupt
+Streams: [sample-grasp:('?l',)->('?g',), sample-base-pose:('?l', '?g', '?ql1', '?ql2')->('?q',), plan-grasp-motion:('?l', '?g', '?q', '?ql')->('?at', '?s'), plan-base-motion:('?q1', '?q2')->('?bt',), plan-limb-motion:('?s1', '?ql2')->('?tt', '?s2'), check-human-joint-limits:('?s1', '?ql2', '?tt', '?s2')->(), check-human-torque-limits:('?s1', '?ql2', '?tt', '?s2')->(), check-robot-torque-limits:('?s1', '?ql2', '?tt', '?s2')->()]
+Functions: []
+Negated: []
+Optimizers: []
+
+Iteration: 1 | Complexity: 0 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.000 | Sample Time: 0.000 | Total Time: 0.000
+Attempt: 1 | Results: 0 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 0 to 1
+
+Iteration: 2 | Complexity: 1 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.002 | Sample Time: 0.000 | Total Time: 0.002
+Attempt: 1 | Results: 2 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 1 to 2
+
+Iteration: 3 | Complexity: 2 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.004 | Sample Time: 0.000 | Total Time: 0.004
+Attempt: 1 | Results: 3 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 2 to 3
+
+Iteration: 4 | Complexity: 3 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.005 | Sample Time: 0.000 | Total Time: 0.005
+Attempt: 1 | Results: 7 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 3 to 4
+
+Iteration: 5 | Complexity: 4 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.007 | Sample Time: 0.000 | Total Time: 0.007
+Attempt: 1 | Results: 12 | Depth: 1 | Success: False | Time: 0.018
+Attempt: 2 | Results: 15 | Depth: 0 | Success: True | Time: 0.034
+Stream plan (8, 8, 0.001): [sample-grasp:(limb)->(#g0), sample-base-pose:(limb, #g0, qL9696, qL9552)->(#q0), plan-grasp-motion:(limb, #g0, #q0, qL9696)->(#a0, #s0), plan-limb-motion:(#s0, qL9552)->(#t0, #s1), check-human-torque-limits:(#s0, qL9552, #t0, #s1)->(), check-human-joint-limits:(#s0, qL9552, #t0, #s1)->(), check-robot-torque-limits:(#s0, qL9552, #t0, #s1)->(), plan-base-motion:(SE2Pose(x=-1.4207959347789068, y=-1.8955830041557251, rot=0.7716), #q0)->(#b0)]
+Action plan (3, 3.000): [move_base(SE2Pose(x=-1.4207959347789068, y=-1.8955830041557251, rot=0.7716), #b0, #q0), grasp(limb, #g0, #q0, #a0, #s0), move_limb(limb, #g0, #q0, #s0, qL9696, qL9552, #t0, #s1)]
+iter=0, outs=1) sample-grasp:(limb)->[(g4880(slide=0.100, roll=3.14))]
+iter=0, outs=1) sample-base-pose:(limb, g4880(slide=0.100, roll=3.14), qL9696, qL9552)->[(SE2Pose(x=-0.5088102722094184, y=-1.231323501863244, rot=0.2617993877991494))]
+iter=0, outs=1) plan-grasp-motion:(limb, g4880(slide=0.100, roll=3.14), SE2Pose(x=-0.5088102722094184, y=-1.231323501863244, rot=0.2617993877991494), qL9696)->[(at4816(waypoints=21), s1648)]
+exit=124 wall=1801

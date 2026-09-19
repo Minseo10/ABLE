@@ -18,19 +18,8 @@ dist/
 venv/
 
 # Generated outputs
-figures/
-videos/
 statistics/
 temp/
 
-# Runs kept locally but not published
-data/archive/
-data/babble/person22/
-data/babble/scale_*/
-data/babble/single_human/
-data/pddlstream/dense*/
-data/pddlstream/person22/
-data/pddlstream/single_human/
-data/pddlstream/smoke_abc/
-data/pddlstream/isolated_left_arm/pretrained.pkl
+# Interrupted writes
 *.partial
