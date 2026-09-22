@@ -26,7 +26,7 @@ from limb_baseline.human import (
     theta_to_bounds,
     theta_to_joint_limits,
 )
-from limb_baseline.pipeline import QueryPolicy
+from limb_baseline.planner import QueryPolicy
 from limb_baseline.queries import DEFAULT_QUERY_MODEL, QueryModel
 from limb_baseline.tasks import DEFAULT_TASK_DISTRIBUTION, inactive_joints
 from limb_baseline.variant import DEFAULT_VARIANT, ENV_VAR, VARIANTS
@@ -323,3 +323,51 @@ def test_fine_tuning_continues_from_the_pretrained_weights():
     model.train(x[:3] * 10.0, y[:3])
     assert np.abs(weights - model.net.coefs_[0]).max() < 1e-6
     assert np.allclose(scaler_mean, model.scaler.mean_)
+
+
+def test_the_memo_learns_from_the_first_success_and_serves_it_after(monkeypatch):
+    """Before its first success the memo defers to the MPC; after it, a naive memo
+    answers from memory and never calls the MPC again."""
+    from kinder_pddlstream_planning.limbrepositioning3d.stream import TorqueTrajectory
+
+    from limb_baseline import memo as memo_module
+
+    calls = []
+    trajectories = {"goal": TorqueTrajectory([[0.0] * 7])}
+
+    def fake_mpc(ctx, s1, q2):
+        calls.append(q2)
+        if q2 == "unreachable":
+            return
+        yield trajectories[q2], f"state-after-{q2}"
+
+    monkeypatch.setattr(memo_module, "plan_limb_motion", fake_mpc)
+    memo = memo_module.LimbMotionMemo(mode="naive")
+
+    assert list(memo.stream(None, "s", "unreachable")) == []
+    assert not memo.filled and memo.mpc_calls == 1 and memo.hits == 0
+
+    assert list(memo.stream(None, "s", "goal")) == [
+        (trajectories["goal"], "state-after-goal")
+    ]
+    assert memo.filled and memo.mpc_calls == 2
+
+    memo.reset()
+    assert list(memo.stream(None, "other-state", "other-goal")) == [
+        (trajectories["goal"], "state-after-goal")
+    ]
+    assert (memo.hits, memo.mpc_calls, memo.calls) == (1, 0, 1)
+    assert calls == ["unreachable", "goal"]
+    assert memo.seconds_in_stream >= 0.0
+
+
+def test_the_memo_routes_the_planner_stream_and_can_be_removed():
+    from kinder_pddlstream_planning.limbrepositioning3d import run as planner_run
+
+    from limb_baseline import memo as memo_module
+
+    memo = memo_module.LimbMotionMemo()
+    memo_module.install(memo)
+    assert planner_run.plan_limb_motion == memo.stream
+    memo_module.uninstall()
+    assert planner_run.plan_limb_motion is memo_module.plan_limb_motion

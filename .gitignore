@@ -23,3 +23,6 @@ temp/
 
 # Interrupted writes
 *.partial
+
+# Memo experiment process logs
+data/memo/logs/

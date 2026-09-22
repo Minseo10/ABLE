@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+import itertools
 import numpy as np
 from kinder.envs.dynamic3d.limb_utils import (
     LIMB_JOINT_INFOS,
@@ -24,8 +25,6 @@ from kinder_pddlstream_planning.limbrepositioning3d.stream import (
 from kinder_pddlstream_planning.limbrepositioning3d.utils import (
     CoupledState,
     JointTorques,
-    _base_candidates,
-    _grasp_ik,
     advance,
     arm_in_collision,
     capture_state,
@@ -42,6 +41,7 @@ from numpy.typing import NDArray
 from pybullet_helpers.joint import JointPositions
 
 from limb_baseline.belief import Belief
+from limb_baseline.utils import base_candidates, grasp_ik
 from limb_baseline.planner import (
     DEFAULT_PLANNER_SETTINGS,
     ENVELOPE,
@@ -103,13 +103,16 @@ def _engage_at(ctx: LimbStreamContext, task: Task) -> bool:
     attempts = [(task.base_pose, grasps)] if task.base_pose is not None else []
     attempts += [
         (pose, grasps[:1])
-        for pose in _base_candidates(ctx)[:MAX_FALLBACK_BASE_POSES]
+        for pose in itertools.islice(
+            base_candidates(ctx, grasps[0], tuple(task.limb_init)),
+            MAX_FALLBACK_BASE_POSES,
+        )
         if pose is not task.base_pose
     ]
     for base_conf, offered in attempts:
         sim.robot.set_base(base_conf)
         for grasp in offered:
-            joints = _grasp_ik(ctx, grasp, tuple(task.limb_init), ctx.retract_joints)
+            joints = grasp_ik(ctx, grasp, tuple(task.limb_init), ctx.retract_joints)
             if joints is None or not limb_is_controllable(ctx, joints):
                 continue
             sim.robot.arm.set_joints(list(joints), joint_velocities=[0.0] * len(joints))

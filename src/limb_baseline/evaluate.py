@@ -19,7 +19,7 @@ from kinder_pddlstream_planning.limbrepositioning3d.stream import MPCConfig
 from limb_baseline.belief import Belief
 from limb_baseline.dataset import append_row, guard_variant
 from limb_baseline.human import DEFAULT_PRIOR
-from limb_baseline.pipeline import QueryPolicy, gather_information
+from limb_baseline.planner import QueryPolicy, gather_information
 from limb_baseline.planner import PlannerSettings, assumed_theta, run_episode
 from limb_baseline.variant import DEFAULT_VARIANT, VARIANTS
 from limb_baseline.variant import current as current_variant

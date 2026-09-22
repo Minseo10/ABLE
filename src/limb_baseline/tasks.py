@@ -171,20 +171,17 @@ class ReachableTaskSampler:
 
         Paid once per init draw, not once per goal draw.
         """
-        from kinder_pddlstream_planning.limbrepositioning3d.utils import (
-            _base_candidates,
-            _grasp_ik,
-            _saved_sim_state,
-            release_grasp,
-        )
+        from kinder_pddlstream_planning.limbrepositioning3d.utils import release_grasp
+
+        from limb_baseline.utils import base_candidates, grasp_ik, saved_sim_state
 
         sim = self.ctx.sim
-        with _saved_sim_state(sim):
+        with saved_sim_state(sim):
             release_grasp(sim)
-            for base_conf in _base_candidates(self.ctx):
+            for base_conf in base_candidates(self.ctx, self.grasp, tuple(limb_init)):
                 sim.robot.set_base(base_conf)
                 if (
-                    _grasp_ik(
+                    grasp_ik(
                         self.ctx,
                         self.grasp,
                         tuple(limb_init),
@@ -205,22 +202,22 @@ class ReachableTaskSampler:
             NUM_REACH_CHECKS,
         )
         from kinder_pddlstream_planning.limbrepositioning3d.utils import (
-            _grasp_ik,
-            _saved_sim_state,
             limb_is_controllable,
             release_grasp,
         )
+
+        from limb_baseline.utils import grasp_ik, saved_sim_state
 
         sim = self.ctx.sim
         waypoints = np.linspace(
             np.asarray(limb_init), np.asarray(limb_goal), NUM_REACH_CHECKS
         )
-        with _saved_sim_state(sim):
+        with saved_sim_state(sim):
             release_grasp(sim)
             sim.robot.set_base(base_conf)
             seed = self.ctx.retract_joints
             for waypoint in waypoints:
-                solution = _grasp_ik(self.ctx, self.grasp, tuple(waypoint), seed)
+                solution = grasp_ik(self.ctx, self.grasp, tuple(waypoint), seed)
                 if solution is None or not limb_is_controllable(self.ctx):
                     return False
                 seed = solution

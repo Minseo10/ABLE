@@ -20,7 +20,7 @@ from limb_baseline.human import (  # noqa: E402
     active_motions,
     default_magnitudes,
 )
-from limb_baseline.pipeline import QueryPolicy, gather_information  # noqa: E402
+from limb_baseline.planner import QueryPolicy, gather_information  # noqa: E402
 from limb_baseline.queries import DEFAULT_QUERY_MODEL  # noqa: E402
 
 KEEP = "#008D63"
