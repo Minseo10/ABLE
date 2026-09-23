@@ -325,40 +325,59 @@ def test_fine_tuning_continues_from_the_pretrained_weights():
     assert np.allclose(scaler_mean, model.scaler.mean_)
 
 
-def test_the_memo_learns_from_the_first_success_and_serves_it_after(monkeypatch):
-    """Before its first success the memo defers to the MPC; after it, a naive memo
-    answers from memory and never calls the MPC again."""
+def test_the_memo_serves_stored_plans_by_goal_and_seeds_the_mpc_on_a_hit(monkeypatch):
+    """A goal seen before seeds the MPC from its stored plan; a new goal seeds nothing."""
+    from types import SimpleNamespace
+
     from kinder_pddlstream_planning.limbrepositioning3d.stream import TorqueTrajectory
 
     from limb_baseline import memo as memo_module
 
-    calls = []
-    trajectories = {"goal": TorqueTrajectory([[0.0] * 7])}
+    mpc = MPCConfig()
+    # Zero torque for one control step, then a constant push.
+    torques = [[0.0] * 7] * mpc.action_repeat + [[1.0] * 7] * (2 * mpc.action_repeat)
+    trajectory = TorqueTrajectory(torques)
 
     def fake_mpc(ctx, s1, q2):
-        calls.append(q2)
-        if q2 == "unreachable":
+        if q2.positions[0] > 5.0:
             return
-        yield trajectories[q2], f"state-after-{q2}"
+        yield trajectory, "state-after"
 
     monkeypatch.setattr(memo_module, "plan_limb_motion", fake_mpc)
-    memo = memo_module.LimbMotionMemo(mode="naive")
+    # Step mode, so a hit hands the seed to the MPC rather than rolling it out here.
+    monkeypatch.setattr(memo_module.SEED, "mode", "step")
+    memo = memo_module.LimbMotionMemo()
+    stream = memo_module.SeededStream(memo)
+    memo.stream = stream.stream
+    ctx = SimpleNamespace(mpc=mpc, warm_start=None)
+    goal = SimpleNamespace(positions=(0.5, 0.0, 0.0, 0.0, 0.0, 0.0))
+    near = SimpleNamespace(positions=(0.52, 0.0, 0.0, 0.0, 0.0, 0.0))
+    far = SimpleNamespace(positions=(0.8, 0.0, 0.0, 0.0, 0.0, 0.0))
+    unreachable = SimpleNamespace(positions=(9.0, 0.0, 0.0, 0.0, 0.0, 0.0))
 
-    assert list(memo.stream(None, "s", "unreachable")) == []
-    assert not memo.filled and memo.mpc_calls == 1 and memo.hits == 0
+    assert list(memo.stream(ctx, "s", unreachable)) == []
+    assert memo.size == 0 and (memo.hits, memo.misses) == (0, 1)
 
-    assert list(memo.stream(None, "s", "goal")) == [
-        (trajectories["goal"], "state-after-goal")
-    ]
-    assert memo.filled and memo.mpc_calls == 2
+    assert list(memo.stream(ctx, "s", goal)) == [(trajectory, "state-after")]
+    assert memo.size == 1 and ctx.warm_start is None and memo.misses == 2
 
+    # Within the key's resolution: a hit, and the seed comes from the stored torques.
     memo.reset()
-    assert list(memo.stream(None, "other-state", "other-goal")) == [
-        (trajectories["goal"], "state-after-goal")
-    ]
-    assert (memo.hits, memo.mpc_calls, memo.calls) == (1, 0, 1)
-    assert calls == ["unreachable", "goal"]
-    assert memo.seconds_in_stream >= 0.0
+    assert list(memo.stream(ctx, "s", near)) == [(trajectory, "state-after")]
+    assert (memo.hits, memo.misses) == (1, 0) and ctx.warm_start is not None
+    seeded = ctx.warm_start(None, None, 1)
+    assert seeded.shape == (mpc.horizon, 7) and np.allclose(seeded, 1.0)
+    # From step 0 the horizon opens with the zero-torque step, verbatim.
+    assert np.allclose(ctx.warm_start(None, None, 0)[0], 0.0)
+    assert np.allclose(ctx.warm_start(None, None, 0)[1:], 1.0)
+    assert np.allclose(ctx.warm_start(None, None, 99), 1.0)
+    # The same key now holds two plans, capped at the best few.
+    assert memo.size == 2
+
+    # A goal outside the resolution misses and plans from scratch.
+    memo.reset()
+    assert list(memo.stream(ctx, "s", far)) == [(trajectory, "state-after")]
+    assert (memo.hits, memo.misses) == (0, 1) and ctx.warm_start is None
 
 
 def test_the_memo_routes_the_planner_stream_and_can_be_removed():
@@ -366,8 +385,8 @@ def test_the_memo_routes_the_planner_stream_and_can_be_removed():
 
     from limb_baseline import memo as memo_module
 
-    memo = memo_module.LimbMotionMemo()
-    memo_module.install(memo)
-    assert planner_run.plan_limb_motion == memo.stream
+    stream = memo_module.SeededStream(memo_module.LimbMotionMemo())
+    memo_module.install(stream)
+    assert planner_run.plan_limb_motion == stream.stream
     memo_module.uninstall()
     assert planner_run.plan_limb_motion is memo_module.plan_limb_motion

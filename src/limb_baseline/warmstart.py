@@ -30,6 +30,22 @@ def control_basis(mpc: MPCConfig) -> NDArray[np.float64]:
     )
 
 
+def horizon_window(
+    robot_torques: list[list[float]], mpc: MPCConfig
+) -> NDArray[np.float64]:
+    """The first horizon of an executed torque sequence, one row per control step.
+
+    `robot_torques` is per simulator step, so it is decimated back to control steps and
+    padded with its last entry when the sequence ends inside the horizon.
+    """
+    torques = np.asarray(robot_torques, dtype=np.float64)
+    assert torques.ndim == 2 and torques.shape[1] == NUM_ROBOT_JOINTS
+    window = torques[:: mpc.action_repeat][: mpc.horizon]
+    if len(window) < mpc.horizon:
+        window = np.vstack([window, np.repeat(window[-1:], mpc.horizon - len(window), axis=0)])
+    return window
+
+
 def project_torques(
     robot_torques: list[list[float]], mpc: MPCConfig
 ) -> NDArray[np.float64]:
@@ -64,6 +80,18 @@ def make_regressors() -> dict[str, object]:
                 hidden_layer_sizes=(64, 64),
                 solver="lbfgs",
                 alpha=10.0,
+                max_iter=2000,
+                random_state=0,
+            ),
+        ),
+        # The same net with little regularization, for fitting one person's or one
+        # task's own rows online, where fitting them closely is the point.
+        "mlp_light": make_pipeline(
+            StandardScaler(),
+            MLPRegressor(
+                hidden_layer_sizes=(64, 64),
+                solver="lbfgs",
+                alpha=1e-2,
                 max_iter=2000,
                 random_state=0,
             ),

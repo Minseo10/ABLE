@@ -23,8 +23,20 @@ import matplotlib.pyplot as plt  # noqa: E402
 INK = "#141C1B"
 FAINT = "#6E7A78"
 GRID = "#E2E7E6"
-COLORS = {"plain": "#AAB4B2", "warm": "#008D63"}
-LABELS = {"plain": "plain (PDDLStream as is)", "warm": "warm (memorized plan-limb-motion)"}
+COLORS = {
+    "plain": "#AAB4B2",
+    "warm": "#008D63",
+    "learned": "#C25A34",
+    "learned:ridge": "#C25A34",
+    "learned:mlp_light": "#3B6FB6",
+}
+LABELS = {
+    "plain": "plain (PDDLStream as is)",
+    "warm": "warm (cached plan rolled out first, MPC if it fails)",
+    "learned": "learned (model rolled out first, MPC if it fails)",
+    "learned:ridge": "learned, ridge (refit each iteration, rolled out first)",
+    "learned:mlp_light": "learned, MLP 64x64 (refit each iteration, rolled out first)",
+}
 
 plt.rcParams.update(
     {
@@ -52,9 +64,9 @@ def _title(frame: pd.DataFrame) -> str:
     return f"{n} tasks, {what} within {variation:g} rad of one another"
 
 
-def draw(ax: plt.Axes, frame: pd.DataFrame, log_scale: bool) -> None:
+def draw(ax: plt.Axes, frame: pd.DataFrame, log_scale: bool, conditions) -> None:
     """One experiment: plan time against iteration, one line per condition."""
-    for condition in ("plain", "warm"):
+    for condition in conditions:
         rows = frame[frame["condition"] == condition].sort_values("iteration")
         if rows.empty:
             continue
@@ -91,15 +103,36 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--csv", type=Path, action="append", required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--plain-csv", type=Path, action="append", default=[],
+                        help="Per panel, a CSV whose plain rows are drawn as the baseline.")
+    parser.add_argument("--conditions", type=str, default="plain,warm",
+                        help="Comma-separated conditions to draw, in order.")
     parser.add_argument("--log", action="store_true", help="Log-scale the time axis.")
     args = parser.parse_args()
 
-    frames = [pd.read_csv(path) for path in args.csv]
+    conditions = args.conditions.split(",")
+    frames = []
+    for index, path in enumerate(args.csv):
+        frame = pd.read_csv(path)
+        if index < len(args.plain_csv):
+            plain = pd.read_csv(args.plain_csv[index])
+            frame = pd.concat(
+                [frame[frame["condition"] != "plain"], plain[plain["condition"] == "plain"]],
+                ignore_index=True,
+            )
+        # A learned row is also addressable by its model, as "learned:<model>".
+        if "model" in frame:
+            learned = frame["condition"].eq("learned")
+            frame.loc[learned, "condition"] = "learned:" + frame.loc[learned, "model"].astype(str)
+            frame = pd.concat(
+                [frame, frame[learned].assign(condition="learned")], ignore_index=True
+            )
+        frames.append(frame[frame["condition"].isin(conditions)])
     fig, axes = plt.subplots(
         1, len(frames), figsize=(5.4 * len(frames), 3.8), squeeze=False
     )
     for ax, frame in zip(axes[0], frames):
-        draw(ax, frame, args.log)
+        draw(ax, frame, args.log, conditions)
     fig.tight_layout()
     args.out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(args.out, dpi=200)
@@ -115,7 +148,8 @@ def main() -> None:
                 reached=("goal_reached", lambda s: s.astype(str).str.lower().eq("true").mean()),
                 plan_time_median=("plan_time", "median"),
                 plan_time_mean=("plan_time", "mean"),
-                memo_hits=("memo_hits", "sum") if "memo_hits" in frame else ("iteration", "size"),
+                seeded_steps=("seeded_steps", "sum") if "seeded_steps" in frame else ("iteration", "size"),
+                full_steps=("full_steps", "sum") if "full_steps" in frame else ("iteration", "size"),
             )
             .round(2)
         )

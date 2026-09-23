@@ -86,32 +86,43 @@ same held-out tasks every round, so the curve moves only when the belief or `psi
 rows) if the handful of personal rows turns out to destabilise the net; it is off by
 default.
 
-## Memorizing the first plan
+## Planning from a plan cache or a learned model first
 
-The simplest "learning to plan", after section 4 of `notebooks/dreaming_rom_planner.ipynb`:
+The simplest "learning to plan", after the cache in `notebooks/dreaming_rom_planner.ipynb`:
 skip the queries and the belief (Stages 1-2), hand the planner the person's true range of
-motion, and wrap the `plan-limb-motion` stream so it memorizes the first torque trajectory
-the MPC finds. Every later call first replays that trajectory open-loop from the state it
-is given; if it still lands inside the goal tolerance and passes the safety checks, it is
-returned with no MPC at all, otherwise the MPC runs as usual. No model is fitted.
+motion, and try a seed before searching. The seed is rolled out closed-loop from the
+grasped state with no search, one torque per control step, under the planner's own limit
+checks and stopping tolerance. If it reaches the goal it is the plan, about a second's
+work; if it violates a limit or stalls it is discarded and the stock MPC plans from the
+original state, exactly as `plain` does, so the worst case is plain plus that second.
 
-Two experiments, `plain` (the stock stream) against `warm` (the memo), plan time against
-task iteration. One repeats a single task; the other draws each task's goal within
-`V` radians of the first, which is enough to miss the memo since the goal tolerance is
-0.1 rad. The grasp, base pose and IK seeds are held fixed across iterations so the
-post-grasp state repeats; only the MPC's noise is reseeded per iteration.
+- `warm`: a cache of solved plans keyed on the goal rounded to 0.1 rad, the best four per
+  key. A hit rolls out the stored torques from the stored state nearest the current one;
+  a miss plans from scratch. The belief would be part of the key too, but it is constant.
+- `learned`: a model refit after every solved episode on the MPC's own rows, the map from
+  the current state (limb and robot joints, goal, step) to the next horizon's torques, the
+  same rows `fit` trains on. Queried at every control step of the rollout, so it corrects
+  for a goal it has not seen. Iteration 0 has no model and runs plain.
+- `plain`: the stock planner.
+
+Two task settings: one task repeated, and each goal drawn within `V` radians of the first.
+The grasp, base pose and IK seeds are held fixed across iterations so the post-grasp state
+repeats; only the MPC's noise is reseeded per iteration. `--seed-mode step` instead seeds
+every MPC step (batch 0 with `--seed-rollouts` noisy copies, accepted within
+`--seed-tolerance` of the MPC's goal-directed candidates) and falls back per step; the
+runs under `data/memo/directed_bar/`, `nominal_bar/` and `batch8/` are earlier per-step
+variants, and `data/memo/replay/` replayed the stored plan open-loop.
 
 ```bash
 scripts/run_memo_experiments.sh 20 0.3 isolated-left-arm   # N, V, variant
 # or one sequence at a time:
-python -m limb_baseline.memo --condition warm --variation 0 --num-tasks 20 \
-    --variant isolated-left-arm --out data/memo/same_task.csv
+python -m limb_baseline.memo --condition learned --model ridge --variation 0.3 \
+    --num-tasks 20 --variant isolated-left-arm --out data/memo/varied_task.csv
 python scripts/make_memo_figures.py --csv data/memo/same_task.csv \
-    --csv data/memo/varied_task.csv --out figures/memo/plan_time.png
+    --csv data/memo/varied_task.csv --plain-csv data/memo/replay/same_task.csv \
+    --plain-csv data/memo/replay/varied_task.csv --conditions plain,warm \
+    --out figures/memo/memo_plan_time.png
 ```
-
-`--cache-mode naive` returns the memorized trajectory without the replay check, which
-keeps planning fast under variation at the price of executed plans that miss the goal.
 
 The package runs against kinder-baselines `main`; `src/limb_baseline/utils.py` supplies
 the few planner names it was written against that `main` renamed or dropped.

@@ -1,10 +1,12 @@
-"""Memorize the first `plan-limb-motion` result and replay it on later calls.
+"""Plan from a cache of solved plans or a learned model first, and search only if that fails.
 
-After the notebook's section 4: stages 1-2 skipped, planner given the true range of
-motion, no model fitted. A replay is verified open-loop and falls back to the MPC when it
-misses; `--cache-mode naive` returns it unverified.
+After the notebook's cache: on a hit (or with a model) the seed is rolled out closed-loop
+from the grasped state with no search, one torque per control step, and kept as the plan
+if it reaches the goal within the limits. Otherwise it is discarded and the stock MPC
+plans from the original state, as plain does. `--seed-mode step` instead seeds every
+MPC step and falls back per step. Stages 1-2 skipped, true range of motion.
 
-    python -m limb_baseline.memo --condition warm --variation 0 --num-tasks 20 \
+    python -m limb_baseline.memo --condition warm --variation 0 --num-tasks 20 \\
         --out data/memo/same_task.csv
 """
 
@@ -31,7 +33,7 @@ from kinder_pddlstream_planning.limbrepositioning3d.stream import (
 )
 from kinder_pddlstream_planning.limbrepositioning3d.utils import (
     CoupledState,
-    advance_corrected,
+    advance,
     capture_state,
     commanded_robot_torque,
     exceeds_human_torque_limits,
@@ -50,164 +52,381 @@ from limb_baseline.tasks import DEFAULT_TASK_DISTRIBUTION, Task
 from limb_baseline.variant import DEFAULT_VARIANT, VARIANTS
 from limb_baseline.variant import current as current_variant
 from limb_baseline.variant import select as select_variant
+from limb_baseline.warmstart import (
+    control_basis,
+    horizon_window,
+    make_regressors,
+    segment_features,
+)
 from limb_baseline.worker import isolate_worker, task_sampler
 
-CONDITIONS = ("plain", "warm")
-CACHE_MODES = ("validated", "naive")
+CONDITIONS = ("plain", "warm", "learned")
+SEED_MODES = ("plan", "step")
+MODELS = ("mlp", "mlp_light", "ridge", "gradient_boosting")
+
+
+# ------------------------------------------------------------------ seeded MPC
 
 
 @dataclass
-class LimbMotionMemo:
-    """One memorized `plan-limb-motion` answer, and how often it was usable."""
+class SeedConfig:
+    """How the seed is used: a whole policy rollout, or batch 0 of every MPC step."""
 
-    mode: str = "validated"
-    trajectory: TorqueTrajectory | None = None
-    end_state: CoupledState | None = None
-    # Per-episode counters; `reset()` clears them before each plan.
-    calls: int = 0
-    hits: int = 0
-    replay_misses: int = 0
-    mpc_calls: int = 0
-    seconds_in_stream: float = 0.0
-    last_miss_reason: str = ""
+    mode: str = "plan"
+    # Plan mode: give up the rollout after this many control steps without improvement,
+    # or this many in total.
+    patience: int = 60
+    max_steps: int = 300
+    # Rollouts spent on the seed and its noisy copies before the full batch is tried.
+    rollouts: int = 1
+    # Accept the seed when its cost is within this fraction of the best of the MPC's
+    # goal-directed candidates, a bar the seed cannot influence; a worse seed sends the
+    # step to the full batch.
+    tolerance: float = 0.0
+
+
+@dataclass
+class SeedStats:
+    """Per-episode counts of what the seeded MPC did."""
+
+    seeded_steps: int = 0
+    full_steps: int = 0
+    seed_rejected: int = 0
+    policy_tried: int = 0
+    policy_reached: int = 0
+    policy_steps: int = 0
+    policy_seconds: float = 0.0
+    policy_failure: str = ""
+    policy_final_error: float = float("nan")
+    # Fraction of the remaining error each committed seed removed over its horizon.
+    seed_progress: list = field(default_factory=list)
+    # The same for the seed on steps that fell back to the full batch.
+    rejected_progress: list = field(default_factory=list)
 
     def reset(self) -> None:
-        """Forget the counters, not the memorized plan."""
-        self.calls = self.hits = self.replay_misses = self.mpc_calls = 0
-        self.seconds_in_stream = 0.0
-        self.last_miss_reason = ""
-
-    @property
-    def filled(self) -> bool:
-        return self.trajectory is not None
-
-    def _replay(
-        self, ctx: LimbStreamContext, s1: CoupledState, q2
-    ) -> tuple[TorqueTrajectory, CoupledState] | str:
-        """Replay the memorized torques from `s1`; the new trajectory, or why it failed.
-
-        The same open-loop check `plan_limb_motion` runs on its own MPC result, so a
-        memorized plan is held to the same standard as a fresh one.
-        """
-        assert self.trajectory is not None
-        sim = ctx.sim
-        goal = np.asarray(q2.positions, dtype=np.float64)
-        if not ctx.in_believed_limits(list(q2.positions)):
-            return "the target is outside the limb's joint limits"
-        robot_torques = [list(t) for t in self.trajectory.robot_torques]
-        human_torques: list[list[float]] = []
-        robot_induced: list[list[float]] = []
-        commanded: list[list[float]] = []
-        with saved_sim_state(sim):
-            restore_state(sim, s1)
-            limb_path = [list(sim.limb.get_joint_positions())]
-            for torque in robot_torques:
-                step_command = commanded_robot_torque(sim, torque)
-                commanded.append(list(step_command))
-                human_torque = advance_corrected(sim, torque)
-                human_torques.append(list(human_torque.total))
-                robot_induced.append(list(human_torque.robot))
-                limb_path.append(list(sim.limb.get_joint_positions()))
-                if limb_out_of_limits(ctx):
-                    return "replayed the memorized plan past the limb's anatomical limits"
-                if exceeds_human_torque_limits(ctx, human_torque):
-                    return "replayed the memorized plan past the person's torque limits"
-                if exceeds_robot_torque_limits(ctx, step_command):
-                    return "replayed the memorized plan past the robot's torque limits"
-            s2 = capture_state(sim)
-            error = limb_error(ctx, s2.limb_positions, goal)
-            if error >= ctx.goal_atol:
-                return f"replayed the memorized plan to {error:.3f}, outside the tolerance"
-            if ctx.resting_penetration and human_in_collision(ctx):
-                return "replayed the memorized plan into the person or the furniture"
-        return (
-            TorqueTrajectory(
-                robot_torques,
-                human_torques,
-                robot_induced,
-                limb_path,
-                commanded,
-                [0.0] * len(robot_torques),
-            ),
-            s2,
-        )
-
-    def stream(
-        self, ctx: LimbStreamContext, s1: CoupledState, q2
-    ) -> Iterator[tuple[TorqueTrajectory, CoupledState]]:
-        """Drop-in for `plan_limb_motion`: the memo first, the MPC only when it must.
-
-        Time is charged before each yield: PDDLStream keeps the generator open, so a
-        `finally` would only run at garbage collection, after the episode's row is out.
-        """
-        started = time.perf_counter()
-        self.calls += 1
-        if self.filled:
-            if self.mode == "naive":
-                assert self.trajectory is not None and self.end_state is not None
-                self.hits += 1
-                print("plan-limb-motion (memo): returned the memorized plan blindly.")
-                self.seconds_in_stream += time.perf_counter() - started
-                yield self.trajectory, self.end_state
-                return
-            replayed = self._replay(ctx, s1, q2)
-            if not isinstance(replayed, str):
-                self.hits += 1
-                print(
-                    "plan-limb-motion (memo): the memorized plan replays to the goal; "
-                    f"{len(replayed[0].robot_torques)} steps, no MPC."
-                )
-                self.seconds_in_stream += time.perf_counter() - started
-                yield replayed
-                return
-            self.replay_misses += 1
-            self.last_miss_reason = replayed
-            print(f"plan-limb-motion (memo): {replayed}; falling back to the MPC.")
-        self.mpc_calls += 1
-        for trajectory, s2 in plan_limb_motion(ctx, s1, q2):
-            if not self.filled:
-                self.trajectory, self.end_state = trajectory, s2
-                print(
-                    "plan-limb-motion (memo): memorized a plan of "
-                    f"{len(trajectory.robot_torques)} steps."
-                )
-            self.seconds_in_stream += time.perf_counter() - started
-            yield trajectory, s2
-            started = time.perf_counter()
-        self.seconds_in_stream += time.perf_counter() - started
+        self.seeded_steps = self.full_steps = self.seed_rejected = 0
+        self.policy_tried = self.policy_reached = self.policy_steps = 0
+        self.policy_seconds = 0.0
+        self.policy_failure, self.policy_final_error = "", float("nan")
+        self.seed_progress, self.rejected_progress = [], []
 
 
-# The seed the MPC's sampling noise draws from on the next construction, when set.
+SEED = SeedConfig()
+STATS = SeedStats()
+# The seed the MPC's noise draws from on the next construction, when set.
 MPC_NOISE_SEED: int | None = None
 _STOCK_MPC = planner_stream.PredictiveSamplingMPC
 
 
-class _ReseededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
-    """The planner's MPC, with its noise drawn from `MPC_NOISE_SEED` instead.
+class _SeededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
+    """The planner's MPC with a batch-0 seed from `ctx.warm_start`, and its own noise seed.
 
-    `LimbStreamContext.motion_seed` seeds grasp, base, IK and MPC noise alike. Repeating
-    one task needs the first three fixed (so the grasped state, and with it the memo's
-    replay, repeats) while the MPC still searches afresh each iteration.
+    `LimbStreamContext.motion_seed` seeds grasp, base, IK and MPC noise alike; repeating
+    one task needs the first three fixed while the MPC still searches afresh.
     """
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, ctx, goal, start=None) -> None:
+        # The stock constructor seeds its nominal from the hook and expects control
+        # points; a horizon of torques is projected onto them here instead.
+        hook, ctx.warm_start = ctx.warm_start, None
+        try:
+            super().__init__(ctx, goal, start)
+        finally:
+            ctx.warm_start = hook
         if MPC_NOISE_SEED is not None:
             self._rng = np.random.default_rng(MPC_NOISE_SEED)
+        if hook is not None and start is not None:
+            seeded = np.asarray(hook(start, goal, 0), dtype=np.float64)
+            if seeded.shape[0] == self._cfg.horizon:
+                seeded, *_ = np.linalg.lstsq(control_basis(self._cfg), seeded, rcond=None)
+            self._nominal = self._clip(seeded)
+
+    def step(self) -> list:
+        hook = self._ctx.warm_start
+        if hook is None or SEED.rollouts <= 0:
+            STATS.full_steps += 1
+            return super().step()
+        ctx, sim, cfg = self._ctx, self._sim, self._cfg
+        error = limb_error(ctx, sim.limb.get_joint_positions(), self._goal)
+        start = capture_state(sim)
+        seed = self._clip(np.asarray(hook(start, self._goal, self._step_index), float))
+        scale = cfg.noise_scale * float(
+            np.clip(error / cfg.noise_reference_error, cfg.min_noise_ratio, 1.0)
+        )
+        batch = [seed] + [
+            self._clip(seed + self._rng.normal(scale=scale, size=seed.shape))
+            for _ in range(SEED.rollouts - 1)
+        ]
+        # A seed given per control step is rolled out verbatim; control points are
+        # interpolated as the MPC's own candidates are.
+        exact = seed.shape[0] == cfg.horizon
+
+        def expand(points):
+            return points if exact else self._expand(points)
+
+        def as_nominal(points):
+            if not exact:
+                return points
+            solution, *_ = np.linalg.lstsq(control_basis(cfg), points, rcond=None)
+            return self._clip(solution)
+        reach = max(ctx.goal_atol - cfg.replay_slack, ctx.goal_atol / 2)
+
+        # The bar: the MPC's own goal-directed candidates, proportional pushes toward
+        # the goal at each gain with a noisy twin. Unlike the shifted nominal they owe
+        # nothing to earlier seeds, so a mediocre policy cannot keep vouching for itself.
+        bar = float("inf")
+        for points in self._directed_candidates(scale):
+            directed_rejected, directed_cost = self._score(start, self._expand(points))
+            if not directed_rejected:
+                bar = min(bar, directed_cost * (1.0 + SEED.tolerance))
+
+        def passes(rejected_flag: int, cost: float, terminal: float) -> bool:
+            return not rejected_flag and (terminal < reach or cost <= bar)
+
+        # The seed itself first: following it exactly keeps the state on the path it
+        # came from. Its noisy copies are only a backup when it falls short.
+        chosen = None
+        rejected, cost = self._score(start, expand(seed))
+        seed_terminal = limb_error(ctx, sim.limb.get_joint_positions(), self._goal)
+        seed_cost = cost
+        if passes(rejected, cost, seed_terminal):
+            chosen = (seed, seed_terminal)
+        else:
+            best = None
+            for points in batch[1:]:
+                rejected_copy, cost = self._score(start, expand(points))
+                terminal = limb_error(ctx, sim.limb.get_joint_positions(), self._goal)
+                if not rejected_copy and (best is None or cost < best[0]):
+                    best = (cost, points, terminal)
+            if best is not None and passes(0, best[0], best[2]):
+                chosen = (best[1], best[2])
+        restore_state(sim, start, regrasp=False)
+        if os.environ.get("MEMO_DEBUG"):
+            print(
+                f"seed step={self._step_index} error={error:.4f} "
+                f"terminal={seed_terminal:.4f} rejected={rejected} cost={seed_cost:.1f} "
+                f"bar={bar:.1f} accepted={chosen is not None} nearest={getattr(hook, 'last', None)}",
+                flush=True,
+            )
+        if chosen is not None:
+            STATS.seeded_steps += 1
+            STATS.seed_progress.append((error - chosen[1]) / max(error, 1e-9))
+            self._nominal = as_nominal(chosen[0])
+            self._step_index += self._commit
+            return [list(t) for t in expand(chosen[0])[: self._commit]]
+        STATS.rejected_progress.append((error - seed_terminal) / max(error, 1e-9))
+        STATS.seed_rejected += 1
+        STATS.full_steps += 1
+        return super().step()
 
 
-def install_mpc_reseeding() -> None:
-    """Have every MPC the planner builds draw its noise from `MPC_NOISE_SEED`."""
-    planner_stream.PredictiveSamplingMPC = _ReseededMPC
+def install_mpc() -> None:
+    """Have the planner build the seeded MPC from here on."""
+    planner_stream.PredictiveSamplingMPC = _SeededMPC
 
 
-def install(memo: LimbMotionMemo) -> None:
-    """Route every `plan-limb-motion` call this process makes through `memo`.
+# --------------------------------------------------------------- plan mode
 
-    `create_problem` looks the stream function up by name in its module at call time,
-    so rebinding that name is enough; nothing in the planner package changes on disk.
+
+def policy_rollout(ctx: LimbStreamContext, s1: CoupledState, q2, hook):
+    """Follow `hook` closed-loop from `s1`; the trajectory and end state if it reaches `q2`.
+
+    The same per-step checks `plan_limb_motion` applies, and the same stopping
+    tolerance, so a returned plan is one the planner would have certified. Nothing is
+    searched: a rollout that violates a limit, stalls or runs long returns None.
     """
-    planner_run.plan_limb_motion = memo.stream
+    sim, cfg = ctx.sim, ctx.mpc
+    if not ctx.in_believed_limits(list(q2.positions)):
+        return None
+    goal = np.asarray(q2.positions, dtype=np.float64)
+    lower, upper = ctx.robot_torque_limits
+    threshold = max(ctx.goal_atol - cfg.replay_slack, ctx.goal_atol / 2)
+    robot_torques, human_torques, robot_induced, commanded = [], [], [], []
+    with saved_sim_state(sim):
+        restore_state(sim, s1)
+        limb_path = [list(sim.limb.get_joint_positions())]
+        error = limb_error(ctx, sim.limb.get_joint_positions(), goal)
+        best, since, reached = error, 0, error < threshold
+        for step in range(SEED.max_steps):
+            if reached or since >= SEED.patience:
+                break
+            state = capture_state(sim)
+            block = np.asarray(hook(state, goal, step), dtype=np.float64)
+            torque = np.clip(block[0], lower, upper)
+            for _ in range(cfg.action_repeat):
+                command = commanded_robot_torque(sim, torque)
+                human = advance(sim, command)
+                robot_torques.append(list(torque))
+                commanded.append(list(command))
+                human_torques.append(list(human.total))
+                robot_induced.append(list(human.robot))
+                limb_path.append(list(sim.limb.get_joint_positions()))
+                failure = (
+                    "robot torque limit" if exceeds_robot_torque_limits(ctx, command)
+                    else "human torque limit" if exceeds_human_torque_limits(ctx, human)
+                    else "limb out of limits" if limb_out_of_limits(ctx)
+                    else "collision" if ctx.resting_penetration and human_in_collision(ctx)
+                    else ""
+                )
+                error = limb_error(ctx, sim.limb.get_joint_positions(), goal)
+                if failure:
+                    STATS.policy_failure = f"{failure} at step {step}"
+                    STATS.policy_final_error = error
+                    STATS.policy_steps = step
+                    return None
+                if error < threshold:
+                    reached = True
+                    break
+            since = 0 if best - error > cfg.divergence_tolerance else since + 1
+            best = min(best, error)
+        STATS.policy_steps = len(robot_torques) // cfg.action_repeat
+        STATS.policy_final_error = error
+        if not reached or not robot_torques:
+            STATS.policy_failure = (
+                f"stalled at {error:.3f} after {STATS.policy_steps} steps"
+                if since >= SEED.patience else f"ran out of steps at {error:.3f}"
+            )
+            return None
+        s2 = capture_state(sim)
+        if limb_error(ctx, s2.limb_positions, goal) >= ctx.goal_atol:
+            STATS.policy_failure = "outside tolerance at the end"
+            return None
+    return (
+        TorqueTrajectory(
+            robot_torques, human_torques, robot_induced, limb_path, commanded,
+            [0.0] * len(robot_torques),
+        ),
+        s2,
+    )
+
+
+# ------------------------------------------------------------------------ memo
+
+
+# The notebook keys its cache on the goal rounded to this resolution, in radians.
+KEY_RESOLUTION = 0.1
+# Plans kept per key, best first.
+KEEP_PER_KEY = 4
+
+
+def goal_key(positions) -> tuple[int, ...]:
+    """The cache key of a goal: each joint rounded to `KEY_RESOLUTION`."""
+    return tuple(int(v) for v in np.round(np.asarray(positions) / KEY_RESOLUTION))
+
+
+@dataclass
+class LimbMotionMemo:
+    """Solved `plan-limb-motion` trajectories by goal, served as the MPC's seed.
+
+    The belief would be part of the key too, but stages 1-2 are skipped here, so it is
+    the same on every call and drops out.
+    """
+
+    plans: dict = field(default_factory=dict)
+    calls: int = 0
+    hits: int = 0
+    misses: int = 0
+
+    def reset(self) -> None:
+        self.calls = self.hits = self.misses = 0
+
+    @property
+    def size(self) -> int:
+        return sum(len(entries) for entries in self.plans.values())
+
+    def store(self, key: tuple, trajectory: TorqueTrajectory) -> None:
+        """Keep `trajectory` under `key`; shorter plans rank first."""
+        entries = self.plans.setdefault(key, [])
+        entries.append((len(trajectory.robot_torques), trajectory))
+        entries.sort(key=lambda entry: entry[0])
+        del entries[KEEP_PER_KEY:]
+
+    def lookup(self, key: tuple) -> TorqueTrajectory | None:
+        entries = self.plans.get(key)
+        return entries[0][1] if entries else None
+
+    @staticmethod
+    def as_hook(trajectory: TorqueTrajectory, mpc: MPCConfig):
+        """`ctx.warm_start`: the stored torques, verbatim, from the stored state nearest
+        `state`, one row per control step of the horizon.
+
+        Indexed by state rather than by step, so a search step that leaves the stored
+        path picks the seed back up wherever the path passes closest.
+        """
+        torques = np.asarray(trajectory.robot_torques, dtype=np.float64)
+        path = [list(q) for q in trajectory.limb_path[: len(torques)]]
+
+        def hook(state: CoupledState, goal: np.ndarray, step: float = 0.0):
+            del goal
+            if path:
+                here = list(state.limb_positions)
+                first = min(
+                    range(len(path)),
+                    key=lambda i: joint_position_distance(LIMB_JOINT_INFOS, path[i], here),
+                )
+                hook.last = (first, round(joint_position_distance(LIMB_JOINT_INFOS, path[first], here), 5))
+            else:
+                first = min(int(step) * mpc.action_repeat, len(torques) - 1)
+            return horizon_window(torques[first:], mpc)
+
+        hook.last = None
+        return hook
+
+
+
+@dataclass
+class SeededStream:
+    """Drop-in for `plan_limb_motion` that plans from a cache or a model first.
+
+    With `memo`, the seed is the cached plan for this goal, if any. Without it, the seed
+    is whatever `run_episode` put in `ctx.warm_start`, the learned model's hook.
+    """
+
+    memo: LimbMotionMemo | None = None
+
+    def stream(
+        self, ctx: LimbStreamContext, s1: CoupledState, q2
+    ) -> Iterator[tuple[TorqueTrajectory, CoupledState]]:
+        key = goal_key(q2.positions)
+        if self.memo is not None:
+            self.memo.calls += 1
+            stored = self.memo.lookup(key)
+            if stored is not None:
+                self.memo.hits += 1
+                hook = LimbMotionMemo.as_hook(stored, ctx.mpc)
+                print(f"plan-limb-motion (memo): hit, {len(stored.robot_torques)} steps stored.")
+            else:
+                self.memo.misses += 1
+                hook = None
+                print("plan-limb-motion (memo): miss.")
+        else:
+            hook = ctx.warm_start
+
+        if hook is not None and SEED.mode == "plan":
+            STATS.policy_tried += 1
+            started = time.perf_counter()
+            result = policy_rollout(ctx, s1, q2, hook)
+            STATS.policy_seconds += time.perf_counter() - started
+            if result is not None:
+                STATS.policy_reached += 1
+                print(f"plan-limb-motion (policy): reached the goal in "
+                      f"{STATS.policy_steps} control steps, no search.")
+                if self.memo is not None:
+                    self.memo.store(key, result[0])
+                yield result
+                return
+            print("plan-limb-motion (policy): rollout failed; planning from scratch.")
+            hook = None
+        ctx.warm_start = hook
+        for trajectory, s2 in plan_limb_motion(ctx, s1, q2):
+            if self.memo is not None:
+                self.memo.store(key, trajectory)
+            yield trajectory, s2
+
+
+def install(stream: SeededStream) -> None:
+    """Route every `plan-limb-motion` call this process makes through `stream`."""
+    planner_run.plan_limb_motion = stream.stream
 
 
 def uninstall() -> None:
@@ -215,7 +434,56 @@ def uninstall() -> None:
     planner_run.plan_limb_motion = plan_limb_motion
 
 
-# ----------------------------------------------------------------------------- tasks
+# --------------------------------------------------------------- learned seed
+
+
+@dataclass
+class OnlineWarmStart:
+    """Rows from every solved episode so far, and the model refit on them.
+
+    The label is the next horizon's torques verbatim, `(horizon, NUM_ROBOT_JOINTS)`
+    flattened, so a model that fits its rows closely reproduces the planner's motion.
+    """
+
+    name: str = "mlp_light"
+    features: list = field(default_factory=list)
+    labels: list = field(default_factory=list)
+    estimator: object | None = None
+    mpc: MPCConfig = field(default_factory=MPCConfig)
+
+    @property
+    def model(self):
+        return self if self.estimator is not None else None
+
+    def add(self, segments) -> None:
+        for segment in segments:
+            self.features.append(segment.features)
+            self.labels.append(np.asarray(segment.torques).ravel())
+
+    def refit(self, mpc: MPCConfig) -> None:
+        if not self.features:
+            return
+        self.mpc = mpc
+        estimator = make_regressors()[self.name]
+        estimator.fit(np.asarray(self.features), np.asarray(self.labels))
+        self.estimator = estimator
+
+    def as_hook(self, belief_features: np.ndarray):
+        """The callable `LimbStreamContext.warm_start` expects."""
+        assert self.estimator is not None
+        horizon = self.mpc.horizon
+
+        def hook(state, goal: np.ndarray, step: float = 0.0):
+            features = segment_features(
+                state.limb_positions, state.robot_positions, goal, belief_features, step
+            )
+            flat = self.estimator.predict(np.asarray(features).reshape(1, -1))[0]
+            return flat.reshape(horizon, -1)
+
+        return hook
+
+
+# ----------------------------------------------------------------------- tasks
 
 
 def nominal_task(theta: np.ndarray, seed: int) -> Task:
@@ -233,10 +501,8 @@ def perturbed_task(
 ) -> Task:
     """`nominal` with its goal (and optionally its start) nudged by up to `variation` rad.
 
-    Each active joint moves by an independent uniform draw in `[-variation, variation]`,
-    clipped to the person's range of motion. The draw is rejected if the separation
-    leaves the task distribution's band or the nominal base pose can no longer carry it,
-    so every variant is as solvable as the original.
+    Rejected if the separation leaves the task distribution's band or the nominal base
+    pose can no longer carry it, so every variant is as solvable as the original.
     """
     sampler = task_sampler()
     lower, upper = theta_to_joint_limits(theta)
@@ -257,9 +523,7 @@ def perturbed_task(
             nominal.base_pose, init, goal
         ):
             continue
-        return dataclasses.replace(
-            nominal, limb_init=tuple(init), limb_goal=tuple(goal)
-        )
+        return dataclasses.replace(nominal, limb_init=tuple(init), limb_goal=tuple(goal))
     raise RuntimeError(
         f"no reachable perturbation of the nominal task within {variation} rad "
         f"in {max_draws} draws"
@@ -273,7 +537,7 @@ def task_shift(task: Task, nominal: Task) -> float:
     )
 
 
-# ------------------------------------------------------------------------ experiment
+# ------------------------------------------------------------------ experiment
 
 
 def run_sequence(
@@ -283,25 +547,29 @@ def run_sequence(
     vary_init: bool,
     person: int,
     task_seed: int,
-    cache_mode: str,
+    model_name: str,
     settings: PlannerSettings,
     out: Path,
     tag: str,
 ) -> list[dict]:
     """Plan `num_tasks` episodes in order in this one process, appending a row each.
 
-    The memo lives across iterations, which is the whole point, so the sequence cannot
-    be spread over workers the way `evaluate` spreads independent episodes.
+    The memo and the model live across iterations, so the sequence cannot be spread
+    over workers the way `evaluate` spreads independent episodes.
     """
+    global MPC_NOISE_SEED  # pylint: disable=global-statement
     isolate_worker()
     theta = DEFAULT_PRIOR.sample(np.random.default_rng(person))
     nominal = nominal_task(theta, task_seed)
-    memo = LimbMotionMemo(mode=cache_mode)
+    memo = LimbMotionMemo()
+    learner = OnlineWarmStart(model_name)
     if condition == "warm":
-        install(memo)
+        install(SeededStream(memo))
+    elif condition == "learned":
+        install(SeededStream(None))
     else:
         uninstall()
-    install_mpc_reseeding()
+    install_mpc()
 
     records = []
     for iteration in range(num_tasks):
@@ -312,12 +580,15 @@ def run_sequence(
             else perturbed_task(nominal, theta, rng, variation, vary_init)
         )
         memo.reset()
-        global MPC_NOISE_SEED  # pylint: disable=global-statement
+        STATS.reset()
         MPC_NOISE_SEED = task_seed * 1000 + iteration
         record = {
             "tag": tag,
             "condition": condition,
-            "cache_mode": cache_mode if condition == "warm" else "",
+            "model": model_name if condition == "learned" else "",
+            "seed_mode": SEED.mode,
+            "seed_rollouts": SEED.rollouts,
+            "seed_tolerance": SEED.tolerance,
             "variation": variation,
             "vary_init": vary_init,
             "variant": current_variant().name,
@@ -327,17 +598,17 @@ def run_sequence(
             "mpc_seed": MPC_NOISE_SEED,
             "separation": round(task.separation, 4),
             "goal_shift": round(task_shift(task, nominal), 4),
+            "num_train_rows": len(learner.features),
         }
         try:
-            # One geometry seed for every iteration, so grasp, base pose and IK repeat
-            # and the memo has a state to replay from; only the MPC noise (above) is
-            # fresh, so the plain condition shows its own spread.
+            # One geometry seed for every iteration, so grasp, base pose and IK repeat;
+            # only the MPC noise (above) is fresh, so plain shows its own spread.
             result = run_episode(
                 task,
                 theta,
                 belief=None,
                 believed_theta=theta,
-                warm_start=None,
+                warm_start=learner.model if condition == "learned" else None,
                 seed=task_seed,
                 settings=settings,
             )
@@ -347,18 +618,34 @@ def run_sequence(
                     "goal_reached": result.goal_reached,
                     "plan_time": round(result.plan_time, 2),
                     "execute_time": round(result.execute_time, 2),
-                    "stream_seconds": round(memo.seconds_in_stream, 2),
                     "stream_calls": memo.calls,
                     "memo_hits": memo.hits,
-                    "memo_replay_misses": memo.replay_misses,
-                    "mpc_calls": memo.mpc_calls,
-                    "memo_filled": memo.filled,
+                    "memo_misses": memo.misses,
+                    "memo_size": memo.size,
+                    "policy_tried": STATS.policy_tried,
+                    "policy_reached": STATS.policy_reached,
+                    "policy_steps": STATS.policy_steps,
+                    "policy_seconds": round(STATS.policy_seconds, 2),
+                    "policy_failure": STATS.policy_failure,
+                    "policy_final_error": round(STATS.policy_final_error, 4),
+                    "seeded_steps": STATS.seeded_steps,
+                    "full_steps": STATS.full_steps,
+                    "seed_rejected": STATS.seed_rejected,
+                    "seed_progress_mean": round(float(np.mean(STATS.seed_progress)), 4)
+                    if STATS.seed_progress else float("nan"),
+                    "rejected_progress_mean": round(float(np.mean(STATS.rejected_progress)), 4)
+                    if STATS.rejected_progress else float("nan"),
                     "num_control_steps": result.num_control_steps,
                     "rom_violation_steps": result.rom_violation_steps,
                     "failure_reason": result.failure_reason,
-                    "memo_miss_reason": memo.last_miss_reason,
+                    "fit_time": 0.0,
                 }
             )
+            if condition == "learned" and result.goal_reached:
+                learner.add(result.segments)
+                started = time.perf_counter()
+                learner.refit(settings.mpc)
+                record["fit_time"] = round(time.perf_counter() - started, 2)
         except Exception as exc:  # pylint: disable=broad-except
             record.update(
                 {
@@ -374,7 +661,9 @@ def run_sequence(
         print(
             f"[{tag}/{condition} {iteration + 1}/{num_tasks}] "
             f"plan={record.get('plan_time')}s reached={record.get('goal_reached')} "
-            f"hits={record.get('memo_hits', 0)} mpc={record.get('mpc_calls', 0)} "
+            f"policy {record.get('policy_reached', 0)}/{record.get('policy_tried', 0)} "
+            f"seeded/full steps={record.get('seeded_steps', 0)}/{record.get('full_steps', 0)} "
+            f"memo hits={record.get('memo_hits', 0)} rows={len(learner.features)} "
             f"{record.get('failure_reason', '')}",
             flush=True,
         )
@@ -386,7 +675,7 @@ def main() -> None:
     """CLI entry point: one condition, one task sequence, one CSV."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--condition", choices=CONDITIONS, required=True)
-    parser.add_argument("--num-tasks", type=int, default=10)
+    parser.add_argument("--num-tasks", type=int, default=20)
     parser.add_argument(
         "--variation", type=float, default=0.0,
         help="Radians each active goal joint may move from the nominal task; 0 repeats "
@@ -394,7 +683,16 @@ def main() -> None:
     )
     parser.add_argument("--vary-init", action="store_true",
                         help="Also nudge the limb's start, not only its goal.")
-    parser.add_argument("--cache-mode", choices=CACHE_MODES, default="validated")
+    parser.add_argument("--model", choices=MODELS, default="mlp_light",
+                        help="Regressor the learned condition refits each iteration.")
+    parser.add_argument("--seed-mode", choices=SEED_MODES, default=SeedConfig.mode,
+                        help="plan: roll the seed out whole, search only if it fails; "
+                             "step: seed each MPC step and fall back per step.")
+    parser.add_argument("--seed-rollouts", type=int, default=SeedConfig.rollouts,
+                        help="Rollouts spent on the seed and its noisy copies; 0 disables.")
+    parser.add_argument("--seed-tolerance", type=float, default=SeedConfig.tolerance,
+                        help="How much worse than the MPC's best goal-directed candidate a "
+                             "seed may score.")
     parser.add_argument("--variant", choices=VARIANTS, default=DEFAULT_VARIANT)
     parser.add_argument("--person", type=int, default=22,
                         help="Seed of the one person whose true range of motion is used.")
@@ -409,6 +707,8 @@ def main() -> None:
         os.environ.setdefault(variable, "1")
 
     select_variant(args.variant)
+    SEED.mode = args.seed_mode
+    SEED.rollouts, SEED.tolerance = args.seed_rollouts, args.seed_tolerance
     mpc = dataclasses.replace(
         MPCConfig(),
         num_rollouts=args.num_rollouts,
@@ -419,7 +719,7 @@ def main() -> None:
     tag = args.tag or ("same_task" if args.variation <= 0.0 else f"varied_{args.variation:g}")
     records = run_sequence(
         args.condition, args.num_tasks, args.variation, args.vary_init, args.person,
-        args.task_seed, args.cache_mode, settings, out, tag,
+        args.task_seed, args.model, settings, out, tag,
     )
     times = [r["plan_time"] for r in records if r.get("solved")]
     print(

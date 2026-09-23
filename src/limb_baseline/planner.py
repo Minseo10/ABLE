@@ -42,7 +42,12 @@ from limb_baseline.queries import (
 from limb_baseline.tasks import Task
 from limb_baseline.variant import current as current_variant
 from limb_baseline.variant import scene_config
-from limb_baseline.warmstart import WarmStartModel, project_torques, segment_features
+from limb_baseline.warmstart import (
+    WarmStartModel,
+    horizon_window,
+    project_torques,
+    segment_features,
+)
 
 
 @dataclass(frozen=True)
@@ -66,10 +71,15 @@ DEFAULT_PLANNER_SETTINGS = PlannerSettings()
 
 @dataclass
 class SegmentSample:
-    """One `move_limb` segment as a training row."""
+    """One `move_limb` control step as a training row.
+
+    `psi` is the horizon fitted to control points; `torques` the same horizon as the
+    raw per-control-step torques it was fitted to, `(horizon, NUM_ROBOT_JOINTS)`.
+    """
 
     features: NDArray[np.float64]
     psi: NDArray[np.float64]
+    torques: NDArray[np.float64] | None = None
 
 
 @dataclass
@@ -203,6 +213,7 @@ def dense_rows(segments, log: RolloutLog, belief_features, mpc: MPCConfig) -> li
                         limb, robot, goal, belief_features, step
                     ),
                     psi=project_torques(torques[step * mpc.action_repeat :], mpc),
+                    torques=horizon_window(torques[step * mpc.action_repeat :], mpc),
                 )
             )
         offset += len(torques)

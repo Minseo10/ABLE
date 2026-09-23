@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# Plain PDDLStream against the memorized plan-limb-motion stream, two experiments:
-#   1. one task repeated N times            -> data/memo/same_task.csv
-#   2. N tasks whose goals differ by <= V rad -> data/memo/varied_task.csv
-# The four sequences run in parallel, one process each, so the memo can persist across
-# iterations and the two conditions see the same machine load.
+# The MPC seeded from a memorized plan (warm) or a model refit per iteration (learned),
+# against plain PDDLStream, on one task repeated N times and on N tasks whose goals
+# differ by <= V rad. Four sequences run in parallel, one process each, so the memo and
+# the model persist across iterations; plain rows are reused from data/memo/replay.
 #
 #   scripts/run_memo_experiments.sh [N=20] [V=0.3] [VARIANT=isolated-left-arm]
 set -euo pipefail
@@ -21,18 +20,24 @@ if [ -z "${CONDA_PREFIX:-}" ] && [ -d "$HOME/anaconda3/envs/kinder/bin" ]; then
     export PATH="$HOME/anaconda3/envs/kinder/bin:$PATH"
 fi
 
-run() { # condition variation csv
+run() { # condition variation csv [model]
     python -m limb_baseline.memo --condition "$1" --variation "$2" --num-tasks "$N" \
-        --variant "$VARIANT" --out "$OUT/$3.csv" > "$LOGS/$3_$1.log" 2>&1 &
+        --variant "$VARIANT" --model "${4:-mlp_light}" --out "$OUT/$3.csv" \
+        > "$LOGS/$3_$1${4:+_$4}.log" 2>&1 &
 }
 
-run plain 0    same_task
-run warm  0    same_task
-run plain "$V" varied_task
-run warm  "$V" varied_task
+# Plain rows come from data/memo/replay, which planned the same tasks with the same seeds.
+for v in 0 "$V"; do
+    csv=same_task; [ "$v" != 0 ] && csv=varied_task
+    run warm    "$v" $csv
+    run learned "$v" $csv ridge
+    run learned "$v" $csv mlp_light
+done
 wait
 
-python scripts/make_memo_figures.py --csv "$OUT/same_task.csv" --csv "$OUT/varied_task.csv" \
-    --out figures/memo/plan_time.png
-python scripts/make_memo_figures.py --csv "$OUT/same_task.csv" --csv "$OUT/varied_task.csv" \
-    --out figures/memo/plan_time_log.png --log
+for pair in "plain,warm memo" "plain,learned:ridge,learned:mlp_light learned"; do
+    set -- $pair
+    python scripts/make_memo_figures.py --csv "$OUT/same_task.csv" --csv "$OUT/varied_task.csv" \
+        --plain-csv "$OUT/replay/same_task.csv" --plain-csv "$OUT/replay/varied_task.csv" \
+        --conditions "$1" --out "figures/memo/${2}_plan_time.png"
+done
