@@ -26,3 +26,5 @@ temp/
 
 # Memo experiment process logs
 data/memo/logs/
+data/memo/*/logs/
+data/dream/*/logs/

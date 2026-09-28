@@ -127,6 +127,55 @@ python scripts/make_memo_figures.py --csv data/memo/same_task.csv \
 The package runs against kinder-baselines `main`; `src/limb_baseline/utils.py` supplies
 the few planner names it was written against that `main` renamed or dropped.
 
+## Dreaming between episodes
+
+`limb_baseline.dream_pipeline` runs the notebook's loop on the arm: one episode is (1) information
+gathering, (2) human model learning, (3) `n_dreams` dreams, (4) one planned and executed
+task. Stages 1-2, the queries, are commented out for now; the belief starts at the
+population prior and, as in the notebook, learns only from execution: a limb that stayed
+inside the person raises a floor the limit lies beyond, one that crossed the limit says
+where it is. The planner plans under the belief's mean. The task set is `K` goals within
+`V` rad of one nominal task, drawn once inside the person's true range as in the
+notebook; episodes and dreams pick from it. A dream draws
+a hypothetical person from the belief and one goal, plans under the current belief exactly
+as a real episode would, imagines executing on that person, updates a copy of the belief
+from what that revealed, and memorizes plans under that imagined next belief, if they
+reached the goal (`--all-goals` solves the whole task set under it, the notebook's step
+3). Two memories:
+
+- `cache`: memo.py's plan cache, keyed on (goal, belief); a hit is rolled out first.
+- `learned`: memo.py's online model, refit after every memorized episode.
+- `plain`: no memory, no dreams.
+
+By default the planner uses 32 belief particles at confidence 0.5, about the typical
+person. Planning gets 600 s per real episode and per dream (`--max-time`,
+`--dream-max-time`), enforced exactly: the planner is stopped mid-stream at the deadline,
+since PDDLStream only checks its clock between iterations. `--particles 0` plans under the belief's mean instead. With
+particles, `P` people are drawn from the belief (redrawn when it changes) and a limb
+configuration is believed inside when at least `--confidence` of them allow it. The range
+only enters the planner as a check on rolled-out positions, so this costs no extra
+rollouts. A goal beyond that range is retargeted into the matching quantile of the
+particles, and a dream's hypothetical person is one of them.
+
+A goal beyond the belief is not refused: as the notebook's planner stops at the nearest
+point it believes reachable, the plan is retargeted 0.05 rad inside the believed edge
+(`goal_beyond_belief`). Stopped-short plans that stay inside the limits are memorized,
+and reaching the edge raises the floor, so the belief grows until it covers the goal.
+Quality is `goal_distance`, the final distance to the original goal, as the notebook's
+error.
+
+Only real planning is charged; dream time goes to `dream_time` and to `<out>_dreams.csv`.
+Effort is counted in MPC rollouts (steps searched x 64, plus policy rollouts).
+
+```bash
+scripts/run_dream_experiments.sh 20 4 0.3 isolated-left-arm   # episodes, dreams, V, variant
+# or one condition at a time:
+python -m limb_baseline.dream_pipeline --condition cache --n-dreams 4 --num-episodes 20 \
+    --variation 0.3 --out data/dream/varied_0.3/cache_4.csv
+python scripts/make_dream_figures.py --csv data/dream/varied_0.3/plain_0.csv \
+    --csv data/dream/varied_0.3/cache_4.csv --out figures/dream/varied_0.3/effort_and_time.png
+```
+
 ## Layout
 
 | Path | What |

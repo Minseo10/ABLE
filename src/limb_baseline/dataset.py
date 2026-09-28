@@ -34,12 +34,18 @@ def append_row(path: str | Path, row: dict) -> None:
     """Append one row, writing the header only when the file is new.
 
     A single-line append, so concurrent workers interleave rather than corrupt rows.
+    Rows are written in the file's own header order, a missing field left empty and a
+    field the header lacks dropped, so a row with other keys cannot shift the columns.
     """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     is_new = not path.exists() or path.stat().st_size == 0
+    fieldnames = list(row)
+    if not is_new:
+        with open(path, newline="", encoding="utf-8") as existing:
+            fieldnames = next(csv.reader(existing), fieldnames)
     with open(path, "a", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(row))
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
         if is_new:
             writer.writeheader()
         writer.writerow(row)

@@ -29,6 +29,7 @@ COLORS = {
     "learned": "#C25A34",
     "learned:ridge": "#C25A34",
     "learned:mlp_light": "#3B6FB6",
+    "learned:mlp:128x128:a0.001": "#3B6FB6",
 }
 LABELS = {
     "plain": "plain (PDDLStream as is)",
@@ -36,6 +37,7 @@ LABELS = {
     "learned": "learned (model rolled out first, MPC if it fails)",
     "learned:ridge": "learned, ridge (refit each iteration, rolled out first)",
     "learned:mlp_light": "learned, MLP 64x64 (refit each iteration, rolled out first)",
+    "learned:mlp:128x128:a0.001": "learned, MLP 128x128 (refit each iteration, rolled out first)",
 }
 
 plt.rcParams.update(

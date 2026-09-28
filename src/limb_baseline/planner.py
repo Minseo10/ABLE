@@ -7,7 +7,9 @@ its target only raises that motion's floor. `run_episode` plans with PDDLStream.
 from __future__ import annotations
 
 import dataclasses
+import signal
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -63,10 +65,45 @@ class PlannerSettings:
     robot_base_z: float | None = None
     standoff: float = 1.0
     max_time: float = 600.0
+    # Stop planning at exactly `max_time`, whatever stream is running. PDDLStream only
+    # checks its clock between iterations, so one MPC call can otherwise run far past it.
+    hard_time_limit: bool = False
     mpc: MPCConfig = field(default_factory=MPCConfig)
 
 
 DEFAULT_PLANNER_SETTINGS = PlannerSettings()
+
+
+class PlanningTimeout(BaseException):
+    """Raised by the alarm at the planning deadline.
+
+    A `BaseException`, as `KeyboardInterrupt` is, so no stream's `except Exception`
+    swallows it on the way out.
+    """
+
+
+@contextmanager
+def hard_deadline(seconds: float | None):
+    """Raise `PlanningTimeout` after `seconds` of wall-clock time, wherever the code is.
+
+    A Unix interval timer on the main thread; the handler interrupts any Python code,
+    and a C call (one PyBullet step) returns within milliseconds. None or <= 0 is no
+    limit. The previous handler and timer are restored on the way out.
+    """
+    if seconds is None or seconds <= 0:
+        yield
+        return
+
+    def fire(signum, frame):  # pylint: disable=unused-argument
+        raise PlanningTimeout(f"hit the {seconds:g} s hard planning time limit")
+
+    previous = signal.signal(signal.SIGALRM, fire)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous)
 
 
 @dataclass
@@ -100,6 +137,8 @@ class EpisodeResult:
     failure_reason: str = ""
     num_segments: int = 0
     segments: list["SegmentSample"] = field(default_factory=list)
+    # The limb's joint positions after every executed simulator step.
+    limb_path: list = field(default_factory=list)
 
 
 def assumed_theta(
@@ -127,6 +166,42 @@ def joint_limits(theta: NDArray[np.float64]) -> tuple[list[float], list[float]]:
 
 # The widest anyone can be: a goal posed against an over-wide belief still builds.
 ENVELOPE = DEFAULT_PRIOR.high
+
+
+@dataclass
+class ParticleLimits:
+    """The believed range as particles, the notebook's belief, as a chance constraint.
+
+    The believed range only ever enters the planner as a box check on rolled-out limb
+    positions (`LimbStreamContext.in_believed_limits`); the physics is the same under
+    every hypothesis. So one rollout can be checked against every particle at once: a
+    configuration is believed inside when at least `confidence` of the particles allow
+    it. At 0.5 that is roughly the median person, near 1 the narrowest plausible one.
+    """
+
+    particles: NDArray[np.float64]
+    confidence: float = 0.5
+
+    def __post_init__(self) -> None:
+        self.particles = np.atleast_2d(np.asarray(self.particles, dtype=np.float64))
+        assert 0.0 < self.confidence <= 1.0
+        bounds = [theta_to_joint_limits(theta) for theta in self.particles]
+        self.lower = np.stack([low for low, _ in bounds])
+        self.upper = np.stack([high for _, high in bounds])
+
+    def __call__(self, joint_positions) -> bool:
+        """`LimbStreamContext.in_believed_limits`, over the particles."""
+        q = np.asarray(joint_positions, dtype=np.float64)
+        inside = np.all((self.lower <= q) & (q <= self.upper), axis=1)
+        return bool(inside.mean() >= self.confidence)
+
+    def quantile_theta(self) -> NDArray[np.float64]:
+        """The one theta whose range `confidence` of the particles reach, per motion.
+
+        Goals posed against it are admissible under the check above, joint by joint;
+        it also stands in for the belief wherever a single theta is needed.
+        """
+        return np.quantile(self.particles, 1.0 - self.confidence, axis=0)
 
 
 def build_episode_env(task: Task, theta: NDArray[np.float64], settings: PlannerSettings):
@@ -205,12 +280,18 @@ def dense_rows(segments, log: RolloutLog, belief_features, mpc: MPCConfig) -> li
                 break
             if index < offset:
                 limb, robot = start_state.limb_positions, start_state.robot_positions
+                limb_velocity = start_state.limb_velocities
+                robot_velocity = start_state.robot_velocities
             else:
                 limb, robot = log.limb_positions[index], log.robot_positions[index]
+                limb_velocity = log.limb_velocities[index]
+                robot_velocity = log.robot_velocities[index]
+            previous = torques[(step - 1) * mpc.action_repeat] if step else None
             rows.append(
                 SegmentSample(
                     features=segment_features(
-                        limb, robot, goal, belief_features, step
+                        limb, robot, goal, belief_features, step,
+                        limb_velocity, robot_velocity, previous,
                     ),
                     psi=project_torques(torques[step * mpc.action_repeat :], mpc),
                     torques=horizon_window(torques[step * mpc.action_repeat :], mpc),
@@ -228,8 +309,13 @@ def run_episode(
     warm_start: WarmStartModel | None = None,
     seed: int = 0,
     settings: PlannerSettings = DEFAULT_PLANNER_SETTINGS,
+    particle_limits: ParticleLimits | None = None,
 ) -> EpisodeResult:
-    """Plan and execute one episode, returning what it cost and whether it worked."""
+    """Plan and execute one episode, returning what it cost and whether it worked.
+
+    `believed_theta` is the one range the planner plans inside; `particle_limits`
+    replaces that box with a chance constraint over belief particles when given.
+    """
     result = EpisodeResult()
     rng = np.random.default_rng(seed)
     belief_features = (
@@ -243,6 +329,9 @@ def run_episode(
             sim, standoff=settings.standoff, motion_seed=seed, mpc=settings.mpc
         )
         ctx.believed_joint_limits = joint_limits(believed_theta)
+        if particle_limits is not None:
+            # Every limit check the planner makes goes through this one method.
+            ctx.in_believed_limits = particle_limits
         ctx.true_joint_limits = joint_limits(theta)
         ctx.base_pose_hint = task.base_pose
         if warm_start is not None:
@@ -250,7 +339,15 @@ def run_episode(
         reset_to_start(ctx)
 
         started = time.time()
-        plan = plan_limbrepositioning3d(ctx, max_time=settings.max_time, verbose=False)
+        try:
+            with hard_deadline(settings.max_time if settings.hard_time_limit else None):
+                plan = plan_limbrepositioning3d(
+                    ctx, max_time=settings.max_time, verbose=False
+                )
+        except PlanningTimeout as timeout:
+            result.plan_time = time.time() - started
+            result.failure_reason = str(timeout)
+            return result
         result.plan_time = time.time() - started
         result.solved = plan is not None
         if plan is None:
@@ -289,6 +386,7 @@ def run_episode(
             result.failure_reason = "the executed plan missed the goal"
 
         result.segments = dense_rows(segments, log, belief_features, mpc)
+        result.limb_path = [list(q) for q in log.limb_positions]
 
         lower, upper = np.asarray(ctx.true_joint_limits[0]), np.asarray(
             ctx.true_joint_limits[1]

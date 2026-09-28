@@ -55,8 +55,8 @@ from limb_baseline.variant import select as select_variant
 from limb_baseline.warmstart import (
     control_basis,
     horizon_window,
-    make_regressors,
-    segment_features,
+    make_regressor,
+    state_features,
 )
 from limb_baseline.worker import isolate_worker, task_sampler
 
@@ -142,6 +142,13 @@ class _SeededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
             self._nominal = self._clip(seeded)
 
     def step(self) -> list:
+        committed = self._seeded_step()
+        hook = self._ctx.warm_start
+        if hook is not None:
+            hook.previous = committed[-1]
+        return committed
+
+    def _seeded_step(self) -> list:
         hook = self._ctx.warm_start
         if hook is None or SEED.rollouts <= 0:
             STATS.full_steps += 1
@@ -253,6 +260,7 @@ def policy_rollout(ctx: LimbStreamContext, s1: CoupledState, q2, hook):
             state = capture_state(sim)
             block = np.asarray(hook(state, goal, step), dtype=np.float64)
             torque = np.clip(block[0], lower, upper)
+            hook.previous = torque
             for _ in range(cfg.action_repeat):
                 command = commanded_robot_torque(sim, torque)
                 human = advance(sim, command)
@@ -383,11 +391,14 @@ class SeededStream:
     """
 
     memo: LimbMotionMemo | None = None
+    # Appended to every goal key: dream_pipeline.py puts the belief here, so a plan solved
+    # under one belief is not served under another. Empty when the belief is fixed.
+    key_suffix: tuple = ()
 
     def stream(
         self, ctx: LimbStreamContext, s1: CoupledState, q2
     ) -> Iterator[tuple[TorqueTrajectory, CoupledState]]:
-        key = goal_key(q2.positions)
+        key = goal_key(q2.positions) + tuple(self.key_suffix)
         if self.memo is not None:
             self.memo.calls += 1
             stored = self.memo.lookup(key)
@@ -464,7 +475,7 @@ class OnlineWarmStart:
         if not self.features:
             return
         self.mpc = mpc
-        estimator = make_regressors()[self.name]
+        estimator = make_regressor(self.name)
         estimator.fit(np.asarray(self.features), np.asarray(self.labels))
         self.estimator = estimator
 
@@ -474,12 +485,14 @@ class OnlineWarmStart:
         horizon = self.mpc.horizon
 
         def hook(state, goal: np.ndarray, step: float = 0.0):
-            features = segment_features(
-                state.limb_positions, state.robot_positions, goal, belief_features, step
-            )
+            if step == 0:
+                hook.previous = None
+            features = state_features(state, goal, belief_features, step, hook.previous)
             flat = self.estimator.predict(np.asarray(features).reshape(1, -1))[0]
             return flat.reshape(horizon, -1)
 
+        # The torque applied at the last control step, set by whoever applies it.
+        hook.previous = None
         return hook
 
 
@@ -683,8 +696,10 @@ def main() -> None:
     )
     parser.add_argument("--vary-init", action="store_true",
                         help="Also nudge the limb's start, not only its goal.")
-    parser.add_argument("--model", choices=MODELS, default="mlp_light",
-                        help="Regressor the learned condition refits each iteration.")
+    parser.add_argument("--model", type=str, default="mlp_light",
+                        help="Regressor the learned condition refits each iteration: one "
+                             f"of {', '.join(MODELS)}, or a spec such as mlp:128x128:a0.001 "
+                             "(see warmstart.make_regressor).")
     parser.add_argument("--seed-mode", choices=SEED_MODES, default=SeedConfig.mode,
                         help="plan: roll the seed out whole, search only if it fails; "
                              "step: seed each MPC step and fall back per step.")
@@ -706,6 +721,7 @@ def main() -> None:
     for variable in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
         os.environ.setdefault(variable, "1")
 
+    make_regressor(args.model)  # fail on a bad spec before any planning
     select_variant(args.variant)
     SEED.mode = args.seed_mode
     SEED.rollouts, SEED.tolerance = args.seed_rollouts, args.seed_tolerance

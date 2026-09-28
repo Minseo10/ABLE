@@ -52,6 +52,7 @@ class RolloutLog:
     limb_positions: list[JointPositions] = field(default_factory=list)
     limb_velocities: list[JointVelocities] = field(default_factory=list)
     robot_positions: list[JointPositions] = field(default_factory=list)
+    robot_velocities: list[JointVelocities] = field(default_factory=list)
     human_total: list[JointTorques] = field(default_factory=list)
     human_robot_induced: list[JointTorques] = field(default_factory=list)
 
@@ -67,6 +68,7 @@ def advance_logged(sim, correction, log: RolloutLog) -> HumanTorques:
     log.limb_positions.append(list(positions))
     log.limb_velocities.append(list(velocities))
     log.robot_positions.append(list(sim.robot.arm.get_joint_positions()))
+    log.robot_velocities.append(list(sim.robot.arm.get_joint_velocities()))
     log.human_total.append(list(human.total))
     log.human_robot_induced.append(list(human.robot))
     return human

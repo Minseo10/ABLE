@@ -1,0 +1,81 @@
+tag,condition,model,seed_mode,seed_rollouts,seed_tolerance,variation,vary_init,variant,person,task_seed,iteration,mpc_seed,separation,goal_shift,num_train_rows,solved,goal_reached,plan_time,execute_time,stream_calls,memo_hits,memo_misses,memo_size,policy_tried,policy_reached,policy_steps,policy_seconds,policy_failure,policy_final_error,seeded_steps,full_steps,seed_rejected,seed_progress_mean,rejected_progress_mean,num_control_steps,rom_violation_steps,failure_reason,fit_time
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,0,0,1.0815,0.1652,0,True,True,95.13,0.12,0,0,0,0,0,0,0,0.0,,nan,0,59,0,nan,nan,58,0,,0.26
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,0,0,1.0815,0.1652,0,True,True,95.56,0.12,0,0,0,0,0,0,0,0.0,,nan,0,59,0,nan,nan,58,0,,0.0
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,0,0,1.0815,0.1652,0,True,True,95.48,0.12,1,0,1,1,0,0,0,0.0,,nan,0,59,0,nan,nan,58,0,,0.0
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,0,0,1.0815,0.1652,0,True,True,95.54,0.13,0,0,0,0,0,0,0,0.0,,nan,0,59,0,nan,nan,58,0,,0.02
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,1,1,0.8997,0.1636,58,True,True,94.3,0.12,0,0,0,0,1,0,51,0.16,limb out of limits at step 51,1.1497,0,58,0,nan,nan,57,0,,0.21
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,1,1,0.8997,0.1636,0,True,True,94.46,0.12,1,0,1,2,0,0,0,0.0,,nan,0,58,0,nan,nan,57,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,1,1,0.8997,0.1636,0,True,True,94.89,0.13,0,0,0,0,0,0,0,0.0,,nan,0,58,0,nan,nan,57,0,,0.0
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,1,1,0.8997,0.1636,58,True,True,95.28,0.12,0,0,0,0,1,0,82,0.24,limb out of limits at step 82,0.9223,0,58,0,nan,nan,57,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,2,2,0.846,0.1508,0,True,True,38.52,0.05,0,0,0,0,0,0,0,0.0,,nan,0,24,0,nan,nan,23,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,2,2,0.846,0.1508,115,True,True,38.9,0.05,0,0,0,0,1,0,5,0.02,limb out of limits at step 5,0.9635,0,24,0,nan,nan,23,0,,0.28
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,2,2,0.846,0.1508,0,True,True,39.62,0.05,1,0,1,3,0,0,0,0.0,,nan,0,24,0,nan,nan,23,0,,0.0
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,2,2,0.846,0.1508,115,True,True,39.19,0.05,0,0,0,0,1,0,10,0.03,limb out of limits at step 10,0.7197,0,24,0,nan,nan,23,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,3,3,0.8258,0.1958,0,True,True,38.63,0.05,0,0,0,0,0,0,0,0.0,,nan,0,24,0,nan,nan,23,0,,0.0
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,3,3,0.8258,0.1958,0,True,True,38.9,0.05,1,0,1,4,0,0,0,0.0,,nan,0,24,0,nan,nan,23,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,3,3,0.8258,0.1958,138,True,True,39.7,0.05,0,0,0,0,1,0,28,0.09,human torque limit at step 28,1.2632,0,24,0,nan,nan,23,0,,0.21
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,3,3,0.8258,0.1958,138,True,True,39.05,0.05,0,0,0,0,1,0,61,0.18,limb out of limits at step 61,0.578,0,24,0,nan,nan,23,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,4,4,0.9073,0.1861,0,True,True,47.49,0.06,0,0,0,0,0,0,0,0.0,,nan,0,29,0,nan,nan,28,0,,0.0
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,4,4,0.9073,0.1861,0,True,True,46.92,0.06,1,0,1,5,0,0,0,0.0,,nan,0,29,0,nan,nan,28,0,,0.0
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,4,4,0.9073,0.1861,161,True,True,48.22,0.06,0,0,0,0,1,0,18,0.06,limb out of limits at step 18,0.3298,0,29,0,nan,nan,28,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,4,4,0.9073,0.1861,161,True,True,47.78,0.06,0,0,0,0,1,0,14,0.04,human torque limit at step 14,1.5536,0,29,0,nan,nan,28,0,,0.5
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,5,5,0.9126,0.1257,189,True,True,0.12,0.05,0,0,0,0,1,1,24,0.07,,0.048,0,0,0,nan,nan,24,0,,0.0
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,6,6,0.9814,0.0652,213,True,True,83.56,0.11,0,0,0,0,1,0,78,0.22,limb out of limits at step 78,0.5678,0,51,0,nan,nan,50,0,,0.0
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,5,5,0.9126,0.1257,0,True,True,124.56,0.16,1,0,1,6,0,0,0,0.0,,nan,0,77,0,nan,nan,76,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,5,5,0.9126,0.1257,0,True,True,125.15,0.16,0,0,0,0,0,0,0,0.0,,nan,0,77,0,nan,nan,76,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,5,5,0.9126,0.1257,189,True,True,126.86,0.16,0,0,0,0,1,0,33,0.1,limb out of limits at step 33,0.9459,0,77,0,nan,nan,76,0,,0.4
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,7,7,0.8067,0.1596,263,True,True,87.95,0.11,0,0,0,0,1,0,72,0.21,human torque limit at step 72,0.9317,0,54,0,nan,nan,53,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,6,6,0.9814,0.0652,0,True,True,82.16,0.1,0,0,0,0,0,0,0,0.0,,nan,0,51,0,nan,nan,50,0,,0.0
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,6,6,0.9814,0.0652,0,True,True,85.0,0.1,1,1,0,7,1,0,88,1.07,stalled at 1.050 after 88 steps,1.0497,0,51,0,nan,nan,50,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,6,6,0.9814,0.0652,265,True,True,83.24,0.11,0,0,0,0,1,0,57,0.16,limb out of limits at step 57,1.0463,0,51,0,nan,nan,50,0,,0.36
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,8,8,0.8204,0.1683,316,True,True,104.22,0.13,0,0,0,0,1,0,50,0.15,limb out of limits at step 50,1.2682,0,63,0,nan,nan,63,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,7,7,0.8067,0.1596,0,True,True,86.54,0.11,0,0,0,0,0,0,0,0.0,,nan,0,54,0,nan,nan,53,0,,0.0
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,7,7,0.8067,0.1596,0,True,True,87.5,0.11,1,0,1,8,0,0,0,0.0,,nan,0,54,0,nan,nan,53,0,,0.0
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,8,8,0.8204,0.1683,0,True,True,0.58,0.04,1,1,0,9,1,1,20,0.52,,0.048,0,0,0,nan,nan,20,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,7,7,0.8067,0.1596,315,True,True,87.73,0.11,0,0,0,0,1,0,26,0.08,limb out of limits at step 26,0.3776,0,54,0,nan,nan,53,0,,0.55
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,9,9,1.0123,0.1373,379,True,True,39.5,0.05,0,0,0,0,1,0,75,0.22,limb out of limits at step 75,0.2742,0,24,0,nan,nan,23,0,,0.0
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,9,9,1.0123,0.1373,0,True,True,39.05,0.05,1,0,1,10,0,0,0,0.0,,nan,0,24,0,nan,nan,23,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,8,8,0.8204,0.1683,0,True,True,101.86,0.13,0,0,0,0,0,0,0,0.0,,nan,0,63,0,nan,nan,63,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,8,8,0.8204,0.1683,368,True,True,104.58,0.13,0,0,0,0,1,0,58,0.17,limb out of limits at step 58,1.21,0,63,0,nan,nan,63,0,,0.82
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,10,10,1.0002,0.2154,402,True,True,95.76,0.12,0,0,0,0,1,0,75,0.22,limb out of limits at step 75,0.3309,0,59,0,nan,nan,58,0,,0.0
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,10,10,1.0002,0.2154,0,True,True,95.89,0.12,1,0,1,11,0,0,0,0.0,,nan,0,59,0,nan,nan,58,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,9,9,1.0123,0.1373,0,True,True,39.21,0.05,0,0,0,0,0,0,0,0.0,,nan,0,24,0,nan,nan,23,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,9,9,1.0123,0.1373,431,True,True,39.48,0.05,0,0,0,0,1,0,46,0.14,limb out of limits at step 46,0.5597,0,24,0,nan,nan,23,0,,0.45
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,11,11,0.8218,0.0947,460,True,True,37.68,0.05,0,0,0,0,1,0,83,0.24,stalled at 0.510 after 83 steps,0.5105,0,23,0,nan,nan,22,0,,0.0
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,11,11,0.8218,0.0947,0,True,True,37.5,0.05,1,0,1,12,0,0,0,0.0,,nan,0,23,0,nan,nan,22,0,,0.0
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,12,12,0.8392,0.2013,0,True,True,0.29,0.05,1,1,0,13,1,1,21,0.23,,0.0491,0,0,0,nan,nan,21,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,10,10,1.0002,0.2154,0,True,True,96.22,0.16,0,0,0,0,0,0,0,0.0,,nan,0,59,0,nan,nan,58,0,,0.0
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,12,12,0.8392,0.2013,482,True,True,83.04,0.1,0,0,0,0,1,0,84,0.24,stalled at 0.904 after 84 steps,0.9044,0,51,0,nan,nan,50,0,,0.0
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,13,13,0.8559,0.2062,532,True,True,0.12,0.05,0,0,0,0,1,1,23,0.07,,0.0488,0,0,0,nan,nan,23,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,10,10,1.0002,0.2154,454,True,True,95.24,0.12,0,0,0,0,1,0,35,0.1,limb out of limits at step 35,0.3508,0,59,0,nan,nan,58,0,,0.88
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,11,11,0.8218,0.0947,0,True,True,37.84,0.05,0,0,0,0,0,0,0,0.0,,nan,0,23,0,nan,nan,22,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,11,11,0.8218,0.0947,512,True,True,37.64,0.05,0,0,0,0,1,0,71,0.2,limb out of limits at step 71,1.5136,0,23,0,nan,nan,22,0,,0.82
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,13,13,0.8559,0.2062,0,True,True,112.73,0.14,1,1,0,14,1,0,83,2.68,stalled at 0.098 after 83 steps,0.0981,0,68,0,nan,nan,67,0,,0.0
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,14,14,0.9697,0.1346,0,True,True,0.33,0.05,1,1,0,15,1,1,22,0.28,,0.0485,0,0,0,nan,nan,22,0,,0.0
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,14,14,0.9697,0.1346,555,True,True,94.1,0.12,0,0,0,0,1,0,77,0.22,limb out of limits at step 77,0.6804,0,58,0,nan,nan,57,0,,0.0
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,15,15,0.9228,0.1328,612,True,True,0.12,0.05,0,0,0,0,1,1,24,0.07,,0.0485,0,0,0,nan,nan,24,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,12,12,0.8392,0.2013,0,True,True,82.92,0.1,0,0,0,0,0,0,0,0.0,,nan,0,51,0,nan,nan,50,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,12,12,0.8392,0.2013,534,True,True,84.02,0.11,0,0,0,0,1,0,34,0.1,limb out of limits at step 34,0.7719,0,51,0,nan,nan,50,0,,0.45
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,15,15,0.9228,0.1328,0,True,True,89.33,0.11,1,0,1,16,0,0,0,0.0,,nan,0,55,0,nan,nan,54,0,,0.0
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,16,16,1.0247,0.1084,636,True,True,102.26,0.13,0,0,0,0,1,0,85,0.24,stalled at 0.381 after 85 steps,0.381,0,62,0,nan,nan,61,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,13,13,0.8559,0.2062,0,True,True,108.98,0.14,0,0,0,0,0,0,0,0.0,,nan,0,68,0,nan,nan,67,0,,0.0
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,16,16,1.0247,0.1084,0,True,True,103.08,0.13,1,1,0,17,1,0,104,2.68,limb out of limits at step 104,0.9295,0,62,0,nan,nan,61,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,13,13,0.8559,0.2062,584,True,True,112.35,0.14,0,0,0,0,1,0,69,0.2,limb out of limits at step 69,0.7359,0,68,0,nan,nan,67,0,,0.82
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,17,17,1.0415,0.1484,697,True,True,106.36,0.13,0,0,0,0,1,0,78,0.23,limb out of limits at step 78,0.2783,0,65,0,nan,nan,64,0,,0.0
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,18,18,0.8965,0.1075,761,True,True,0.12,0.05,0,0,0,0,1,1,23,0.07,,0.0496,0,0,0,nan,nan,23,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,14,14,0.9697,0.1346,0,True,True,93.71,0.12,0,0,0,0,0,0,0,0.0,,nan,0,58,0,nan,nan,57,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,14,14,0.9697,0.1346,651,True,True,93.64,0.12,0,0,0,0,1,0,34,0.1,limb out of limits at step 34,0.5039,0,58,0,nan,nan,57,0,,0.84
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,17,17,1.0415,0.1484,0,True,True,107.12,0.18,1,1,0,18,1,0,75,1.94,limb out of limits at step 75,0.4123,0,65,0,nan,nan,64,0,,0.0
+varied_0.1,learned,ridge,plan,1,0.0,0.1,False,isolated-left-arm,22,0,19,19,0.8604,0.1463,784,True,True,92.78,0.12,0,0,0,0,1,0,78,0.22,limb out of limits at step 78,1.0524,0,57,0,nan,nan,56,0,,0.01
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,15,15,0.9228,0.1328,0,True,True,89.48,0.11,0,0,0,0,0,0,0,0.0,,nan,0,55,0,nan,nan,54,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,15,15,0.9228,0.1328,708,True,True,88.72,0.11,0,0,0,0,1,0,86,0.25,stalled at 0.235 after 86 steps,0.2352,0,55,0,nan,nan,54,0,,1.61
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,18,18,0.8965,0.1075,0,True,True,92.73,0.12,1,1,0,19,1,0,82,2.09,stalled at 0.381 after 82 steps,0.3811,0,55,0,nan,nan,54,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,16,16,1.0247,0.1084,0,True,True,98.98,0.13,0,0,0,0,0,0,0,0.0,,nan,0,62,0,nan,nan,61,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,16,16,1.0247,0.1084,762,True,True,101.63,0.13,0,0,0,0,1,0,88,0.25,stalled at 0.190 after 88 steps,0.1895,0,62,0,nan,nan,61,0,,1.15
+varied_0.1,warm,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,19,19,0.8604,0.1463,0,True,True,93.93,0.12,1,1,0,20,1,0,45,0.49,limb out of limits at step 45,0.7672,0,57,0,nan,nan,56,0,,0.0
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,17,17,1.0415,0.1484,0,True,True,103.32,0.13,0,0,0,0,0,0,0,0.0,,nan,0,65,0,nan,nan,64,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,17,17,1.0415,0.1484,823,True,True,105.87,0.13,0,0,0,0,1,0,68,0.19,human torque limit at step 68,0.943,0,65,0,nan,nan,64,0,,1.31
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,18,18,0.8965,0.1075,0,True,True,87.05,0.16,0,0,0,0,0,0,0,0.0,,nan,0,55,0,nan,nan,54,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,18,18,0.8965,0.1075,887,True,True,89.79,0.11,0,0,0,0,1,0,38,0.11,limb out of limits at step 38,0.4635,0,55,0,nan,nan,54,0,,1.73
+varied_0.1,plain,,plan,1,0.0,0.1,False,isolated-left-arm,22,0,19,19,0.8604,0.1463,0,True,True,90.48,0.11,0,0,0,0,0,0,0,0.0,,nan,0,57,0,nan,nan,56,0,,0.0
+varied_0.1,learned,mlp_light,plan,1,0.0,0.1,False,isolated-left-arm,22,0,19,19,0.8604,0.1463,941,True,True,92.1,0.11,0,0,0,0,1,0,82,0.24,stalled at 0.371 after 82 steps,0.3714,0,57,0,nan,nan,56,0,,2.1

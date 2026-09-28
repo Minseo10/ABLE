@@ -1,7 +1,9 @@
 """The robot's belief about `theta`: one Gaussian per active motion.
 
 The likelihood is linear-Gaussian, so the update is closed form. A query answer is where
-the person stopped, which `short_fall` offsets back toward their passive bound.
+the person stopped, which `short_fall` offsets back toward their passive bound. An
+execution that stayed inside the person only says the limit lies beyond where the limb
+went: that raises a floor that truncates the Gaussian from below.
 """
 
 from __future__ import annotations
@@ -11,6 +13,7 @@ from dataclasses import dataclass, replace
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.stats import truncnorm
 
 from limb_baseline.human import (
     DEFAULT_PRIOR,
@@ -55,18 +58,51 @@ class Belief:
     """A mean and a standard deviation per active motion.
 
     `low` and `high` are the population's bounds. The Gaussian is untruncated so the
-    conjugate update stays closed form; only `sample` is bounded.
+    conjugate update stays closed form; `sample`, `planning_mean` and `width` read the
+    truncation to `[lower, high]`, where `lower` is the population's bound raised by
+    what the person has been seen to reach.
     """
 
     mean: NDArray[np.float64]
     stddev: NDArray[np.float64]
     low: float = DEFAULT_PRIOR.low
     high: float = DEFAULT_PRIOR.high
+    # Per motion, a scale factor the person reached safely, so the limit lies beyond.
+    floor: NDArray[np.float64] | None = None
 
     def __post_init__(self) -> None:
         assert self.mean.shape == self.stddev.shape == (len(active_motions()),)
         assert np.all(self.stddev > 0.0)
         assert self.low < self.high
+        assert self.floor is None or self.floor.shape == self.mean.shape
+
+    @property
+    def lower(self) -> NDArray[np.float64]:
+        """The least each motion's factor can be: the population's bound, or the floor."""
+        low = np.full(len(self.mean), self.low)
+        return low if self.floor is None else np.maximum(low, self.floor)
+
+    def _truncated(self):
+        a = (self.lower - self.mean) / self.stddev
+        b = (self.high - self.mean) / self.stddev
+        return truncnorm(a, b, loc=self.mean, scale=self.stddev)
+
+    @property
+    def planning_mean(self) -> NDArray[np.float64]:
+        """The one theta to plan under: the mean of the truncated belief."""
+        return np.asarray(self._truncated().mean(), dtype=np.float64)
+
+    @property
+    def width(self) -> float:
+        """How uncertain the belief still is, summed over motions, as the notebook's."""
+        return float(np.sum(self._truncated().std()))
+
+    def raised(self, motion_index: int, scale: float) -> "Belief":
+        """Condition on the person having reached `scale` of a motion's default range."""
+        floor = np.zeros(len(self.mean)) if self.floor is None else self.floor.copy()
+        # A floor at the top would leave nothing to sample.
+        floor[motion_index] = min(max(floor[motion_index], scale), self.high - 1e-3)
+        return replace(self, floor=floor)
 
     @classmethod
     def from_prior(cls, prior: RoMPrior) -> "Belief":
@@ -77,8 +113,8 @@ class Belief:
         )
 
     def sample(self, rng: np.random.Generator) -> NDArray[np.float64]:
-        """One `theta` drawn from the belief, clipped to the population's range."""
-        return np.clip(rng.normal(self.mean, self.stddev), self.low, self.high)
+        """One `theta` drawn from the belief truncated to `[lower, high]`."""
+        return np.asarray(self._truncated().rvs(random_state=rng), dtype=np.float64)
 
     def updated(
         self, motion_index: int, answer: float, tau: float, short_fall: float = 0.0
@@ -105,3 +141,7 @@ class Belief:
     def as_features(self) -> NDArray[np.float64]:
         """The belief as the six numbers the warm-start model reads."""
         return np.concatenate([self.mean, self.stddev])
+
+    def key_features(self) -> NDArray[np.float64]:
+        """Everything a cache key should tell apart: the Gaussian and its floor."""
+        return np.concatenate([self.mean, self.stddev, self.lower])

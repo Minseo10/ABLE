@@ -1,0 +1,12 @@
+Wrote figures/dream/rerun/interim/interim_1051.png
+Wrote figures/dream/rerun/interim/interim_1051_person23.png
+Wrote figures/dream/rerun/interim/interim_1051_person25.png
+Wrote figures/dream/rerun/interim/interim_1051_person26.png
+Wrote figures/dream/rerun/interim/interim_1051_person29.png
+
+                                       people  episodes  reached  rollouts_mean  rollouts_median  plan_time_mean  plan_time_median  goal_distance_mean  goal_beyond_belief_sum  memo_hits_sum  policy_reached_sum  dream_time_sum  dreams_planned_sum  dreams_reached_sum
+condition model              n_dreams                                                                                                                                                                                                                                    
+cache                        4              4         7     0.86        3127.43              1.0          147.20              4.66                0.20                       0              4                   4         5054.47                  33                  26
+learned   mlp:128x128:a0.001 4              4         4     0.75        5601.00           4225.0          267.32            198.57                0.31                       0              0                   0         4136.50                  18                  15
+          ridge              4              4         4     0.75        5713.00           4225.0          268.14            200.29                0.31                       0              0                   0         4088.72                  18                  15
+plain                        0              1         4     0.75        8032.00           8640.0          375.05            413.60                0.32                       0              0                   0            0.00                   0                   0

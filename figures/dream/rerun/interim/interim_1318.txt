@@ -1,0 +1,16 @@
+Wrote figures/dream/rerun/interim/interim_1318.png
+Wrote figures/dream/rerun/interim/interim_1318_person23.png
+Wrote figures/dream/rerun/interim/interim_1318_person24.png
+Wrote figures/dream/rerun/interim/interim_1318_person25.png
+Wrote figures/dream/rerun/interim/interim_1318_person26.png
+Wrote figures/dream/rerun/interim/interim_1318_person29.png
+
+                                       people  episodes  reached  rollouts_mean  rollouts_median  plan_time_mean  plan_time_median  goal_distance_mean  goal_beyond_belief_sum  memo_hits_sum  policy_reached_sum  dream_time_sum  dreams_planned_sum  dreams_reached_sum
+condition model              n_dreams                                                                                                                                                                                                                                    
+cache                        0              2        17     0.82        5861.94           4992.0          290.25            263.88                0.26                       1              5                   1            0.00                   0                   0
+                             4              5        35     0.94        1108.94              1.0           58.70              4.68                0.09                       1             29                  28        18999.29                 156                 120
+learned   mlp:128x128:a0.001 0              2        16     0.81        6128.81           5185.0          312.92            254.72                0.25                       1              0                   0            0.00                   0                   0
+                             4              5        25     0.88        4824.04           4545.0          234.29            222.28                0.15                       1              0                   0        29498.58                 113                  80
+          ridge              0              2        17     0.88        5572.59           4993.0          284.51            243.78                0.19                       1              0                   0            0.00                   0                   0
+                             4              5        26     0.92        4867.46           4417.0          239.18            223.50                0.15                       1              0                   0        30636.32                 119                  86
+plain                        0              3        23     0.83        6683.83           5376.0          329.06            273.22                0.26                       1              0                   0            0.00                   0                   0

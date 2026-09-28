@@ -33,10 +33,13 @@ from limb_baseline.variant import DEFAULT_VARIANT, ENV_VAR, VARIANTS
 from limb_baseline.variant import _build as _build_variant
 from limb_baseline.variant import select as select_variant
 from limb_baseline.warmstart import (
+    BASE_FEATURES,
     control_basis,
+    make_regressor,
     make_scaled_mlp,
     project_torques,
     segment_features,
+    state_features,
 )
 
 
@@ -191,6 +194,99 @@ def test_segment_features_drop_the_gripper_joints():
     assert features.shape == (26,)
     assert np.allclose(features[6:13], np.arange(7.0))
     assert features[-1] == 4.0
+
+
+def test_history_features_follow_the_base_features():
+    base = segment_features(np.zeros(6), np.arange(13.0), np.ones(6), np.zeros(6), 4)
+    full = segment_features(np.zeros(6), np.arange(13.0), np.ones(6), np.zeros(6), 4,
+                            np.full(6, 2.0), np.arange(13.0) + 10, np.full(7, 3.0))
+    assert full.shape == (BASE_FEATURES + 20,)
+    assert np.allclose(full[:BASE_FEATURES], base)
+    assert np.allclose(full[BASE_FEATURES + 6:BASE_FEATURES + 13], np.arange(7.0) + 10)
+    assert np.allclose(full[-7:], 3.0)
+    start = segment_features(np.zeros(6), np.zeros(13), np.ones(6), np.zeros(6), 0,
+                             np.zeros(6), np.zeros(13))
+    assert np.allclose(start[-7:], 0.0)
+
+
+def test_only_hist_specs_read_the_history_columns():
+    rng = np.random.default_rng(0)
+    x = rng.normal(size=(200, BASE_FEATURES + 20))
+    y = np.column_stack([x[:, -1], x[:, 0]])
+    plain = make_regressor("ridge").fit(x, y)
+    assert np.allclose(plain.predict(x), make_regressor("ridge").fit(x[:, :BASE_FEATURES], y)
+                       .predict(x[:, :BASE_FEATURES]))
+    hist = make_regressor("ridge:hist").fit(x, y)
+    assert np.abs(hist.predict(x)[:, 0] - y[:, 0]).mean() < 0.05
+    assert np.abs(plain.predict(x)[:, 0] - y[:, 0]).mean() > 0.5
+
+
+def test_dropout_mlp_fits_and_pickles():
+    import pickle
+
+    rng = np.random.default_rng(0)
+    x = rng.normal(size=(400, BASE_FEATURES + 20))
+    x[:, BASE_FEATURES - 1] = np.tile(np.arange(20), 20)  # 20 segments of 20 steps
+    y = np.column_stack([np.sin(x[:, 0]), x[:, -1]])
+    model = make_regressor("net:32x32:d0.1:s300:hist").fit(x, y)
+    again = pickle.loads(pickle.dumps(model))
+    assert again.predict(x).shape == (400, 2)
+    assert np.allclose(again.predict(x[:5]), model.predict(x[:5]))
+    assert ((model.predict(x) - y) ** 2).mean() < y.var(0).mean()
+
+
+def test_learned_hook_tracks_the_previous_torque_per_segment():
+    from types import SimpleNamespace
+
+    from limb_baseline.memo import OnlineWarmStart
+
+    class Echo:
+        def predict(self, features):
+            return np.tile(features[:, -7:], (1, 12))
+
+    learner = OnlineWarmStart(estimator=Echo(), mpc=MPCConfig())
+    hook = learner.as_hook(np.zeros(6))
+    state = SimpleNamespace(limb_positions=np.zeros(6), robot_positions=np.zeros(13),
+                            limb_velocities=np.zeros(6), robot_velocities=np.zeros(13))
+    assert np.allclose(hook(state, np.zeros(6), 0), 0.0)
+    hook.previous = np.full(7, 2.0)
+    assert np.allclose(hook(state, np.zeros(6), 1)[0], 2.0)
+    assert np.allclose(hook(state, np.zeros(6), 0), 0.0)
+
+
+def test_training_rows_match_what_the_hook_sees():
+    from types import SimpleNamespace
+
+    from limb_baseline.planner import dense_rows
+    from limb_baseline.utils import RolloutLog
+
+    mpc = MPCConfig()
+    repeat, steps = mpc.action_repeat, 3
+    rng = np.random.default_rng(0)
+    torques = rng.normal(size=(steps * repeat, 7)).tolist()
+    start = SimpleNamespace(limb_positions=rng.normal(size=6), robot_positions=rng.normal(size=13),
+                            limb_velocities=rng.normal(size=6), robot_velocities=rng.normal(size=13))
+    log = RolloutLog()
+    for _ in range(steps * repeat):
+        log.limb_positions.append(rng.normal(size=6).tolist())
+        log.limb_velocities.append(rng.normal(size=6).tolist())
+        log.robot_positions.append(rng.normal(size=13).tolist())
+        log.robot_velocities.append(rng.normal(size=13).tolist())
+    goal = SimpleNamespace(positions=np.ones(6))
+    rows = dense_rows([(start, goal, SimpleNamespace(robot_torques=torques))], log,
+                      np.zeros(6), mpc)
+    assert len(rows) == steps
+    for step, row in enumerate(rows):
+        if step == 0:
+            state, previous = start, None
+        else:
+            i = step * repeat - 1
+            state = SimpleNamespace(
+                limb_positions=log.limb_positions[i], robot_positions=log.robot_positions[i],
+                limb_velocities=log.limb_velocities[i], robot_velocities=log.robot_velocities[i])
+            previous = torques[(step - 1) * repeat]
+        expected = state_features(state, np.ones(6), np.zeros(6), step, previous)
+        assert np.allclose(row.features, expected)
 
 
 def test_test_split_shares_no_person_with_training(tmp_path):
@@ -390,3 +486,325 @@ def test_the_memo_routes_the_planner_stream_and_can_be_removed():
     assert planner_run.plan_limb_motion == stream.stream
     memo_module.uninstall()
     assert planner_run.plan_limb_motion is memo_module.plan_limb_motion
+
+
+def test_the_dream_loop_memorizes_only_imagined_successes_and_charges_only_real_planning(
+    monkeypatch, tmp_path
+):
+    """Dreams fill the cache before the real episode; a failed dream leaves nothing."""
+    from types import SimpleNamespace
+
+    from kinder_pddlstream_planning.limbrepositioning3d.stream import TorqueTrajectory
+
+    from limb_baseline import dream_pipeline as dream_module
+    from limb_baseline.planner import EpisodeResult, PlannerSettings
+    from limb_baseline.tasks import Task
+
+    select_variant(DEFAULT_VARIANT)
+    nominal = np.zeros(6)
+    tasks = []
+    for k in range(3):
+        goal = nominal.copy()
+        goal[active_joints()[0]] = 0.5 + 0.3 * k
+        tasks.append(Task(tuple(nominal), tuple(np.zeros(7)), tuple(goal)))
+    monkeypatch.setattr(dream_module, "isolate_worker", lambda: None)
+    monkeypatch.setattr(
+        dream_module, "make_task_set",
+        lambda theta, rng, config: dream_module.TaskSet(tasks[0], tasks),
+    )
+
+    # The stand-in planner: a person narrower than 0.8 cannot reach the far goals, so
+    # dreams on such hypotheses fail and must not leave a plan behind.
+    calls = []
+
+    def fake_run_episode(task, theta, belief, believed_theta, warm_start, seed, settings,
+                         particle_limits=None):
+        calls.append((tuple(task.limb_goal), float(theta[0])))
+        goal = SimpleNamespace(positions=task.limb_goal)
+        stream = dream_module.memo_module.planner_run.plan_limb_motion
+        trajectory = TorqueTrajectory([[1.0] * 7] * settings.mpc.action_repeat)
+        # A stock stream (plain) is the real planner; skip it, nothing to record.
+        if stream is not dream_module.memo_module.plan_limb_motion:
+            ctx = SimpleNamespace(mpc=settings.mpc, warm_start=None)
+            monkeypatch.setattr(
+                dream_module.memo_module, "plan_limb_motion",
+                lambda ctx, s1, q2: iter([(trajectory, "s2")]),
+            )
+            monkeypatch.setattr(dream_module.SEED, "mode", "step")
+            list(stream(ctx, "s1", goal))
+        reached = task.limb_goal[active_joints()[0]] <= float(theta[0])
+        return EpisodeResult(solved=True, goal_reached=reached, plan_time=1.0)
+
+    monkeypatch.setattr(dream_module, "run_episode", fake_run_episode)
+    config = dream_module.DreamConfig(n_dreams=2, num_episodes=2, num_goals=3)
+    settings = PlannerSettings(max_time=1.0)
+    out = tmp_path / "cache.csv"
+    records = dream_module.run_sequence(
+        "cache", config, person=22, task_seed=0, model_name="ridge", settings=settings,
+        out=out, tag="t",
+    )
+    assert len(records) == 2 and all(r["dreams_planned"] == 2 for r in records)
+    # Two dreams per episode came before each real episode: 2 * (2 + 1) planner calls.
+    assert len(calls) == 6
+    dreams = __import__("pandas").read_csv(out.with_name("cache_dreams.csv"))
+    assert len(dreams) == 4
+    # Only plans whose imagined execution reached the goal stay in the cache. The last
+    # record counts the cache before its own episode was gated, hence the + 1.
+    memo = dream_module.memo_module
+    expected = int(dreams["goal_reached"].sum()) + int(records[0]["goal_reached"]) + 1
+    assert records[-1]["memo_size"] == expected < 6
+    assert records[-1]["dream_time"] >= 0.0 and records[0]["belief_revised"] is False
+
+    # Plain ignores dreams entirely and writes no dream rows.
+    calls.clear()
+    plain_out = tmp_path / "plain.csv"
+    plain = dream_module.run_sequence(
+        "plain", config, person=22, task_seed=0, model_name="ridge", settings=settings,
+        out=plain_out, tag="t",
+    )
+    assert len(calls) == 2 and plain[0]["n_dreams"] == 0
+    assert not plain_out.with_name("plain_dreams.csv").exists()
+    assert memo.planner_run.plan_limb_motion is memo.plan_limb_motion
+
+
+def test_particle_limits_are_a_chance_constraint_over_the_belief():
+    """A configuration is believed inside when enough particles allow it."""
+    from limb_baseline.planner import ParticleLimits
+
+    select_variant(DEFAULT_VARIANT)
+    joint, sign = active_joints()[0], active_signs()[0]
+    # Four people, evenly spread; every other motion at the population mean.
+    scales = np.array([0.75, 0.85, 0.95, 1.05])
+    particles = np.full((4, len(active_motions())), 0.9)
+    particles[:, 0] = scales
+    limits = ParticleLimits(particles, confidence=0.5)
+    assert limits.lower.shape == limits.upper.shape == (4, 6)
+
+    def at(scale):
+        q = np.zeros(6)
+        q[joint] = sign * scale * default_magnitudes()[0]
+        return q
+
+    # Just short of the third person's bound: two of four allow it, exactly half.
+    assert limits(at(0.94)) and not limits(at(0.96))
+    assert ParticleLimits(particles, confidence=0.75)(at(0.84))
+    assert not ParticleLimits(particles, confidence=0.75)(at(0.86))
+    assert ParticleLimits(particles, confidence=1.0)(at(0.74))
+    # The quantile theta is the range goals are posed against: the 0.5 quantile
+    # of the spread with confidence 0.5, the narrowest person at confidence 1.
+    assert np.isclose(limits.quantile_theta()[0], np.quantile(scales, 0.5))
+    assert np.isclose(ParticleLimits(particles, 1.0).quantile_theta()[0], 0.75)
+    assert np.allclose(limits.quantile_theta()[1:], 0.9)
+
+
+def test_a_floor_truncates_the_belief_and_narrows_it():
+    """Reaching a motion safely rules out every narrower person."""
+    belief = Belief.from_prior(DEFAULT_PRIOR)
+    raised = belief.raised(1, 1.0)
+    assert np.allclose(raised.lower, [DEFAULT_PRIOR.low, 1.0, DEFAULT_PRIOR.low])
+    assert raised.width < belief.width
+    assert raised.planning_mean[1] > belief.planning_mean[1] >= belief.mean[1] - 1e-9
+    draws = np.array([raised.sample(np.random.default_rng(i)) for i in range(200)])
+    assert draws[:, 1].min() >= 1.0 and draws.max() <= DEFAULT_PRIOR.high
+    # A floor survives a query update, and never rises above the population's top.
+    updated = raised.updated(0, 1.0, DEFAULT_QUERY_MODEL.tau)
+    assert np.allclose(updated.lower, raised.lower)
+    assert raised.raised(1, 5.0).lower[1] < DEFAULT_PRIOR.high
+    assert len(raised.key_features()) == 3 * len(belief.mean)
+
+
+def test_an_execution_updates_the_belief_as_the_notebook_does():
+    """Inside the person: a floor. Past the limit: the crossing angle is the limit."""
+    from limb_baseline.dream_pipeline import observe
+
+    select_variant(DEFAULT_VARIANT)
+    joint, sign = active_joints()[0], active_signs()[0]
+    person = np.array([0.8, 0.9, 1.0])
+    belief = Belief.from_prior(DEFAULT_PRIOR)
+
+    def path(scales):
+        q = np.zeros((len(scales), 6))
+        q[:, joint] = sign * np.asarray(scales) * default_magnitudes()[0]
+        return q.tolist()
+
+    inside, notes = observe(belief, path([0.2, 0.5, 0.75, 0.6]), person)
+    assert notes == ["floor:0@0.750"]
+    assert inside.lower[0] == pytest.approx(0.75) and inside.mean[0] == belief.mean[0]
+
+    crossed, notes = observe(belief, path([0.5, 0.79, 0.81, 0.9]), person, tau=1e-6)
+    assert notes[0].startswith("crossed:0@0.81")
+    assert crossed.mean[0] == pytest.approx(0.81, abs=1e-3) and crossed.floor is None
+    assert crossed.stddev[0] < 1e-3
+
+    same, notes = observe(inside, path([0.1]), person)
+    assert notes == [] and same is inside
+    same, notes = observe(inside, path([0.7505]), person)
+    assert notes == [] and same is inside
+    assert observe(belief, [], person) == (belief, [])
+
+
+def test_a_goal_beyond_the_belief_is_retargeted_just_inside_it():
+    """As the notebook's planner stops at the nearest point it believes reachable."""
+    from limb_baseline.dream_pipeline import RETARGET_MARGIN, Believed, DreamConfig
+    from limb_baseline.planner import EpisodeResult, joint_limits
+    from limb_baseline.dream_pipeline import goal_distance
+    from limb_baseline.tasks import Task
+
+    select_variant(DEFAULT_VARIANT)
+    belief = Belief.from_prior(DEFAULT_PRIOR)
+    believed = Believed(belief)
+    joint, sign = active_joints()[0], active_signs()[0]
+    init = np.zeros(6)
+
+    def task_to(scale):
+        goal = np.zeros(6)
+        goal[joint] = sign * scale * default_magnitudes()[0]
+        return Task(tuple(init), tuple(np.zeros(7)), tuple(goal))
+
+    inside = task_to(0.5)
+    same, moved = believed.retarget(inside)
+    assert same is inside and not moved
+
+    beyond = task_to(1.1)
+    target, moved = believed.retarget(beyond)
+    assert moved
+    lower, upper = joint_limits(believed.theta)
+    edge = upper[joint] if sign > 0 else lower[joint]
+    assert target.limb_goal[joint] == pytest.approx(edge - sign * RETARGET_MARGIN)
+    assert np.allclose(np.delete(target.limb_goal, joint), np.delete(beyond.limb_goal, joint))
+    assert target.limb_init == beyond.limb_init
+
+    # With particles, the retargeted goal passes the particle vote.
+    rng = np.random.default_rng(0)
+    particled = Believed.build(belief, DreamConfig(particles=16, confidence=0.9), rng)
+    target, moved = particled.retarget(beyond)
+    assert moved and particled.limits(np.asarray(target.limb_goal))
+
+    # Scored from where the limb ended, or from the start when nothing ran.
+    # The environment's metric wraps angles, so compare against it directly.
+    from limb_baseline.dream_pipeline import distance
+
+    stopped = EpisodeResult(limb_path=[list(init), list(target.limb_goal)])
+    assert goal_distance(beyond, stopped) == pytest.approx(
+        distance(target.limb_goal, beyond.limb_goal))
+    assert 0.0 < goal_distance(beyond, stopped) < goal_distance(beyond, EpisodeResult())
+    assert goal_distance(beyond, EpisodeResult()) == pytest.approx(
+        distance(init, beyond.limb_goal))
+
+
+def test_the_hard_deadline_stops_any_code_at_the_limit_and_cleans_up():
+    """Even a loop that swallows every Exception is stopped on time."""
+    import signal
+    import time
+
+    from limb_baseline.planner import PlanningTimeout, hard_deadline
+
+    before = signal.getsignal(signal.SIGALRM)
+    started = time.perf_counter()
+    with pytest.raises(PlanningTimeout, match="0.3 s hard planning time limit"):
+        with hard_deadline(0.3):
+            while True:
+                try:
+                    sum(range(10_000))
+                except Exception:  # a stream's broad handler must not stop it
+                    pass
+    elapsed = time.perf_counter() - started
+    assert 0.29 <= elapsed < 0.4
+    assert signal.getsignal(signal.SIGALRM) == before
+    assert signal.getitimer(signal.ITIMER_REAL) == (0.0, 0.0)
+
+    # Finishing early cancels the alarm; no limit means no alarm at all.
+    with hard_deadline(0.2):
+        pass
+    time.sleep(0.3)
+    with hard_deadline(None):
+        assert signal.getitimer(signal.ITIMER_REAL) == (0.0, 0.0)
+
+
+def test_the_belief_memo_serves_the_nearest_belief_within_tolerance():
+    """The notebook's nearest-neighbour cache: goal near-exact, belief by distance."""
+    from kinder_pddlstream_planning.limbrepositioning3d.stream import TorqueTrajectory
+
+    from limb_baseline.dream_pipeline import BeliefMemo
+
+    def plan(steps):
+        return TorqueTrajectory([[0.0] * 7] * steps)
+
+    memo = BeliefMemo(tolerance=0.15)
+    base = np.full(9, 0.9)
+    memo.current = base
+    memo.store((5, 0), plan(30))
+    memo.store((5, 0), plan(20), belief=base + 0.1)
+    memo.store((5, 0), plan(10), belief=base + 0.3)
+
+    # Exact belief: served, and at distance 0 even though a shorter plan exists nearby.
+    assert len(memo.lookup((5, 0)).robot_torques) == 30 and memo.last_distance == 0.0
+    # Nearest within tolerance wins: 0.12 away from the 20-step plan's belief is 0.02.
+    memo.current = base + 0.12
+    assert len(memo.lookup((5, 0)).robot_torques) == 20
+    assert memo.last_distance == pytest.approx(0.02)
+    # Beyond tolerance on any one number: a miss, however close the others are.
+    memo.current = base.copy()
+    memo.current[4] += 0.5
+    assert memo.lookup((5, 0)) is None
+    # Another goal is another key; the size counts every filed plan.
+    assert memo.lookup((6, 0)) is None and memo.size == 3
+    # The same rounded belief keeps at most KEEP_PER_KEY plans, shortest first.
+    memo.current = base
+    for steps in (40, 50, 60, 5):
+        memo.store((7, 0), plan(steps))
+    assert sorted(len(e[1].robot_torques) for e in memo.plans[(7, 0)]) == [5, 40, 50, 60]
+    memo.store((7, 0), plan(70))
+    assert len(memo.plans[(7, 0)]) == 4 and memo.last_stored[0] == (7, 0)
+
+
+def test_a_dream_refiles_its_plan_instead_of_searching_again():
+    """Same aim point under the imagined belief: refile. A moved aim point: search."""
+    from kinder_pddlstream_planning.limbrepositioning3d.stream import TorqueTrajectory
+
+    from limb_baseline.dream_pipeline import BeliefMemo, Believed, Memory, refile
+    from limb_baseline.memo import goal_key
+    from limb_baseline.tasks import Task
+
+    select_variant(DEFAULT_VARIANT)
+    joint, sign = active_joints()[0], active_signs()[0]
+    belief = Belief.from_prior(DEFAULT_PRIOR)
+    raised = belief.raised(0, 1.0)
+
+    def task_to(scale):
+        goal = np.zeros(6)
+        goal[joint] = sign * scale * default_magnitudes()[0]
+        return Task(tuple(np.zeros(6)), tuple(np.zeros(7)), tuple(goal))
+
+    memo = BeliefMemo()
+    memory = Memory("cache", SimpleStream(), memo, None)
+    memo.current = belief.key_features()
+    inside = task_to(0.5)
+    memo.store(goal_key(inside.limb_goal), TorqueTrajectory([[0.0] * 7] * 12))
+
+    # A goal inside both beliefs aims at the same place: refiled, now served there.
+    assert refile(inside, Believed(belief), Believed(raised), memory)
+    memo.current = raised.key_features()
+    assert memo.lookup(goal_key(inside.limb_goal)) is not None
+    # A goal beyond the old belief is aimed further under the raised one: search.
+    beyond = task_to(1.15)
+    assert not refile(beyond, Believed(belief), Believed(raised), memory)
+
+
+class SimpleStream:
+    key_suffix = ()
+
+
+def test_append_row_keeps_columns_aligned_when_rows_differ(tmp_path):
+    """A row with fewer, extra or reordered keys lands under the right headers."""
+    import pandas as pd
+
+    path = tmp_path / "rows.csv"
+    append_row(path, {"a": 1, "b": 2, "c": 3})
+    append_row(path, {"c": 30, "a": 10})            # reordered, one missing
+    append_row(path, {"a": 100, "b": 200, "c": 300, "d": 4})  # one extra
+    frame = pd.read_csv(path)
+    assert list(frame.columns) == ["a", "b", "c"]
+    assert frame["a"].tolist() == [1, 10, 100]
+    assert frame["c"].tolist() == [3, 30, 300]
+    assert frame["b"].isna().tolist() == [False, True, False]
