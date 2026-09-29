@@ -6,6 +6,8 @@
 #   scripts/run_warmstart_comparison.sh [N=20] [D=4]
 #   SEED_MODE=step scripts/run_warmstart_comparison.sh 20 0   # model seeds every MPC step;
 #       learned lines only (plain does not depend on the seed mode), tagged `_step`
+#   ZERO=0 SEED_MODE=step scripts/run_warmstart_comparison.sh 20 4   # dreaming lines only
+#   CACHE=1 LEARNED=0 ... # the goal-keyed cache instead of the learned models
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -16,6 +18,10 @@ DEPLOYED="${DEPLOYED:-mlp:128x128:a0.001}"
 NEW="${NEW:-net:256x256:d0.3:hist}"
 MAX_JOBS="${MAX_JOBS:-16}"
 SEED_MODE="${SEED_MODE:-plan}"
+ZERO="${ZERO:-1}"
+CACHE="${CACHE:-0}"
+LEARNED="${LEARNED:-1}"
+MODELS="${MODELS:-net mlp}"   # which learned models, when LEARNED=1
 SUFFIX=""
 [ "$SEED_MODE" = step ] && SUFFIX="_step"
 OUT="${OUT:-data/dream/warmstart_compare}"
@@ -38,14 +44,19 @@ run() { # person condition n_dreams name [model]
 
 if [ "$D" -gt 0 ]; then
     for p in $PEOPLE; do
-        run "$p" learned "$D" "net_$D$SUFFIX" "$NEW"
-        run "$p" learned "$D" "mlp_$D$SUFFIX" "$DEPLOYED"
+        [ "$CACHE" = 1 ] && run "$p" cache "$D" "cache_$D$SUFFIX"
+        [ "$LEARNED" = 1 ] || continue
+        [[ " $MODELS " == *" net "* ]] && run "$p" learned "$D" "net_$D$SUFFIX" "$NEW"
+        [[ " $MODELS " == *" mlp "* ]] && run "$p" learned "$D" "mlp_$D$SUFFIX" "$DEPLOYED"
     done
 fi
 for p in $PEOPLE; do
+    [ "$ZERO" = 1 ] || break
     [ "$SEED_MODE" = plan ] && run "$p" plain 0 plain_0
-    run "$p" learned 0 "net_0$SUFFIX" "$NEW"
-    run "$p" learned 0 "mlp_0$SUFFIX" "$DEPLOYED"
+    [ "$CACHE" = 1 ] && run "$p" cache 0 "cache_0$SUFFIX"
+    [ "$LEARNED" = 1 ] || continue
+    [[ " $MODELS " == *" net "* ]] && run "$p" learned 0 "net_0$SUFFIX" "$NEW"
+    [[ " $MODELS " == *" mlp "* ]] && run "$p" learned 0 "mlp_0$SUFFIX" "$DEPLOYED"
 done
 wait
 

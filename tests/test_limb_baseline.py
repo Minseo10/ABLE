@@ -254,6 +254,36 @@ def test_learned_hook_tracks_the_previous_torque_per_segment():
     assert np.allclose(hook(state, np.zeros(6), 0), 0.0)
 
 
+def test_online_learner_logs_each_refit(tmp_path):
+    import json
+    from types import SimpleNamespace
+
+    from limb_baseline.memo import OnlineWarmStart
+
+    rng = np.random.default_rng(0)
+
+    def segments(n):
+        rows = []
+        for i in range(n):
+            x = rng.normal(size=BASE_FEATURES + 20)
+            x[BASE_FEATURES - 1] = i % 10
+            rows.append(SimpleNamespace(features=x, torques=rng.normal(size=(12, 7))))
+        return rows
+
+    log = tmp_path / "learning.jsonl"
+    learner = OnlineWarmStart(name="net:16:d0.1:s200:hist", log_path=str(log))
+    learner.context = {"episode": 0, "dream": -1}
+    learner.add(segments(80))
+    learner.refit(MPCConfig())
+    learner.context = {"episode": 1, "dream": -1}
+    learner.add(segments(40))
+    learner.refit(MPCConfig())
+    first, second = (json.loads(line) for line in log.read_text().splitlines())
+    assert "new_nmse" not in first and first["rows"] == 80 and first["segments"] == 8
+    assert second["episode"] == 1 and second["new_rows"] == 40 and second["new_nmse"] > 0
+    assert second["curve"][-1][0] == 200 and second["val_nmse"] == second["val_nmse"]
+
+
 def test_training_rows_match_what_the_hook_sees():
     from types import SimpleNamespace
 

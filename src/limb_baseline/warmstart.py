@@ -225,6 +225,8 @@ class DropoutMLP:
         schedule = torch.optim.lr_scheduler.OneCycleLR(
             optimizer, self.lr, total_steps=self.steps, pct_start=0.05)
         best, state = float("inf"), None
+        self.history, self.best_step, self.best_val = [], self.steps, float("nan")
+        watched = train[torch.randperm(len(train), generator=torch.Generator().manual_seed(1))[:2048]]
         generator = torch.Generator().manual_seed(self.seed)
         for step in range(1, self.steps + 1):
             self.net.train()
@@ -234,12 +236,15 @@ class DropoutMLP:
             loss.backward()
             optimizer.step()
             schedule.step()
-            if held.any() and (step % 100 == 0 or step == self.steps):
+            if step % 100 == 0 or step == self.steps:
                 self.net.eval()
                 with torch.no_grad():
-                    val = float(((self.net(xs[held]) - ys[held]) ** 2).mean())
-                if val < best:
+                    fit = float(((self.net(xs[watched]) - ys[watched]) ** 2).mean())
+                    val = float(((self.net(xs[held]) - ys[held]) ** 2).mean()) if held.any() else None
+                self.history.append((step, fit, val))
+                if val is not None and val < best:
                     best, state = val, {k: v.clone() for k, v in self.net.state_dict().items()}
+                    self.best_step, self.best_val = step, val
         if state is not None:
             self.net.load_state_dict(state)
         self.net.eval()

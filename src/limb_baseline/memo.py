@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import json
 import os
 import time
 import traceback
@@ -22,7 +23,11 @@ from pathlib import Path
 from typing import Iterator
 
 import numpy as np
-from kinder.envs.dynamic3d.limb_utils import LIMB_JOINT_INFOS, joint_position_distance
+from kinder.envs.dynamic3d.limb_utils import (
+    LIMB_JOINT_INFOS,
+    NUM_ROBOT_JOINTS,
+    joint_position_distance,
+)
 from kinder_pddlstream_planning.limbrepositioning3d import run as planner_run
 from kinder_pddlstream_planning.limbrepositioning3d import stream as planner_stream
 from kinder_pddlstream_planning.limbrepositioning3d.stream import (
@@ -53,6 +58,7 @@ from limb_baseline.variant import DEFAULT_VARIANT, VARIANTS
 from limb_baseline.variant import current as current_variant
 from limb_baseline.variant import select as select_variant
 from limb_baseline.warmstart import (
+    BASE_FEATURES,
     control_basis,
     horizon_window,
     make_regressor,
@@ -448,6 +454,11 @@ def uninstall() -> None:
 # --------------------------------------------------------------- learned seed
 
 
+def _variance(labels: np.ndarray) -> np.ndarray:
+    """Per-output label variance, floored so a constant output does not divide by zero."""
+    return np.maximum(labels.var(0), 1e-12) if len(labels) > 1 else np.ones(labels.shape[1])
+
+
 @dataclass
 class OnlineWarmStart:
     """Rows from every solved episode so far, and the model refit on them.
@@ -461,23 +472,62 @@ class OnlineWarmStart:
     labels: list = field(default_factory=list)
     estimator: object | None = None
     mpc: MPCConfig = field(default_factory=MPCConfig)
+    # When set, each refit appends a JSON line: the error on the rows just added, before
+    # fitting them, and the fit's own errors; `context` (episode, dream, ...) is copied in.
+    log_path: str | None = None
+    context: dict = field(default_factory=dict)
 
     @property
     def model(self):
         return self if self.estimator is not None else None
 
     def add(self, segments) -> None:
-        for segment in segments:
-            self.features.append(segment.features)
-            self.labels.append(np.asarray(segment.torques).ravel())
+        new_x = [segment.features for segment in segments]
+        new_y = [np.asarray(segment.torques).ravel() for segment in segments]
+        self._pending = {"new_rows": len(new_x)}
+        if getattr(self, "log_path", None) and new_x and self.estimator is not None:
+            y, pred = np.asarray(new_y), self.estimator.predict(np.asarray(new_x))
+            var = _variance(np.asarray(self.labels))
+            first = NUM_ROBOT_JOINTS
+            self._pending.update(
+                new_nmse=float((((pred - y) ** 2) / var).mean()),
+                new_nmse_first=float((((pred - y)[:, :first] ** 2) / var[:first]).mean()),
+                new_mse=float(((pred - y) ** 2).mean()),
+            )
+        self.features.extend(new_x)
+        self.labels.extend(new_y)
 
     def refit(self, mpc: MPCConfig) -> None:
         if not self.features:
             return
         self.mpc = mpc
         estimator = make_regressor(self.name)
-        estimator.fit(np.asarray(self.features), np.asarray(self.labels))
+        started = time.perf_counter()
+        x, y = np.asarray(self.features), np.asarray(self.labels)
+        estimator.fit(x, y)
         self.estimator = estimator
+        if getattr(self, "log_path", None):
+            self._log(x, y, estimator, time.perf_counter() - started)
+
+    def _log(self, x, y, estimator, seconds: float) -> None:
+        from sklearn.pipeline import Pipeline
+
+        inner = estimator.steps[-1][1] if isinstance(estimator, Pipeline) else estimator
+        record = {
+            **getattr(self, "context", {}),
+            **getattr(self, "_pending", {}),
+            "model": self.name,
+            "rows": len(x),
+            "segments": int((x[:, BASE_FEATURES - 1] == 0).sum()),
+            "train_nmse": float((((estimator.predict(x) - y) ** 2) / _variance(y)).mean()),
+            "fit_seconds": round(seconds, 3),
+        }
+        if hasattr(inner, "history"):
+            record.update(val_nmse=inner.best_val, best_step=inner.best_step,
+                          curve=[list(h) for h in inner.history])
+        with open(self.log_path, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record) + "\n")
+        self._pending = {}
 
     def as_hook(self, belief_features: np.ndarray):
         """The callable `LimbStreamContext.warm_start` expects."""

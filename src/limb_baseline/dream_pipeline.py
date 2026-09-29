@@ -494,6 +494,7 @@ def dream_once(
         result, stats = plan_and_execute(
             task, hypothesis, under, memory, settings, geometry_seed, seed
         )
+        memory.learner.context.update(role=role, goal=task_index)
         fit_time = memory.memorize(result, snapshot, settings.mpc)
         records.append({
             "role": role,
@@ -672,6 +673,12 @@ def run_sequence(
         # Nothing to resume: start clean rather than append to a stale CSV.
         truncate_rows(out, 0)
         truncate_rows(dreams_out, 0)
+    if condition == "learned":
+        # One JSON line per refit: the learned model's learning curve.
+        learning_log = out.with_name(out.stem + "_learning.jsonl")
+        if start == 0:
+            learning_log.unlink(missing_ok=True)
+        memory.learner.log_path = str(learning_log)
 
     for episode in range(start, config.num_episodes):
         # Stage 1: information gathering (off).
@@ -691,6 +698,7 @@ def run_sequence(
         dream_rows = []
         for dream in range(n_dreams):
             noise_seed = task_seed * 100_000 + episode * 100 + dream + 1
+            memory.learner.context = {"episode": episode, "dream": dream}
             try:
                 rows = dream_once(
                     believed, task_set, memory, dream_settings, dream_rng, config,
@@ -735,6 +743,8 @@ def run_sequence(
             "fit_time": 0.0,
             "observed": "",
         }
+        memory.learner.context = {"episode": episode, "dream": -1, "role": "real",
+                                  "goal": record["goal_index"]}
         try:
             snapshot = memory.snapshot()
             result, stats = plan_and_execute(
