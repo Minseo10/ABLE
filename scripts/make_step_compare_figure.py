@@ -38,7 +38,14 @@ plt.rcParams.update({
 
 
 def main():
-    d = pd.concat([pd.read_csv(f) for f in glob.glob(str(DATA / "*_p*.csv")) if "dreams" not in f])
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", type=Path, default=DATA)
+    parser.add_argument("--out", type=Path, default=OUT)
+    parser.add_argument("--title", default="Seeding every MPC step (step mode), 5 people × 20 episodes")
+    args = parser.parse_args()
+    d = pd.concat([pd.read_csv(f) for f in glob.glob(str(args.data / "*_p??.csv"))])
     d = d[d.tag.isin(LINES)]
     lines = {tag: LINES[tag] for tag in LINES if tag in set(d.tag)}
     d["accepted"] = d.seeded_steps / (d.seeded_steps + d.full_steps)
@@ -83,12 +90,12 @@ def main():
     ax.set_title("How often the MPC uses the model", loc="left")
     ax.legend(fontsize=8, loc="upper left")
 
-    fig.suptitle("Seeding every MPC step (step mode), 5 people × 20 episodes",
+    fig.suptitle(args.title,
                  x=0.01, ha="left", fontweight="bold", color=INK)
     fig.tight_layout()
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT)
-    print(OUT)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(args.out)
+    print(args.out)
 
 
 if __name__ == "__main__":

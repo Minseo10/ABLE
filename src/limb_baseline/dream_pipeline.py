@@ -102,6 +102,11 @@ class DreamConfig:
     n_dreams: int = 0
     # Notebook step 3: solve every goal under the imagined belief, not just the one.
     all_goals: bool = False
+    # Every real episode gets a goal of its own, never repeated; dreams draw from a
+    # separate pool of `dream_pool` goals from the same distribution, so no dream ever
+    # solves a real episode's goal in advance.
+    fresh_goals: bool = False
+    dream_pool: int = 200
     num_goals: int = 6
     # Radians each goal may sit from the nominal goal; 0 repeats one task.
     variation: float = 0.3
@@ -615,13 +620,24 @@ def run_sequence(
     dream_rng = np.random.default_rng(task_seed + 1)
     particle_rng = np.random.default_rng(task_seed + 2)
     # Fixed goals inside the true range, as in the notebook.
-    task_set = make_task_set(theta, task_rng, config)
+    if config.fresh_goals:
+        task_set = make_task_set(
+            theta, task_rng, dataclasses.replace(config, num_goals=config.num_episodes))
+        pool_rng = np.random.default_rng(task_seed + 3)
+        dream_tasks = TaskSet(task_set.nominal, [
+            perturbed_task(task_set.nominal, theta, pool_rng, config.variation, vary_init=False)
+            for _ in range(config.dream_pool)
+        ])
+    else:
+        task_set = make_task_set(theta, task_rng, config)
+        dream_tasks = task_set
     # The limb is seen resting at its start, so the person reaches it: a floor, as a
     # safe execution gives. Without it a start beyond the belief makes every plan
     # leave the believed range at its first step.
     belief, start_notes = observe(belief, [task_set.nominal.limb_init], theta)
     believed = Believed.build(belief, config, particle_rng)
-    goal_sequence = task_rng.integers(len(task_set), size=config.num_episodes)
+    goal_sequence = (np.arange(config.num_episodes) if config.fresh_goals
+                     else task_rng.integers(len(task_set), size=config.num_episodes))
     n_dreams = config.n_dreams if condition != "plain" else 0
     memory = Memory.build(condition, model_name)
     dreams_out = out.with_name(out.stem + "_dreams.csv")
@@ -632,6 +648,7 @@ def run_sequence(
         "model": model_name if condition == "learned" else "",
         "n_dreams": n_dreams,
         "all_goals": config.all_goals,
+        "fresh_goals": config.fresh_goals,
         "num_goals": len(task_set),
         "variation": config.variation,
         "particles": config.particles,
@@ -701,7 +718,7 @@ def run_sequence(
             memory.learner.context = {"episode": episode, "dream": dream}
             try:
                 rows = dream_once(
-                    believed, task_set, memory, dream_settings, dream_rng, config,
+                    believed, dream_tasks, memory, dream_settings, dream_rng, config,
                     task_seed, noise_seed,
                 )
             except Exception as exc:  # pylint: disable=broad-except
@@ -795,6 +812,8 @@ def main() -> None:
                         help="Dreams before every episode; plain ignores them.")
     parser.add_argument("--all-goals", action="store_true",
                         help="Each dream also solves every goal of the task set.")
+    parser.add_argument("--fresh-goals", action="store_true",
+                        help="A new goal every real episode; dreams draw their own goals.")
     parser.add_argument("--num-goals", type=int, default=DreamConfig.num_goals)
     parser.add_argument("--variation", type=float, default=DreamConfig.variation,
                         help="Radians each goal may sit from the nominal goal.")
@@ -847,6 +866,7 @@ def main() -> None:
     config = DreamConfig(
         n_dreams=args.n_dreams,
         all_goals=args.all_goals,
+        fresh_goals=args.fresh_goals,
         num_goals=args.num_goals,
         variation=args.variation,
         num_episodes=args.num_episodes,
