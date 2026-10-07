@@ -4,8 +4,6 @@ A robot repositions a person's limb to a goal configuration without knowing thei
 motion. It asks the person a few questions, updates a belief about that range, and uses the
 belief to warm-start the MPC inside a PDDLStream planner so planning gets faster.
 
-Full design: [`doc/limb-baseline.md`](doc/limb-baseline.md).
-
 ## Install
 
 Needs Python 3.10-3.12 and access to the two private sibling repos, which are pinned to
@@ -40,10 +38,6 @@ python -m limb_baseline.fit --run-dir data/babble/isolated_left_arm
 # 4. Evaluate on freshly drawn people.
 python -m limb_baseline.evaluate --run-dir data/babble/isolated_left_arm \
     --variant isolated-left-arm --num-tasks 50
-
-# Figures (written to figures/<method>/<tag>).
-python scripts/make_figures.py --run-dir data/babble/isolated_left_arm \
-    --compare-dir data/pddlstream/isolated_left_arm
 ```
 
 ## Personalization
@@ -60,11 +54,11 @@ weights start.
 
 ```bash
 # Factory learning: one MLP over an existing collect run.
-python -m limb_baseline.personalize pretrain --run-dir data/pddlstream/isolated_left_arm
+python -m limb_baseline.personalize pretrain --run-dir data/archive/pddlstream/isolated_left_arm
 
 # Version 1: personalize from the factory model.
 python -m limb_baseline.personalize run --version v1 --variant isolated-left-arm \
-    --pretrained data/pddlstream/isolated_left_arm/pretrained.pkl \
+    --pretrained data/archive/pddlstream/isolated_left_arm/pretrained.pkl \
     --out-dir data/personalize/compare --num-people 5 --rounds 5 --tasks-per-round 5
 
 # Version 2, matched and larger. Both write into the same rounds.csv.
@@ -72,8 +66,6 @@ python -m limb_baseline.personalize run --version v2_matched \
     --variant isolated-left-arm --out-dir data/personalize/compare --num-people 5 --rounds 5 --tasks-per-round 5
 python -m limb_baseline.personalize run --version v2_large \
     --variant isolated-left-arm --out-dir data/personalize/compare --num-people 5 --rounds 5 --tasks-per-round 15
-
-python scripts/make_personalize_figures.py --run-dir data/personalize/compare
 ```
 
 Run the matched arm as well as the larger one: without it, a tie between v1 and v2 cannot
@@ -110,18 +102,12 @@ The grasp, base pose and IK seeds are held fixed across iterations so the post-g
 repeats; only the MPC's noise is reseeded per iteration. `--seed-mode step` instead seeds
 every MPC step (batch 0 with `--seed-rollouts` noisy copies, accepted within
 `--seed-tolerance` of the MPC's goal-directed candidates) and falls back per step; the
-runs under `data/memo/directed_bar/`, `nominal_bar/` and `batch8/` are earlier per-step
-variants, and `data/memo/replay/` replayed the stored plan open-loop.
+runs under `data/archive/memo/directed_bar/`, `nominal_bar/` and `batch8/` are earlier
+per-step variants, and `data/archive/memo/replay/` replayed the stored plan open-loop.
 
 ```bash
-scripts/run_memo_experiments.sh 20 0.3 isolated-left-arm   # N, V, variant
-# or one sequence at a time:
 python -m limb_baseline.memo --condition learned --model ridge --variation 0.3 \
     --num-tasks 20 --variant isolated-left-arm --out data/memo/varied_task.csv
-python scripts/make_memo_figures.py --csv data/memo/same_task.csv \
-    --csv data/memo/varied_task.csv --plain-csv data/memo/replay/same_task.csv \
-    --plain-csv data/memo/replay/varied_task.csv --conditions plain,warm \
-    --out figures/memo/memo_plan_time.png
 ```
 
 The package runs against kinder-baselines `main`; `src/limb_baseline/utils.py` supplies
@@ -168,23 +154,30 @@ Only real planning is charged; dream time goes to `dream_time` and to `<out>_dre
 Effort is counted in MPC rollouts (steps searched x 64, plus policy rollouts).
 
 ```bash
-scripts/run_dream_experiments.sh 20 4 0.3 isolated-left-arm   # episodes, dreams, V, variant
+# All lines of one experiment, 5 people, then its figures (episodes, dreams):
+scripts/run_dream.sh warmstart 20 4    # 6 repeated goals -> data/dream/warmstart_compare
+scripts/run_dream.sh fresh 20 4        # a new goal every episode -> data/dream/fresh_goals
+MODELS="gen:flow:hist gen:ddpm:hist" scripts/run_dream.sh generative 20 4
+                                       # 8 sampled seeds, varied geometry -> data/dream/generative_models
 # or one condition at a time:
 python -m limb_baseline.dream_pipeline --condition cache --n-dreams 4 --num-episodes 20 \
     --variation 0.3 --out data/dream/varied_0.3/cache_4.csv
-python scripts/make_dream_figures.py --csv data/dream/varied_0.3/plain_0.csv \
+python scripts/dream_figures.py summary --csv data/dream/varied_0.3/plain_0.csv \
     --csv data/dream/varied_0.3/cache_4.csv --out figures/dream/varied_0.3/effort_and_time.png
 ```
+
+`scripts/dream_figures.py` also draws the learned models' learning curves (`curves`), the
+step-mode comparison (`step`) and the generative models' draws (`samples`).
+`scripts/dream_eval.py` holds the offline studies on recorded runs (`belief-features`,
+`backfill`, `screen`, `sampling-steps`), and `scripts/log_to_wandb.py` uploads results.
 
 ## Layout
 
 | Path | What |
 | --- | --- |
 | `src/limb_baseline/` | The package: human model, queries, belief, tasks, both collectors, fit, evaluate, personalize |
-| `scripts/` | Figure and video rendering |
-| `data/` | Published runs, one directory per collection method |
-| `doc/` | Design document |
+| `scripts/` | The dream experiments' runner, figures, offline studies and W&B upload; the range-of-motion figure |
+| `data/dream/` | Current dream-pipeline runs, one directory per experiment |
+| `data/archive/`, `figures/archive/` | Earlier runs and their figures (babble, pddlstream, memo, older dream runs) |
+| `doc/poster/` | NERC posters |
 | `tests/` | `pytest -m "not slow"` skips the ones that build a simulation |
-
-Committed runs are `babble/isolated_left_arm` and `pddlstream/isolated_left_arm`. Earlier
-exploratory runs stay in the gitignored `data/archive/`.

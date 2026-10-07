@@ -26,9 +26,10 @@ import wandb
 
 PROJECT = "learning-forceful-manipulation"
 MANIFEST = Path("data/wandb_manifest.json")
-DREAM_DIRS = ("data/dream/warmstart_compare", "data/dream/fresh_goals")
-FIGURE_DIRS = ("figures/dream/ml_search", "figures/dream/flow", "figures/dream/warmstart_models",
-               "figures/dream/warmstart_compare", "figures/dream/fresh_goals")
+DREAM_DIRS = ("data/dream/warmstart_compare", "data/dream/fresh_goals", "data/dream/generative_models")
+FIGURE_DIRS = ("figures/dream/ml_search", "figures/archive/dream/flow",
+               "figures/archive/dream/warmstart_models", "figures/dream/warmstart_compare",
+               "figures/dream/fresh_goals", "figures/dream/generative_models")
 CONFIG_COLUMNS = ("tag", "condition", "model", "n_dreams", "all_goals", "fresh_goals", "num_goals",
                   "variation", "particles", "confidence", "dream_max_time", "seed_mode",
                   "seed_rollouts", "variant", "person", "task_seed", "theta")
@@ -92,7 +93,7 @@ def ml_sweep(up: Uploader):
 
 
 def flow_policy(up: Uploader):
-    search = json.load(open("data/dream/flow/search.json"))
+    search = json.load(open("data/archive/dream/flow/search.json"))
     for row in search["flow"]:
         cfg = row["config"]
         name = "flow/{width}x{depth}-d{dropout}-e{epochs}".format(**cfg)
@@ -119,7 +120,7 @@ def flow_policy(up: Uploader):
     name = "flow/scaling"
     run = up.run(name, "flow-policy", job_type="scaling")
     if run is not None:
-        scaling = json.load(open("data/dream/flow/scaling.json"))
+        scaling = json.load(open("data/archive/dream/flow/scaling.json"))
         flat = [{"fraction": r["fraction"], "seed": r["seed"], "segments": r["segments"],
                  "model": m, "test_nmse": r[m]["test"]["nmse_det"], "test_energy": r[m]["test"]["energy"],
                  "train_nmse": r[m]["train_nmse_det"],
@@ -131,8 +132,8 @@ def flow_policy(up: Uploader):
 
 def offline_tables(up: Uploader):
     sources = {
-        "offline-model-compare": ("data/dream/warmstart_models/results.json", "offline-model-compare"),
-        "belief-features": ("data/dream/belief_features/results.csv", "belief-features"),
+        "offline-model-compare": ("data/archive/dream/warmstart_models/results.json", "offline-model-compare"),
+        "belief-features": ("data/archive/dream/belief_features/results.csv", "belief-features"),
     }
     for name, (path, group) in sources.items():
         if not Path(path).exists():

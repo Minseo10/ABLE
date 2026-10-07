@@ -125,10 +125,19 @@ def make_regressor(spec: str):
     - `ridge:a<lo>,<hi>[:poly2]`: RidgeCV over alphas 10**lo..10**hi, optionally on
       degree-2 polynomial features;
     - `mlp:<h1>x<h2>...:a<alpha>`: an lbfgs MLP with those hidden sizes and L2 alpha;
-    - `net:<h1>x<h2>...:d<dropout>[:s<steps>]`: a `DropoutMLP`.
+    - `net:<h1>x<h2>...:d<dropout>[:s<steps>]`: a `DropoutMLP`;
+    - `gen:<kind>[:s<steps>]`: a generative model from `generative.KINDS` (mdn, flow, ddpm,
+      cvae, ebm), with `sample` as well as `predict`.
 
     Each reads only the first `BASE_FEATURES` columns unless the spec ends in `:hist`.
     """
+    if spec.startswith("gen:"):
+        from limb_baseline.generative import KINDS
+
+        hist = spec.endswith(":hist")
+        kind, *parts = spec.removesuffix(":hist").split(":")[1:]
+        options = {"steps": int(p[1:]) for p in parts if p.startswith("s")}
+        return KINDS[kind](columns=None if hist else BASE_FEATURES, **options)
     if spec.endswith(":hist"):
         return _make_regressor(spec[: -len(":hist")])
     from sklearn.preprocessing import FunctionTransformer
@@ -198,7 +207,7 @@ class DropoutMLP:
     min_segments: int = 6
     seed: int = 0
 
-    def fit(self, features, labels) -> DropoutMLP:
+    def fit(self, features, labels, held=None) -> DropoutMLP:
         import torch
         from torch import nn
 
@@ -208,8 +217,11 @@ class DropoutMLP:
         self.x_mean, self.x_std = x.mean(0), np.where(x.std(0) < 1e-8, 1.0, x.std(0))
         self.y_mean, self.y_std = y.mean(0), np.where(y.std(0) < 1e-8, 1.0, y.std(0))
         segment = np.cumsum(x[:, BASE_FEATURES - 1] == 0)
-        held = np.zeros(len(x), bool)
-        if segment[-1] >= self.min_segments:
+        if held is not None:
+            held = np.asarray(held, bool)
+        elif segment[-1] < self.min_segments:
+            held = np.zeros(len(x), bool)
+        else:
             rng = np.random.default_rng(self.seed)
             chosen = rng.choice(np.arange(1, segment[-1] + 1), size=segment[-1] // 6, replace=False)
             held = np.isin(segment, chosen)
@@ -226,6 +238,9 @@ class DropoutMLP:
             optimizer, self.lr, total_steps=self.steps, pct_start=0.05)
         best, state = float("inf"), None
         self.history, self.best_step, self.best_val = [], self.steps, float("nan")
+        # Reported only: the held-out trajectories from the newest third of the run.
+        recent = held & (segment > segment[-1] - segment[-1] // 3)
+        self.best_val_recent = float("nan")
         watched = train[torch.randperm(len(train), generator=torch.Generator().manual_seed(1))[:2048]]
         generator = torch.Generator().manual_seed(self.seed)
         for step in range(1, self.steps + 1):
@@ -241,10 +256,13 @@ class DropoutMLP:
                 with torch.no_grad():
                     fit = float(((self.net(xs[watched]) - ys[watched]) ** 2).mean())
                     val = float(((self.net(xs[held]) - ys[held]) ** 2).mean()) if held.any() else None
-                self.history.append((step, fit, val))
+                    val_recent = (float(((self.net(xs[recent]) - ys[recent]) ** 2).mean())
+                                  if recent.any() else None)
+                self.history.append((step, fit, val, val_recent))
                 if val is not None and val < best:
                     best, state = val, {k: v.clone() for k, v in self.net.state_dict().items()}
                     self.best_step, self.best_val = step, val
+                    self.best_val_recent = float("nan") if val_recent is None else val_recent
         if state is not None:
             self.net.load_state_dict(state)
         self.net.eval()

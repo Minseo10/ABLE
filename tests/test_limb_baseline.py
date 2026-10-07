@@ -284,6 +284,40 @@ def test_online_learner_logs_each_refit(tmp_path):
     assert second["curve"][-1][0] == 200 and second["val_nmse"] == second["val_nmse"]
 
 
+@pytest.mark.parametrize("kind", ["mdn", "flow", "ddpm", "cvae", "ebm"])
+def test_generative_models_fit_sample_and_pickle(kind):
+    import pickle
+
+    rng = np.random.default_rng(0)
+    x = rng.normal(size=(240, BASE_FEATURES + 20))
+    x[:, BASE_FEATURES - 1] = np.tile(np.arange(20), 12)
+    y = rng.normal(size=(240, 84))
+    model = make_regressor(f"gen:{kind}:s60:hist").fit(x, y)
+    again = pickle.loads(pickle.dumps(model))
+    assert again.predict(x[:3]).shape == (3, 84)
+    assert again.sample(x[:3], 4, seed=0).shape == (3, 4, 84)
+    narrow = make_regressor(f"gen:{kind}:s20").fit(x, y)
+    assert narrow.predict(x[:2]).shape == (2, 84)
+
+
+def test_generative_hook_offers_samples():
+    from types import SimpleNamespace
+
+    from limb_baseline.memo import OnlineWarmStart
+
+    rng = np.random.default_rng(0)
+    x = rng.normal(size=(120, BASE_FEATURES + 20))
+    x[:, BASE_FEATURES - 1] = np.tile(np.arange(10), 12)
+    learner = OnlineWarmStart(name="gen:flow:s30:hist", features=list(x),
+                              labels=list(rng.normal(size=(120, 84))))
+    learner.refit(MPCConfig())
+    hook = learner.as_hook(np.zeros(6))
+    state = SimpleNamespace(limb_positions=np.zeros(6), robot_positions=np.zeros(13),
+                            limb_velocities=np.zeros(6), robot_velocities=np.zeros(13))
+    assert hook(state, np.zeros(6), 0).shape == (12, 7)
+    assert hook.samples(state, np.zeros(6), 0, 5).shape == (5, 12, 7)
+
+
 def test_training_rows_match_what_the_hook_sees():
     from types import SimpleNamespace
 

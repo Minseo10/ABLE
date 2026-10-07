@@ -61,6 +61,7 @@ from limb_baseline.memo import (
     install,
     install_mpc,
     perturbed_task,
+    random_task,
     task_shift,
     uninstall,
 )
@@ -106,7 +107,13 @@ class DreamConfig:
     # separate pool of `dream_pool` goals from the same distribution, so no dream ever
     # solves a real episode's goal in advance.
     fresh_goals: bool = False
+    # Grasp, base pose and IK are sampled afresh for every plan (real or dreamed), seeded
+    # by the plan's own noise seed, instead of fixed by the run's task seed.
+    vary_geometry: bool = False
     dream_pool: int = 200
+    # With `fresh_goals`: goals drawn uniformly over the person's true range instead of
+    # within `variation` of the nominal goal.
+    random_goals: bool = False
     num_goals: int = 6
     # Radians each goal may sit from the nominal goal; 0 repeats one task.
     variation: float = 0.3
@@ -497,7 +504,8 @@ def dream_once(
         task = task_set.tasks[task_index]
         snapshot = memory.snapshot()
         result, stats = plan_and_execute(
-            task, hypothesis, under, memory, settings, geometry_seed, seed
+            task, hypothesis, under, memory, settings,
+            seed if config.vary_geometry else geometry_seed, seed,
         )
         memory.learner.context.update(role=role, goal=task_index)
         fit_time = memory.memorize(result, snapshot, settings.mpc)
@@ -624,10 +632,16 @@ def run_sequence(
         task_set = make_task_set(
             theta, task_rng, dataclasses.replace(config, num_goals=config.num_episodes))
         pool_rng = np.random.default_rng(task_seed + 3)
-        dream_tasks = TaskSet(task_set.nominal, [
-            perturbed_task(task_set.nominal, theta, pool_rng, config.variation, vary_init=False)
-            for _ in range(config.dream_pool)
-        ])
+        nominal = task_set.nominal
+
+        def draw(rng):
+            if config.random_goals:
+                return random_task(nominal, theta, rng)
+            return perturbed_task(nominal, theta, rng, config.variation, vary_init=False)
+
+        if config.random_goals:
+            task_set = TaskSet(nominal, [draw(task_rng) for _ in range(config.num_episodes)])
+        dream_tasks = TaskSet(nominal, [draw(pool_rng) for _ in range(config.dream_pool)])
     else:
         task_set = make_task_set(theta, task_rng, config)
         dream_tasks = task_set
@@ -649,6 +663,8 @@ def run_sequence(
         "n_dreams": n_dreams,
         "all_goals": config.all_goals,
         "fresh_goals": config.fresh_goals,
+        "random_goals": config.random_goals,
+        "vary_geometry": config.vary_geometry,
         "num_goals": len(task_set),
         "variation": config.variation,
         "particles": config.particles,
@@ -765,7 +781,8 @@ def run_sequence(
         try:
             snapshot = memory.snapshot()
             result, stats = plan_and_execute(
-                task, theta, believed, memory, settings, task_seed, record["mpc_seed"]
+                task, theta, believed, memory, settings,
+                record["mpc_seed"] if config.vary_geometry else task_seed, record["mpc_seed"],
             )
             record.update(stats)
             record["fit_time"] = round(memory.memorize(result, snapshot, settings.mpc), 2)
@@ -812,6 +829,10 @@ def main() -> None:
                         help="Dreams before every episode; plain ignores them.")
     parser.add_argument("--all-goals", action="store_true",
                         help="Each dream also solves every goal of the task set.")
+    parser.add_argument("--vary-geometry", action="store_true",
+                        help="Sample grasp, base pose and IK afresh for every plan.")
+    parser.add_argument("--random-goals", action="store_true",
+                        help="Fresh goals drawn uniformly over the person's true range.")
     parser.add_argument("--fresh-goals", action="store_true",
                         help="A new goal every real episode; dreams draw their own goals.")
     parser.add_argument("--num-goals", type=int, default=DreamConfig.num_goals)
@@ -866,7 +887,9 @@ def main() -> None:
     config = DreamConfig(
         n_dreams=args.n_dreams,
         all_goals=args.all_goals,
-        fresh_goals=args.fresh_goals,
+        fresh_goals=args.fresh_goals or args.random_goals,
+        random_goals=args.random_goals,
+        vary_geometry=args.vary_geometry,
         num_goals=args.num_goals,
         variation=args.variation,
         num_episodes=args.num_episodes,

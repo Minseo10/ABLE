@@ -24,8 +24,9 @@ temp/
 # Interrupted writes
 *.partial
 
-# Memo experiment process logs
-data/memo/logs/
-data/memo/*/logs/
+# Experiment process logs
 data/dream/*/logs/
+data/archive/memo/logs/
+data/archive/memo/*/logs/
+data/archive/dream/*/logs/
 wandb/

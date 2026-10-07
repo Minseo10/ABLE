@@ -1,0 +1,3 @@
+{"episode": 0, "dream": 0, "role": "chosen", "goal": 102, "new_rows": 37, "model": "gen:flow:hist", "rows": 37, "segments": 1, "train_nmse": 0.004604109612211478, "fit_seconds": 18.425}
+{"episode": 0, "dream": 1, "role": "chosen", "goal": 190, "new_rows": 27, "new_nmse": 107.66811777785995, "new_nmse_first": 48.443953306766225, "new_mse": 3.356223802297302, "model": "gen:flow:hist", "rows": 64, "segments": 2, "train_nmse": 0.007962954095861573, "fit_seconds": 18.693}
+{"episode": 0, "dream": -1, "role": "real", "goal": 0, "new_rows": 30, "new_nmse": 5.6442205534265675, "new_nmse_first": 6.937325739058835, "new_mse": 0.37297984351681346, "model": "gen:flow:hist", "rows": 94, "segments": 3, "train_nmse": 0.013064020335235411, "fit_seconds": 21.603}

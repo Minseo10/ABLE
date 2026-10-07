@@ -108,13 +108,15 @@ class SeedStats:
     seed_progress: list = field(default_factory=list)
     # The same for the seed on steps that fell back to the full batch.
     rejected_progress: list = field(default_factory=list)
+    # Per step: the best model candidate's cost over the bar (inf when all were rejected).
+    seed_margin: list = field(default_factory=list)
 
     def reset(self) -> None:
         self.seeded_steps = self.full_steps = self.seed_rejected = 0
         self.policy_tried = self.policy_reached = self.policy_steps = 0
         self.policy_seconds = 0.0
         self.policy_failure, self.policy_final_error = "", float("nan")
-        self.seed_progress, self.rejected_progress = [], []
+        self.seed_progress, self.rejected_progress, self.seed_margin = [], [], []
 
 
 SEED = SeedConfig()
@@ -166,10 +168,16 @@ class _SeededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
         scale = cfg.noise_scale * float(
             np.clip(error / cfg.noise_reference_error, cfg.min_noise_ratio, 1.0)
         )
-        batch = [seed] + [
-            self._clip(seed + self._rng.normal(scale=scale, size=seed.shape))
-            for _ in range(SEED.rollouts - 1)
-        ]
+        sampler = getattr(hook, "samples", None)
+        if sampler is not None and SEED.rollouts > 1:
+            # A generative model's own draws replace the seed's noisy copies.
+            drawn = sampler(start, self._goal, self._step_index, SEED.rollouts - 1)
+            batch = [seed] + [self._clip(np.asarray(p, float)) for p in drawn]
+        else:
+            batch = [seed] + [
+                self._clip(seed + self._rng.normal(scale=scale, size=seed.shape))
+                for _ in range(SEED.rollouts - 1)
+            ]
         # A seed given per control step is rolled out verbatim; control points are
         # interpolated as the MPC's own candidates are.
         exact = seed.shape[0] == cfg.horizon
@@ -202,7 +210,19 @@ class _SeededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
         rejected, cost = self._score(start, expand(seed))
         seed_terminal = limb_error(ctx, sim.limb.get_joint_positions(), self._goal)
         seed_cost = cost
-        if passes(rejected, cost, seed_terminal):
+        if sampler is not None and SEED.rollouts > 1:
+            # Draws are alternatives, not backups: score them all and keep the cheapest.
+            best = None if rejected else (cost, seed, seed_terminal)
+            for points in batch[1:]:
+                rejected_draw, cost = self._score(start, expand(points))
+                terminal = limb_error(ctx, sim.limb.get_joint_positions(), self._goal)
+                if not rejected_draw and (best is None or cost < best[0]):
+                    best = (cost, points, terminal)
+            if best is not None and passes(0, best[0], best[2]):
+                chosen = (best[1], best[2])
+            STATS.seed_margin.append(best[0] / bar if best is not None else float("inf"))
+        elif passes(rejected, cost, seed_terminal):
+            STATS.seed_margin.append(cost / bar if not rejected else float("inf"))
             chosen = (seed, seed_terminal)
         else:
             best = None
@@ -213,6 +233,8 @@ class _SeededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
                     best = (cost, points, terminal)
             if best is not None and passes(0, best[0], best[2]):
                 chosen = (best[1], best[2])
+            options = [c for c in ([] if rejected else [seed_cost]) + ([best[0]] if best else [])]
+            STATS.seed_margin.append(min(options) / bar if options else float("inf"))
         restore_state(sim, start, regrasp=False)
         if os.environ.get("MEMO_DEBUG"):
             print(
@@ -524,6 +546,7 @@ class OnlineWarmStart:
         }
         if hasattr(inner, "history"):
             record.update(val_nmse=inner.best_val, best_step=inner.best_step,
+                          val_recent_nmse=getattr(inner, "best_val_recent", float("nan")),
                           curve=[list(h) for h in inner.history])
         with open(self.log_path, "a", encoding="utf-8") as handle:
             handle.write(json.dumps(record) + "\n")
@@ -543,6 +566,12 @@ class OnlineWarmStart:
 
         # The torque applied at the last control step, set by whoever applies it.
         hook.previous = None
+        if hasattr(self.estimator, "sample"):
+            def samples(state, goal: np.ndarray, step: float, k: int):
+                features = state_features(state, goal, belief_features, step, hook.previous)
+                return self.estimator.sample(features.reshape(1, -1), k)[0].reshape(k, horizon, -1)
+
+            hook.samples = samples
         return hook
 
 
@@ -591,6 +620,31 @@ def perturbed_task(
         f"no reachable perturbation of the nominal task within {variation} rad "
         f"in {max_draws} draws"
     )
+
+
+def random_task(
+    nominal: Task, theta: np.ndarray, rng: np.random.Generator, max_draws: int = 2000
+) -> Task:
+    """`nominal` with its goal drawn uniformly over the person's true range on each active
+    joint, under the same two rejections as `perturbed_task`: the separation from the
+    start, and reach from the nominal base pose. Start and base pose stay the nominal's."""
+    sampler = task_sampler()
+    lower, upper = theta_to_joint_limits(theta)
+    distribution = DEFAULT_TASK_DISTRIBUTION
+    init = np.asarray(nominal.limb_init, dtype=np.float64)
+    for _ in range(max_draws):
+        goal = np.asarray(nominal.limb_goal, dtype=np.float64)
+        for j in active_joints():
+            goal[j] = rng.uniform(lower[j], upper[j])
+        separation = joint_position_distance(LIMB_JOINT_INFOS, list(init), list(goal))
+        if not distribution.min_separation <= separation <= distribution.max_separation:
+            continue
+        if nominal.base_pose is not None and not sampler._reachable_from(  # noqa: SLF001
+            nominal.base_pose, init, goal
+        ):
+            continue
+        return dataclasses.replace(nominal, limb_goal=tuple(goal))
+    raise RuntimeError(f"no reachable random goal in {max_draws} draws")
 
 
 def task_shift(task: Task, nominal: Task) -> float:

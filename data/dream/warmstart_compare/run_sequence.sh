@@ -4,7 +4,7 @@
 cd "$(dirname "$0")/../../.."
 while ps -eo args | awk '/limb_baseline[.]dream_pipeline/ && /cache_4_step_p/' | grep -q .; do sleep 60; done
 echo "cache done $(date)"
-ZERO=0 SEED_MODE=step MODELS=net scripts/run_warmstart_comparison.sh 20 4
+ZERO=0 SEED_MODE=step MODELS=net scripts/run_dream.sh warmstart 20 4
 echo "net done $(date)"
-ZERO=0 SEED_MODE=step MODELS=mlp scripts/run_warmstart_comparison.sh 20 4
+ZERO=0 SEED_MODE=step MODELS=mlp scripts/run_dream.sh warmstart 20 4
 echo "mlp done $(date)"
