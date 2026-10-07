@@ -1,183 +1,179 @@
-# Learning Forceful Manipulation
+# ABLE: Anticipating Belief Updates for Learning Efficient TAMP
 
-A robot repositions a person's limb to a goal configuration without knowing their range of
-motion. It asks the person a few questions, updates a belief about that range, and uses the
-belief to warm-start the MPC inside a PDDLStream planner so planning gets faster.
+**Motivation:** A robot moves a person's arm to a goal pose by forceful contact, as in caregiving
+or rehabilitation. Where to stand, where to grasp and how to move the limb can be considered as a Task and
+Motion Planning (TAMP) problem. The difficulty is that each person's **range of motion**
+(RoM) is different and unknown, so the planner is slow: it has to search for torques that
+keep the limb inside limits it is not sure about.
+
+**Goal:** for a new person, learn their range of motion and learn to plan faster for them.
+
+**Idea (dreaming):** the robot keeps a *belief* over the person's RoM. Between real
+episodes it imagines how that belief might change next, solves tasks under those imagined
+beliefs with the slow planner, and stores the solutions in a memory. Dreamed results can be used to learn a model $g$ that predicts the warm start for the planner. When the real episode
+comes, the planner can generate plan faster using $g$.
+
+![The four-step loop and the dreaming step](figures/approach.png)
+
+More background: [NERC abstract](doc/presentations/NERC_Abstract.pdf) ·
+[NERC poster](doc/poster/nerc_poster_9_48x36_preview.pdf)
+([pptx](doc/poster/nerc_poster_9_48x36.pptx)) ·
+[lab meeting slides](<doc/presentations/Lab Meeting 260909.pptx>)
 
 ## Install
 
-Needs Python 3.10-3.12 and access to the two private sibling repos, which are pinned to
-branches in `pyproject.toml`.
+The project builds on three other repos:
+
+| Repo | Description |
+| --- | --- |
+| [kindergarden](https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden) | LimbRepositioning3D environment |
+| [pddlstream](https://github.com/Princeton-Robot-Planning-and-Learning/pddlstream) (PRPL fork) | The TAMP planner the pipeline uses. Installed automatically with kinder-baselines. |
+| [kinder-baselines](https://github.com/Princeton-Robot-Planning-and-Learning/kinder-baselines) | Contains domain pddl, stream pddl, and stream functions the PDDLStream planner uses to solve  LimbRepositioning3D tasks. |
+
+
 
 ```bash
+git clone https://github.com/Minseo10/learning-forceful-manipulation
+cd learning-forceful-manipulation
+
 conda create -n kinder python=3.11 && conda activate kinder
-pip install -e ".[develop]"
+# Build tools: the planner (FastDownward) and the robot's IK (IKFast) are compiled locally.
+conda install -c conda-forge cmake make cxx-compiler openblas libgfortran5
+
+# -Wno-template-body lets GCC 15 build FastDownward.
+CXXFLAGS="$CXXFLAGS -Wno-template-body" pip install -e ".[develop]"
+
+pytest -m "not slow"        # quick check: 62 tests, a few seconds
 ```
 
-To work on the environment or the planner too, clone them beside this repo and install
-editable instead of letting pip fetch them:
+- pip fetches kindergarden and kinder-baselines from their `main` branches. To use editable version, clone them beside
+this repo and run `pip install -e ../kindergarden -e ../kinder-baselines/kinder-models
+-e ../kinder-baselines/kinder-pddlstream-planning` afterwards.
 
-```bash
-pip install -e ../kindergarden -e ../kinder-baselines/kinder-pddlstream-planning
-```
+- IKFast compiles itself the first time the planner runs and looks for LAPACK/BLAS in system
+folders. Point it at the conda ones once, before the first run:
+
+    ```bash
+    L=$CONDA_PREFIX/lib/ikfast-link && mkdir -p $L
+    ln -sf $CONDA_PREFIX/lib/libopenblas.a $L/liblapack.a
+    ln -sf $CONDA_PREFIX/lib/libopenblas.a $L/libblas.a
+    ln -sf $CONDA_PREFIX/lib/libgfortran.so.5.0.0 $L/libgfortran.so.5.0.0
+    export LAPACK_DIR=$L BLAS_DIR=$L LIBGFORTRAN_DIR=$L
+    export LDFLAGS="-Wl,-rpath,$CONDA_PREFIX/lib -lgomp -lpthread"
+    ```
+
+    Then run the short test in [Run](#run) in the same shell. After IKFast has built, the
+    exports are no longer needed.
 
 ## Pipeline
 
-Each run lives in `data/<method>/<tag>/` and holds `demos.csv`, `attempts.csv`, `fit.json`,
-`warm_start.pkl` and `eval.csv`.
+**Human paramter `theta`:**
+- The simulated person has a parameter `theta`: how far three left-arm motions
+(shoulder flexion, shoulder abduction, elbow flexion) can go, as a scaled value of the default
+ROMs ([figure](figures/rom_definition.png)). 
+
+**Planner's parameter `psi`:**
+- The planner `plan-limb-motion` stream uses MPC to search for robot torques that manipulates limb to the goal configuration. `psi` is the warm start (initial robot torque distribution) for the MPC. By default it is zero, so the search starts from
+scratch every time.
+- Learning to plan means learning a model $g$ that predicts a good `psi`. The learned model predicts them from the current state,
+goal and belief. A good seed lets the MPC find a plan with fewer rollouts.0
+- For now `psi` is a warm start just for `plan-limb-motion` stream, but it can be extended to warm start for other streams for future work.
+
+
+Each **episode** runs these following steps, all driven by
+[`dream_pipeline.py`](src/limb_baseline/dream_pipeline.py):
+
+| Step | What happens | Code |
+| --- | --- | --- |
+| 1. Information gathering | The robot queries human and collect responses (Query: The robot asks the person to push a joint to the believed limit. Response: Human's final limb configuration.) | [`queries.py`](src/limb_baseline/queries.py) |
+| 2. Human model learning | Keep a belief over `theta`. It starts at a population prior and the belief is updated after information gathering using human responses. | [`belief.py`](src/limb_baseline/belief.py), `observe()` |
+| 3. Dreaming | Repeat `n_dreams` times: draw a random person from the belief, plan a task for them, imagine executing it, and get the belief that would follow. Store the plan in the memory under that imagined belief. | `dream_once()` |
+| 4. Planning and execution | Run PDDLStream planner, with using $g$ that predicts the warm start for MPC. If its plan does not work, search with the normal planner (PDDLStream without $g$). Execute on the real person, then update the belief. | `plan_and_execute()`, [`planner.py`](src/limb_baseline/planner.py), [`memo.py`](src/limb_baseline/memo.py) |
+
+`--condition` represents what the memory selects:
+
+- `plain`: no memory and no dreams. The baseline.
+- `cache`: Just reuse the plan saved in the memory. A table from (goal, belief) to a stored plan.
+- `learned`: a model that predicts torques from the current state and goal, retrained
+  after every solved dream or episode. 
+    - `--model` picks it: an MLP
+  ([`warmstart.py`](src/limb_baseline/warmstart.py)) or a generative model such as flow
+  matching or diffusion ([`generative.py`](src/limb_baseline/generative.py)).
+
+
+## Run
+
 
 ```bash
-# 1-2. Collect demonstrations. --method is pddlstream (plan to a goal) or babble
-#      (random torques, relabelled). Queries and belief updates happen per episode.
-python -m limb_baseline.collect --method babble --variant isolated-left-arm \
-    --tag isolated_left_arm --num-people 50 --tasks-per-person 5
-
-# 3. Fit psi, the MPC warm start, held out by person.
-python -m limb_baseline.fit --run-dir data/babble/isolated_left_arm
-
-# 4. Evaluate on freshly drawn people.
-python -m limb_baseline.evaluate --run-dir data/babble/isolated_left_arm \
-    --variant isolated-left-arm --num-tasks 50
+python -m limb_baseline.dream_pipeline --condition learned --model gen:flow:hist \
+    --n-dreams 4 --num-episodes 20 --person 24 --fresh-goals --vary-geometry \
+    --seed-mode step --seed-rollouts 8 --out data/dream/my_run/flow_p24.csv
 ```
 
-## Personalization
+- For a quick test (about 10 minutes) use `--num-episodes 2 --n-dreams 1 --max-time 120
+--dream-max-time 120`.
 
-Two ways to reach a warm start for one specific person, compared round by round. Both
-loop the same four steps -- ask queries, update the belief, train `psi` on that person's
-demonstrations, plan and execute held-out tasks -- and differ only in where the network's
-weights start.
+- It writes `flow_p24.csv` (one row per episode), `flow_p24_dreams.csv` (one row per dream),
+`flow_p24_learning.jsonl` (model error after each retraining) and a checkpoint;
+`--resume` continues an interrupted run. Each plan may take up to 10 minutes, so a
+20-episode run with dreams takes hours.
 
-| Version | Round 0 weights | Scaler | Data per round |
-| --- | --- | --- | --- |
-| 1, factory pretrained | fit on `m` people x `n` tasks | from the factory data, frozen | small |
-| 2, from scratch | random | fit on the person's first batch, then frozen | larger |
-
-```bash
-# Factory learning: one MLP over an existing collect run.
-python -m limb_baseline.personalize pretrain --run-dir data/archive/pddlstream/isolated_left_arm
-
-# Version 1: personalize from the factory model.
-python -m limb_baseline.personalize run --version v1 --variant isolated-left-arm \
-    --pretrained data/archive/pddlstream/isolated_left_arm/pretrained.pkl \
-    --out-dir data/personalize/compare --num-people 5 --rounds 5 --tasks-per-round 5
-
-# Version 2, matched and larger. Both write into the same rounds.csv.
-python -m limb_baseline.personalize run --version v2_matched \
-    --variant isolated-left-arm --out-dir data/personalize/compare --num-people 5 --rounds 5 --tasks-per-round 5
-python -m limb_baseline.personalize run --version v2_large \
-    --variant isolated-left-arm --out-dir data/personalize/compare --num-people 5 --rounds 5 --tasks-per-round 15
-```
-
-Run the matched arm as well as the larger one: without it, a tie between v1 and v2 cannot
-distinguish "pretraining bought nothing" from "the extra data made up for it".
-
-Demonstrations are planned *without* a warm start in both versions, so the label is what
-the slow planner does rather than what the model already predicts. Evaluation uses the
-same held-out tasks every round, so the curve moves only when the belief or `psi` does.
-`--replay` mixes factory rows back into each fine-tune (as a multiple of the person's own
-rows) if the handful of personal rows turns out to destabilise the net; it is off by
-default.
-
-## Planning from a plan cache or a learned model first
-
-The simplest "learning to plan", after the cache in `notebooks/dreaming_rom_planner.ipynb`:
-skip the queries and the belief (Stages 1-2), hand the planner the person's true range of
-motion, and try a seed before searching. The seed is rolled out closed-loop from the
-grasped state with no search, one torque per control step, under the planner's own limit
-checks and stopping tolerance. If it reaches the goal it is the plan, about a second's
-work; if it violates a limit or stalls it is discarded and the stock MPC plans from the
-original state, exactly as `plain` does, so the worst case is plain plus that second.
-
-- `warm`: a cache of solved plans keyed on the goal rounded to 0.1 rad, the best four per
-  key. A hit rolls out the stored torques from the stored state nearest the current one;
-  a miss plans from scratch. The belief would be part of the key too, but it is constant.
-- `learned`: a model refit after every solved episode on the MPC's own rows, the map from
-  the current state (limb and robot joints, goal, step) to the next horizon's torques, the
-  same rows `fit` trains on. Queried at every control step of the rollout, so it corrects
-  for a goal it has not seen. Iteration 0 has no model and runs plain.
-- `plain`: the stock planner.
-
-Two task settings: one task repeated, and each goal drawn within `V` radians of the first.
-The grasp, base pose and IK seeds are held fixed across iterations so the post-grasp state
-repeats; only the MPC's noise is reseeded per iteration. `--seed-mode step` instead seeds
-every MPC step (batch 0 with `--seed-rollouts` noisy copies, accepted within
-`--seed-tolerance` of the MPC's goal-directed candidates) and falls back per step; the
-runs under `data/archive/memo/directed_bar/`, `nominal_bar/` and `batch8/` are earlier
-per-step variants, and `data/archive/memo/replay/` replayed the stored plan open-loop.
+A full experiment is 5 people for every condition, run in parallel (at most 16 processes),
+followed by the figures:
 
 ```bash
-python -m limb_baseline.memo --condition learned --model ridge --variation 0.3 \
-    --num-tasks 20 --variant isolated-left-arm --out data/memo/varied_task.csv
-```
-
-The package runs against kinder-baselines `main`; `src/limb_baseline/utils.py` supplies
-the few planner names it was written against that `main` renamed or dropped.
-
-## Dreaming between episodes
-
-`limb_baseline.dream_pipeline` runs the notebook's loop on the arm: one episode is (1) information
-gathering, (2) human model learning, (3) `n_dreams` dreams, (4) one planned and executed
-task. Stages 1-2, the queries, are commented out for now; the belief starts at the
-population prior and, as in the notebook, learns only from execution: a limb that stayed
-inside the person raises a floor the limit lies beyond, one that crossed the limit says
-where it is. The planner plans under the belief's mean. The task set is `K` goals within
-`V` rad of one nominal task, drawn once inside the person's true range as in the
-notebook; episodes and dreams pick from it. A dream draws
-a hypothetical person from the belief and one goal, plans under the current belief exactly
-as a real episode would, imagines executing on that person, updates a copy of the belief
-from what that revealed, and memorizes plans under that imagined next belief, if they
-reached the goal (`--all-goals` solves the whole task set under it, the notebook's step
-3). Two memories:
-
-- `cache`: memo.py's plan cache, keyed on (goal, belief); a hit is rolled out first.
-- `learned`: memo.py's online model, refit after every memorized episode.
-- `plain`: no memory, no dreams.
-
-By default the planner uses 32 belief particles at confidence 0.5, about the typical
-person. Planning gets 600 s per real episode and per dream (`--max-time`,
-`--dream-max-time`), enforced exactly: the planner is stopped mid-stream at the deadline,
-since PDDLStream only checks its clock between iterations. `--particles 0` plans under the belief's mean instead. With
-particles, `P` people are drawn from the belief (redrawn when it changes) and a limb
-configuration is believed inside when at least `--confidence` of them allow it. The range
-only enters the planner as a check on rolled-out positions, so this costs no extra
-rollouts. A goal beyond that range is retargeted into the matching quantile of the
-particles, and a dream's hypothetical person is one of them.
-
-A goal beyond the belief is not refused: as the notebook's planner stops at the nearest
-point it believes reachable, the plan is retargeted 0.05 rad inside the believed edge
-(`goal_beyond_belief`). Stopped-short plans that stay inside the limits are memorized,
-and reaching the edge raises the floor, so the belief grows until it covers the goal.
-Quality is `goal_distance`, the final distance to the original goal, as the notebook's
-error.
-
-Only real planning is charged; dream time goes to `dream_time` and to `<out>_dreams.csv`.
-Effort is counted in MPC rollouts (steps searched x 64, plus policy rollouts).
-
-```bash
-# All lines of one experiment, 5 people, then its figures (episodes, dreams):
-scripts/run_dream.sh warmstart 20 4    # 6 repeated goals -> data/dream/warmstart_compare
-scripts/run_dream.sh fresh 20 4        # a new goal every episode -> data/dream/fresh_goals
+scripts/run_dream.sh warmstart 20 4    # 6 goals that repeat        -> data/dream/warmstart_compare
+scripts/run_dream.sh fresh 20 4        # a new goal every episode   -> data/dream/fresh_goals
 MODELS="gen:flow:hist gen:ddpm:hist" scripts/run_dream.sh generative 20 4
-                                       # 8 sampled seeds, varied geometry -> data/dream/generative_models
-# or one condition at a time:
-python -m limb_baseline.dream_pipeline --condition cache --n-dreams 4 --num-episodes 20 \
-    --variation 0.3 --out data/dream/varied_0.3/cache_4.csv
-python scripts/dream_figures.py summary --csv data/dream/varied_0.3/plain_0.csv \
-    --csv data/dream/varied_0.3/cache_4.csv --out figures/dream/varied_0.3/effort_and_time.png
+                                       # generative models, 8 candidates -> data/dream/generative_models
 ```
 
-`scripts/dream_figures.py` also draws the learned models' learning curves (`curves`), the
-step-mode comparison (`step`) and the generative models' draws (`samples`).
-`scripts/dream_eval.py` holds the offline studies on recorded runs (`belief-features`,
-`backfill`, `screen`, `sampling-steps`), and `scripts/log_to_wandb.py` uploads results.
+The arguments are episodes and dreams per episode; the header of
+[`run_dream.sh`](scripts/run_dream.sh) lists the other options. To redraw figures from
+existing runs:
 
-## Layout
+```bash
+python scripts/dream_figures.py summary --csv data/dream/generative_models/*_p??.csv \
+    --out figures/dream/generative_models/summary.png --per-person
+```
+
+## Expected results
+
+With a useful memory, planning should get **cheaper than `plain` as episodes go on**
+(fewer MPC rollouts, less planning time), while the arm still reaches the goal (distance
+to goal stays near zero) and the belief narrows.
+
+Results with 5 people, 20 episodes, 4 dreams per episode.
+Each row compares one memory against `plain` (grey). Flow matching has the best performance so far.
+
+![Results with never-repeated goals and varied geometry](figures/dream/generative_models/summary.png)
+
+Mean over episodes 10-19:
+
+| Memory | MPC rollouts | Planning time (s) | Goal reached |
+| --- | --- | --- | --- |
+| plain | 5082 | 216 | 94% |
+| cache | 5031 | 157 | 96% |
+| MLP | 3340 | 126 | 98% |
+| MLP, 8 candidates | 3173 | 137 | 94% |
+| diffusion, 8 candidates | 3374 | 140 | 100% |
+| flow matching, 8 candidates | 1868 | 107 | 96% |
+
+
+## Files
 
 | Path | What |
 | --- | --- |
-| `src/limb_baseline/` | The package: human model, queries, belief, tasks, both collectors, fit, evaluate, personalize |
-| `scripts/` | The dream experiments' runner, figures, offline studies and W&B upload; the range-of-motion figure |
-| `data/dream/` | Current dream-pipeline runs, one directory per experiment |
-| `data/archive/`, `figures/archive/` | Earlier runs and their figures (babble, pddlstream, memo, older dream runs) |
-| `doc/poster/` | NERC posters |
-| `tests/` | `pytest -m "not slow"` skips the ones that build a simulation |
+| `src/limb_baseline/dream_pipeline.py` | The episode loop: belief update, dreams, memory, planning |
+| `src/limb_baseline/belief.py`, `human.py` | Belief over the range of motion; the person model `theta` |
+| `src/limb_baseline/planner.py`, `memo.py` | Planner wrapper; plan cache, online model and MPC seeding |
+| `src/limb_baseline/warmstart.py`, `generative.py` | The learned models (MLP; flow matching, diffusion and others) |
+| `scripts/run_dream.sh` | Runs a full experiment |
+| `scripts/dream_figures.py` | Result figures: `summary`, `curves`, `step`, `samples` |
+| `scripts/dream_eval.py` | Offline studies of the models on recorded runs |
+| `scripts/log_to_wandb.py` | Uploads results to Weights & Biases |
+| `data/dream/`, `figures/dream/` | Current runs and their figures, one folder per experiment |
+| `data/archive/`, `figures/archive/` | Earlier runs and figures |
+| `doc/` | Poster, abstract, slides, [earlier experiments](doc/earlier-experiments.md) |
+| `notebooks/dreaming_rom_planner.ipynb` | The toy version of the loop this pipeline follows |
+| `tests/` | `pytest -m "not slow"` skips tests that build a simulation |

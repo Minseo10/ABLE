@@ -18,9 +18,9 @@ dependencies = [
     "imageio",
     "imageio-ffmpeg",
     "pybullet_helpers>=0.1.0",
-    # Branch pins: both are unreleased work this baseline is written against.
-    "kindergarden @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden.git@limb/04-limb-joint-limits",
-    "kinder_pddlstream_planning @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kinder-baselines.git@pddlstream/learning-baseline#subdirectory=kinder-pddlstream-planning",
+    "kindergarden @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden.git@main",
+    "kinder_models @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kinder-baselines.git@main#subdirectory=kinder-models",
+    "kinder_pddlstream_planning @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kinder-baselines.git@main#subdirectory=kinder-pddlstream-planning",
 ]
 
 [project.optional-dependencies]
