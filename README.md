@@ -67,7 +67,7 @@ folders. Point it at the conda ones once, before the first run:
 
 ## Pipeline
 
-**Human paramter `theta`:**
+**Human parameter `theta`:**
 - The simulated person has a parameter `theta`: how far three left-arm motions
 (shoulder flexion, shoulder abduction, elbow flexion) can go, as a scaled value of the default
 ROMs ([figure](figures/rom_definition.png)). 
