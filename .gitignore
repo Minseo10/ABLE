@@ -30,3 +30,16 @@ data/archive/memo/logs/
 data/archive/memo/*/logs/
 data/archive/dream/*/logs/
 wandb/
+
+# Local work kept out of the repo
+paper/
+figures/variant_sweep/
+videos/variant_sweep/
+data/dream/variants/
+data/variant_sweep/
+figures/dream/variants/
+scripts/variant_sweep.py
+tmp/
+patches/
+research_notes/
+reports/

@@ -1,0 +1,22 @@
+{
+  "solved": true,
+  "goal_reached": true,
+  "plan_time": 36.66899752616882,
+  "execute_time": 0.14254236221313477,
+  "num_torque_steps": 438,
+  "num_control_steps": 36,
+  "mpc_simulator_steps": 165888,
+  "rom_violation_steps": 0,
+  "worst_rom_violation": 0.0,
+  "rom_margin": 0.2602392842795829,
+  "failure_reason": "",
+  "num_segments": 1,
+  "variant": "isolated-right-leg",
+  "particle_constraints": true,
+  "body_mass_kg": 62.5,
+  "motion_outcomes": {
+    "reached the goal": 1
+  },
+  "replay_max_joint_error": 0.0,
+  "robot_peak_velocity": 1.176899188048482
+}

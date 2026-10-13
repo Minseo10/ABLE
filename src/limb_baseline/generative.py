@@ -1,7 +1,8 @@
 """Generative warm-start models: features -> a distribution over torque plans.
 
 Each model has `fit(x, y)`, `predict(x)` (its single most likely plan) and
-`sample(x, k)` (k plans per row, `(n, k, dim)`), trains for `steps` Adam steps and keeps
+`sample(x, k)` (k plans per row, `(n, k, dim)`); the mixture, flow and diffusion models
+also have `log_prob(x, y)`, the log density of each row's plan. Each trains for `steps` Adam steps and keeps
 the weights with the lowest held-out loss, holding out a sixth of the segments as
 `DropoutMLP` does.
 """
@@ -25,6 +26,31 @@ def mlp(inp: int, out: int, width: int, depth: int) -> nn.Sequential:
         layers += [nn.Linear(d, width), nn.SiLU()]
         d = width
     return nn.Sequential(*layers, nn.Linear(d, out))
+
+
+def ode_log_prob(field, y: torch.Tensor, times: torch.Tensor) -> torch.Tensor:
+    """Log density of `y` under the flow of `field(x, t)` whose density at `times[-1]` is
+    standard normal: RK4 from `times[0]` (data) to `times[-1]` (noise), carrying the
+    integral of the exact divergence (one backward pass per plan dimension)."""
+
+    def slope(x, t):
+        x = x.detach().requires_grad_(True)
+        with torch.enable_grad():
+            v = field(x, t)
+            div = sum(torch.autograd.grad(v[:, i].sum(), x, retain_graph=True)[0][:, i]
+                      for i in range(x.shape[1]))
+        return v.detach(), div.detach()
+
+    x, log_det = y, torch.zeros(len(y))
+    for t, t_next in zip(times[:-1], times[1:]):
+        h = t_next - t
+        v1, d1 = slope(x, t)
+        v2, d2 = slope(x + h / 2 * v1, t + h / 2)
+        v3, d3 = slope(x + h / 2 * v2, t + h / 2)
+        v4, d4 = slope(x + h * v3, t_next)
+        x = x + h / 6 * (v1 + 2 * v2 + 2 * v3 + v4)
+        log_det = log_det + h / 6 * (d1 + 2 * d2 + 2 * d3 + d4)
+    return (-0.5 * x ** 2 - 0.5 * math.log(2 * math.pi)).sum(-1) + log_det
 
 
 @dataclass
@@ -126,6 +152,18 @@ class Generative:
         features = np.asarray(features)
         return self._draw(features, torch.zeros(len(features), self.latent))
 
+    def log_density(self, c: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        """Log density of standardized plans `y` given conditions `c`."""
+        raise NotImplementedError
+
+    def log_prob(self, features, labels) -> np.ndarray:
+        """Log density of each row's plan, in the labels' own units."""
+        c = self._tensor((self._x(features) - self.x_mean) / self.x_std)
+        y = self._tensor((np.asarray(labels, np.float64) - self.y_mean) / self.y_std)
+        with torch.no_grad():
+            log_p = self.log_density(c, y)
+        return log_p.numpy().astype(np.float64) - np.log(self.y_std).sum()
+
     @property
     def latent(self) -> int:
         return self.dim
@@ -153,6 +191,12 @@ class MixtureDensity(Generative):
         log_prob = (-0.5 * z ** 2 - log_scale - 0.5 * math.log(2 * math.pi)).sum(-1)
         return -torch.logsumexp(torch.log_softmax(logits, -1) + log_prob, -1).mean() / self.dim
 
+    def log_density(self, c, y):
+        logits, mean, log_scale = self._split(c)
+        z = (y[:, None] - mean) / log_scale.exp()
+        log_prob = (-0.5 * z ** 2 - log_scale - 0.5 * math.log(2 * math.pi)).sum(-1)
+        return torch.logsumexp(torch.log_softmax(logits, -1) + log_prob, -1)
+
     def draw(self, c, z):
         logits, mean, log_scale = self._split(c)
         if torch.all(z == 0):
@@ -166,9 +210,11 @@ class MixtureDensity(Generative):
 
 
 class FlowMatching(Generative):
-    """Conditional flow matching (rectified flow); 10 Euler steps from noise to a plan."""
+    """Conditional flow matching (rectified flow); 10 Euler steps from noise to a plan.
+    The density is the continuous flow's, not the 10-step sampler's."""
 
     integration_steps: int = 10
+    density_steps: int = 20
 
     def build(self, cond, dim):
         self.net = mlp(dim + cond + 64, dim, self.width, self.depth)
@@ -188,13 +234,21 @@ class FlowMatching(Generative):
             x = x + dt * self._v(x, torch.full((len(c),), i * dt), c)
         return x
 
+    def log_density(self, c, y):
+        return ode_log_prob(lambda x, t: self._v(x, t.expand(len(c)), c), y,
+                            torch.linspace(1.0, 0.0, self.density_steps + 1))
+
 
 class Diffusion(Generative):
     """DDPM with a cosine schedule (100 levels); the network predicts the clean plan, and a
-    draw runs deterministic DDIM in 10 steps from noise."""
+    draw runs deterministic DDIM in 10 steps from noise. Its density is the DDIM
+    (probability-flow) ODE's from the first noise level to the last, not the 10-step
+    sampler's; it leans on the network's Jacobian at the lowest noise levels, which that
+    sampler never visits."""
 
     timesteps: int = 100
     sample_steps: int = 10
+    density_steps: int = 50
 
     def build(self, cond, dim):
         self.net = mlp(dim + cond + 64, dim, self.width, self.depth)
@@ -221,6 +275,20 @@ class Diffusion(Generative):
             eps = (x - a.sqrt() * x0) / (1 - a).sqrt()
             x = a_next.sqrt() * x0 + (1 - a_next).sqrt() * eps
         return x
+
+    def log_density(self, c, y):
+        def field(x, t):
+            # alpha_bar is linear between levels, so its slope is the level difference.
+            low = t.floor().long().clamp(max=self.timesteps - 1)
+            slope = self.alpha_bar[low + 1] - self.alpha_bar[low]
+            alpha_bar = self.alpha_bar[low] + (t - low) * slope
+            a, s = alpha_bar.sqrt(), (1 - alpha_bar).sqrt()
+            x0 = self.net(torch.cat([x, c, time_embedding(t.expand(len(c)) / self.timesteps, 64)], -1))
+            return slope / (2 * a) * x0 - slope / (2 * s * s) * (x - a * x0)
+
+        # Geometric steps: the field changes fastest at the low-noise end.
+        times = torch.logspace(0.0, math.log10(self.timesteps), self.density_steps + 1)
+        return ode_log_prob(field, y, times)
 
 
 class ConditionalVAE(Generative):

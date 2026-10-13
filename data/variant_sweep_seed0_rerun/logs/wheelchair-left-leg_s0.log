@@ -1,0 +1,37 @@
+pybullet build time: Mar 13 2026 19:11:15
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootStreams: [sample-grasp:('?l',)->('?g',), plan-grasp-motion:('?l', '?g', '?ql1', '?ql2')->('?q', '?at', '?s'), plan-base-motion:('?q1', '?q2')->('?bt',), plan-limb-motion:('?s1', '?ql2')->('?tt', '?s2'), check-human-joint-limits:('?s1', '?ql2', '?tt', '?s2')->(), check-human-torque-limits:('?s1', '?ql2', '?tt', '?s2')->(), check-robot-torque-limits:('?s1', '?ql2', '?tt', '?s2')->()]
+Functions: []
+Negated: []
+Optimizers: []
+
+Iteration: 1 | Complexity: 0 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.000 | Sample Time: 0.000 | Total Time: 0.000
+Attempt: 1 | Results: 0 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 0 to 1
+
+Iteration: 2 | Complexity: 1 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.001 | Sample Time: 0.000 | Total Time: 0.001
+Attempt: 1 | Results: 2 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 1 to 2
+
+Iteration: 3 | Complexity: 2 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.002 | Sample Time: 0.000 | Total Time: 0.002
+Attempt: 1 | Results: 3 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 2 to 3
+
+Iteration: 4 | Complexity: 3 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.003 | Sample Time: 0.000 | Total Time: 0.003
+Attempt: 1 | Results: 11 | Depth: 1 | Success: False | Time: 0.008
+Attempt: 2 | Results: 14 | Depth: 0 | Success: True | Time: 0.016
+Stream plan (7, 7, 0.001): [sample-grasp:(limb)->(#g0), plan-grasp-motion:(limb, #g0, qL9024, qL8736)->(#q0, #a0, #s0), plan-limb-motion:(#s0, qL8736)->(#t0, #s1), check-human-torque-limits:(#s0, qL8736, #t0, #s1)->(), check-robot-torque-limits:(#s0, qL8736, #t0, #s1)->(), check-human-joint-limits:(#s0, qL8736, #t0, #s1)->(), plan-base-motion:(SE2Pose(x=1.6741688034059177, y=-0.6214898362075055, rot=-2.4336), #q0)->(#b0)]
+Action plan (3, 3.000): [move_base(SE2Pose(x=1.6741688034059177, y=-0.6214898362075055, rot=-2.4336), #b0, #q0), grasp(limb, #g0, #q0, #a0, #s0), move_limb(limb, #g0, #q0, #s0, qL9024, qL8736, #t0, #s1)]
+iter=0, outs=1) sample-grasp:(limb)->[(Pose(position=(0.0015222528018057346, 0.02931196056306362, 0.0969289094209671), orientation=(-4.329780301713277e-17, 0.7071067690849304, 0.7071067690849304, 4.329780301713277e-17)))]
+iter=0, outs=1) plan-grasp-motion:(limb, Pose(position=(0.0015222528018057346, 0.02931196056306362, 0.0969289094209671), orientation=(-4.329780301713277e-17, 0.7071067690849304, 0.7071067690849304, 4.329780301713277e-17)), qL9024, qL8736)->[(SE2Pose(x=0.6345071315122384, y=-0.6732328226009362, rot=0.2617993877991494), at7088(waypoints=37), s8672)]
+Planning stopped at the 600 s deadline; saving a recording.
+No plan found, and no motion was ever attempted (no base pose was ever generated); saving the start state only.
+Saved 9 frames to: /home/minseo/research/learning-forceful-manipulation/videos/variant_sweep_seed0_rerun/wheelchair-left-leg.gif
+ROW {"variant": "wheelchair-left-leg", "seed": 0, "plan_found": false, "goal_reached": false, "plan_time": 600.0005896091461, "total_time": 603.1394486427307, "failure_reason": "planning exceeded 600 s", "video": "/home/minseo/research/learning-forceful-manipulation/videos/variant_sweep_seed0_rerun/wheelchair-left-leg.gif", "recording_kind": "planning progress; no accepted plan", "num_frames": 9, "timed_out": true}

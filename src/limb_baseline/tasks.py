@@ -154,6 +154,7 @@ class ReachableTaskSampler:
         distribution: TaskDistribution = None,  # type: ignore[assignment]
         max_goal_draws: int = 30,
         max_init_draws: int = 8,
+        max_conf_draws: int = 200,
     ) -> None:
         from kinder_pddlstream_planning.limbrepositioning3d.run import LIMB_NAME
         from kinder_pddlstream_planning.limbrepositioning3d.stream import sample_grasp
@@ -162,9 +163,28 @@ class ReachableTaskSampler:
         self.distribution = distribution or DEFAULT_TASK_DISTRIBUTION
         self.max_goal_draws = max_goal_draws
         self.max_init_draws = max_init_draws
+        self.max_conf_draws = max_conf_draws
         self.limb_name = LIMB_NAME
         # The nominal grasp only: the other thirteen recover nothing and cost 10x.
         self.grasp = next(sample_grasp(ctx, LIMB_NAME))[0]
+
+    def _in_furniture(self, limb_conf) -> bool:
+        """Reject furniture penetration beyond the numerical contact tolerance."""
+        from kinder_pddlstream_planning.limbrepositioning3d.utils import (
+            CONTACT_PENETRATION_TOLERANCE,
+            pair_clearance,
+        )
+
+        from limb_baseline.utils import saved_sim_state
+
+        ctx, sim = self.ctx, self.ctx.sim
+        with saved_sim_state(sim):
+            sim.limb.set_joints(list(limb_conf))
+            return any(
+                pair_clearance(sim, sim.limb.robot_id, body)
+                < -CONTACT_PENETRATION_TOLERANCE
+                for body in ctx.scene_collision_ids
+            )
 
     def _base_pose_for(self, limb_init):
         """The nearest base pose that can hold the grasp at `limb_init`, or None.
@@ -208,6 +228,8 @@ class ReachableTaskSampler:
 
         from limb_baseline.utils import grasp_ik, saved_sim_state
 
+        if self._in_furniture(limb_init) or self._in_furniture(limb_goal):
+            return False
         sim = self.ctx.sim
         waypoints = np.linspace(
             np.asarray(limb_init), np.asarray(limb_goal), NUM_REACH_CHECKS
@@ -229,13 +251,19 @@ class ReachableTaskSampler:
         low: NDArray[np.float64],
         high: NDArray[np.float64],
     ) -> NDArray[np.float64]:
-        """One limb configuration; the joints a task does not vary keep the default."""
-        conf = np.asarray(
-            scene_config().scene.limb_init_joint_positions, np.float64
+        """One limb configuration clear of the furniture; the joints a task does not
+        vary keep the default."""
+        for _ in range(self.max_conf_draws):
+            conf = np.asarray(
+                scene_config().scene.limb_init_joint_positions, np.float64
+            )
+            for j in active_joints():
+                conf[j] = rng.uniform(low[j], high[j])
+            if not self._in_furniture(conf):
+                return conf
+        raise RuntimeError(
+            f"no limb configuration clear of the furniture in {self.max_conf_draws} draws"
         )
-        for j in active_joints():
-            conf[j] = rng.uniform(low[j], high[j])
-        return conf
 
     def _draw_robot_init(self, rng: np.random.Generator) -> NDArray[np.float64]:
         """The robot's own start, jittered around the variant's."""

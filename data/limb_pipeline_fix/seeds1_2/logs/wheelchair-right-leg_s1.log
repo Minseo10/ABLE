@@ -1,0 +1,79 @@
+pybullet build time: Mar 13 2026 19:11:15
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootStreams: [sample-grasp:('?l',)->('?g',), plan-grasp-motion:('?l', '?g', '?ql1', '?ql2')->('?q', '?at', '?s'), plan-base-motion:('?q1', '?q2')->('?bt',), plan-limb-motion:('?s1', '?ql2')->('?tt', '?s2'), check-human-joint-limits:('?s1', '?ql2', '?tt', '?s2')->(), check-human-torque-limits:('?s1', '?ql2', '?tt', '?s2')->(), check-robot-torque-limits:('?s1', '?ql2', '?tt', '?s2')->()]
+Functions: []
+Negated: []
+Optimizers: []
+
+Iteration: 1 | Complexity: 0 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.000 | Sample Time: 0.000 | Total Time: 0.000
+Attempt: 1 | Results: 0 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 0 to 1
+
+Iteration: 2 | Complexity: 1 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.002 | Sample Time: 0.000 | Total Time: 0.002
+Attempt: 1 | Results: 2 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 1 to 2
+
+Iteration: 3 | Complexity: 2 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.003 | Sample Time: 0.000 | Total Time: 0.003
+Attempt: 1 | Results: 3 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 2 to 3
+
+Iteration: 4 | Complexity: 3 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.004 | Sample Time: 0.000 | Total Time: 0.004
+Attempt: 1 | Results: 11 | Depth: 1 | Success: False | Time: 0.011
+Attempt: 2 | Results: 14 | Depth: 0 | Success: True | Time: 0.022
+Stream plan (7, 7, 0.001): [sample-grasp:(limb)->(#g0), plan-grasp-motion:(limb, #g0, qL416, qL128)->(#q0, #a0, #s0), plan-limb-motion:(#s0, qL128)->(#t0, #s1), check-human-torque-limits:(#s0, qL128, #t0, #s1)->(), check-robot-torque-limits:(#s0, qL128, #t0, #s1)->(), check-human-joint-limits:(#s0, qL128, #t0, #s1)->(), plan-base-motion:(SE2Pose(x=-1.7656495099729597, y=-0.255982831927026, rot=-0.319), #q0)->(#b0)]
+Action plan (3, 3.000): [move_base(SE2Pose(x=-1.7656495099729597, y=-0.255982831927026, rot=-0.319), #b0, #q0), grasp(limb, #g0, #q0, #a0, #s0), move_limb(limb, #g0, #q0, #s0, qL416, qL128, #t0, #s1)]
+iter=0, outs=1) sample-grasp:(limb)->[(Pose(position=(-0.0010085456306114793, 0.027091559022665024, 0.09625502675771713), orientation=(-0.7071067690849304, 0.0, 0.0, 0.7071067690849304)))]
+iter=0, outs=1) plan-grasp-motion:(limb, Pose(position=(-0.0010085456306114793, 0.027091559022665024, 0.09625502675771713), orientation=(-0.7071067690849304, 0.0, 0.0, 0.7071067690849304)), qL416, qL128)->[(SE2Pose(x=-0.2401237806331912, y=-1.6070044220797515, rot=1.832595714594046), at3408(waypoints=31), s672)]
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootplan-limb-motion: MPC rollout no constraint-valid MPC candidate.
+iter=inf, outs=0) plan-limb-motion:(s672, qL128)->[]
+Sampling for up to -25.273 seconds
+Sampling while complexity <= 3
+
+Iteration: 5 | Complexity: 3 | Skeletons: 1 | Skeleton Queue: 2 | Disabled: 0 | Evaluations: 16 | Eager Calls: 0 | Cost: inf | Search Time: 0.027 | Sample Time: 25.299 | Total Time: 25.326
+Attempt: 1 | Results: 8 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 3 to 4
+Sampling for up to -25.270 seconds
+Sampling while complexity <= 4
+iter=1, outs=1) sample-grasp:(limb)->[(Pose(position=(-0.0023151286877691746, 0.062189001590013504, 0.22095456719398499), orientation=(-0.7071067690849304, 0.0, 0.0, 0.7071067690849304)))]
+iter=0, outs=1) plan-grasp-motion:(limb, Pose(position=(-0.0023151286877691746, 0.062189001590013504, 0.22095456719398499), orientation=(-0.7071067690849304, 0.0, 0.0, 0.7071067690849304)), qL416, qL128)->[(SE2Pose(x=0.4004345065376125, y=-0.961069260269511, rot=2.6179938779914944), at2224(waypoints=21), s7648)]
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootplan-limb-motion: generated a trajectory with 500 steps.
+iter=0, outs=1) plan-limb-motion:(s7648, qL128)->[(tt272(steps=500), s7872)]
+iter=inf, outs=1) check-human-torque-limits:(s7648, qL128, tt272(steps=500), s7872)->[()]
+iter=inf, outs=1) check-robot-torque-limits:(s7648, qL128, tt272(steps=500), s7872)->[()]
+iter=inf, outs=1) check-human-joint-limits:(s7648, qL128, tt272(steps=500), s7872)->[()]
+iter=0, outs=1) plan-base-motion:(SE2Pose(x=-1.7656495099729597, y=-0.255982831927026, rot=-0.319), SE2Pose(x=0.4004345065376125, y=-0.961069260269511, rot=2.6179938779914944))->[([SE2Pose(x=-1.7656495571136475, y=-0.2559828460216522, rot=-0.319000053423746), SE2Pose(x=-1.5072178840637207, y=-0.36327579617500305, rot=-0.3352753993809536), SE2Pose(x=-1.2487564086914062, y=-0.47057920694351196, rot=-0.35155087853613615), SE2Pose(x=-1.3385045528411865, y=-0.6616843938827515, rot=-0.37727170323775044), SE2Pose(x=-1.4281790256500244, y=-0.8528188467025757, rot=-0.4029925537804226), SE2Pose(x=-1.5177804231643677, y=-1.043984293937683, rot=-0.4287133642362075), SE2Pose(x=-1.6073099374771118, y=-1.2351828813552856, rot=-0.45443413897989277), SE2Pose(x=-1.4102931022644043, y=-1.2363814115524292, rot=-0.27118128610940917), SE2Pose(x=-1.2094080448150635, y=-1.2386555671691895, rot=-0.08792836358386721), SE2Pose(x=-1.0045232772827148, y=-1.241282343864441, rot=0.09532450706016247), SE2Pose(x=-0.7956416606903076, y=-1.2435269355773926, rot=0.27857739406657306), SE2Pose(x=-0.5828995108604431, y=-1.2446671724319458, rot=0.4618302610714334), SE2Pose(x=-0.3665628731250763, y=-1.2440185546875, rot=0.6450831510081477), SE2Pose(x=-0.14701791107654572, y=-1.2409555912017822, rot=0.8283359457410954), SE2Pose(x=0.07524174451828003, y=-1.2349343299865723, rot=1.0115889274909133), SE2Pose(x=0.2996315062046051, y=-1.225509524345398, rot=1.1948419048039665), SE2Pose(x=0.5254954695701599, y=-1.2123498916625977, rot=1.378094657223505), SE2Pose(x=0.4995216131210327, y=-1.1653581857681274, rot=1.688069357510692), SE2Pose(x=0.472210556268692, y=-1.1070164442062378, rot=1.9980445453469202), SE2Pose(x=0.44016385078430176, y=-1.0382733345031738, rot=2.3080190699240384), SE2Pose(x=0.4004344642162323, y=-0.9610692858695984, rot=2.6179938738007547)])]
+Summary: {complexity: 4, cost: 3.000, evaluations: 30, iterations: 5, length: 2, run_time: 114.165, sample_time: 114.135, search_time: 0.030, skeletons: 1, solutions: 1, solved: True, timeout: False}
+
+Total External Statistics
+External: sample-grasp | n: 2 | p_success: 1.000 | overhead: 0.000
+External: plan-grasp-motion | n: 2 | p_success: 1.000 | overhead: 0.399
+External: plan-base-motion | n: 1 | p_success: 1.000 | overhead: 0.031
+External: plan-limb-motion | n: 2 | p_success: 0.667 | overhead: 37.624
+External: check-human-joint-limits | n: 1 | p_success: 1.000 | overhead: 0.000
+External: check-human-torque-limits | n: 1 | p_success: 1.000 | overhead: 0.001
+External: check-robot-torque-limits | n: 1 | p_success: 1.000 | overhead: 0.001
+Wrote: statistics/py3/limbrepositioning3d.pkl
+
+Solved: True
+Cost: 3.000
+Length: 3
+Deferred: 0
+Evaluations: 2
+ 1) move_base SE2Pose(x=-1.7656495099729597, y=-0.255982831927026, rot=-0.319) [SE2Pose(x=-1.7656495571136475, y=-0.2559828460216522, rot=-0.319000053423746), SE2Pose(x=-1.5072178840637207, y=-0.36327579617500305, rot=-0.3352753993809536), SE2Pose(x=-1.2487564086914062, y=-0.47057920694351196, rot=-0.35155087853613615), SE2Pose(x=-1.3385045528411865, y=-0.6616843938827515, rot=-0.37727170323775044), SE2Pose(x=-1.4281790256500244, y=-0.8528188467025757, rot=-0.4029925537804226), SE2Pose(x=-1.5177804231643677, y=-1.043984293937683, rot=-0.4287133642362075), SE2Pose(x=-1.6073099374771118, y=-1.2351828813552856, rot=-0.45443413897989277), SE2Pose(x=-1.4102931022644043, y=-1.2363814115524292, rot=-0.27118128610940917), SE2Pose(x=-1.2094080448150635, y=-1.2386555671691895, rot=-0.08792836358386721), SE2Pose(x=-1.0045232772827148, y=-1.241282343864441, rot=0.09532450706016247), SE2Pose(x=-0.7956416606903076, y=-1.2435269355773926, rot=0.27857739406657306), SE2Pose(x=-0.5828995108604431, y=-1.2446671724319458, rot=0.4618302610714334), SE2Pose(x=-0.3665628731250763, y=-1.2440185546875, rot=0.6450831510081477), SE2Pose(x=-0.14701791107654572, y=-1.2409555912017822, rot=0.8283359457410954), SE2Pose(x=0.07524174451828003, y=-1.2349343299865723, rot=1.0115889274909133), SE2Pose(x=0.2996315062046051, y=-1.225509524345398, rot=1.1948419048039665), SE2Pose(x=0.5254954695701599, y=-1.2123498916625977, rot=1.378094657223505), SE2Pose(x=0.4995216131210327, y=-1.1653581857681274, rot=1.688069357510692), SE2Pose(x=0.472210556268692, y=-1.1070164442062378, rot=1.9980445453469202), SE2Pose(x=0.44016385078430176, y=-1.0382733345031738, rot=2.3080190699240384), SE2Pose(x=0.4004344642162323, y=-0.9610692858695984, rot=2.6179938738007547)] SE2Pose(x=0.4004345065376125, y=-0.961069260269511, rot=2.6179938779914944)
+ 2) grasp limb Pose(position=(-0.0023151286877691746, 0.062189001590013504, 0.22095456719398499), orientation=(-0.7071067690849304, 0.0, 0.0, 0.7071067690849304)) SE2Pose(x=0.4004345065376125, y=-0.961069260269511, rot=2.6179938779914944) at2224(waypoints=21) s7648
+ 3) move_limb limb Pose(position=(-0.0023151286877691746, 0.062189001590013504, 0.22095456719398499), orientation=(-0.7071067690849304, 0.0, 0.0, 0.7071067690849304)) SE2Pose(x=0.4004345065376125, y=-0.961069260269511, rot=2.6179938779914944) s7648 qL416 qL128 tt272(steps=500) s7872
+Saved 69 frames to: /home/minseo/research/learning-forceful-manipulation/videos/limb_pipeline_fix/seeds1_2/wheelchair-right-leg_s1.gif
+ROW {"variant": "wheelchair-right-leg", "seed": 1, "plan_found": true, "goal_reached": true, "plan_time": 114.16726064682007, "total_time": 134.6343801021576, "failure_reason": "", "motion_outcomes": {"no constraint-valid MPC candidate": 1, "reached the goal": 1}, "replay_max_joint_error": 5.247866214919128e-07, "robot_peak_velocity": 1.9596772783319305, "video": "/home/minseo/research/learning-forceful-manipulation/videos/limb_pipeline_fix/seeds1_2/wheelchair-right-leg_s1.gif", "recording_kind": "goal reached", "num_frames": 69, "timed_out": false}

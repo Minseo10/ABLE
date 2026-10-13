@@ -1,0 +1,25 @@
+pybullet build time: Mar 13 2026 19:11:15
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root{'variant': 'isolated-left-leg', 'gain': 8.0, 'steps': 860, 'error': 0.04982584447170346, 'reason': 'goal', 'robot_peak_speed': 0.8361616824935536}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root{'variant': 'isolated-right-leg', 'gain': 8.0, 'steps': 866, 'error': 0.049860828509153965, 'reason': 'goal', 'robot_peak_speed': 0.7083838697924156}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root{'variant': 'human-left-leg', 'gain': 8.0, 'steps': 862, 'error': 0.049907753790178866, 'reason': 'goal', 'robot_peak_speed': 1.063976868785437}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root{'variant': 'human-right-leg', 'gain': 8.0, 'steps': 866, 'error': 0.049845747162502896, 'reason': 'goal', 'robot_peak_speed': 0.7083985776560683}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root{'variant': 'bed-left-leg', 'gain': 8.0, 'steps': 1048, 'error': 0.0499634110357996, 'reason': 'goal', 'robot_peak_speed': 0.5663306946626434}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root{'variant': 'bed-right-leg', 'gain': 8.0, 'steps': 1048, 'error': 0.04987157982843016, 'reason': 'goal', 'robot_peak_speed': 0.6846719779624434}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root{'variant': 'wheelchair-left-leg', 'gain': 8.0, 'steps': 896, 'error': 0.04997113758031402, 'reason': 'goal', 'robot_peak_speed': 1.9795329509639745}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root{'variant': 'wheelchair-right-leg', 'gain': 8.0, 'steps': 868, 'error': 0.04999534517383353, 'reason': 'goal', 'robot_peak_speed': 3.9631703292613327}

@@ -25,6 +25,7 @@ from kinder_pddlstream_planning.limbrepositioning3d.stream import (
     TorqueTrajectory,
 )
 from numpy.typing import NDArray
+from pybullet_helpers.geometry import SE2Pose
 
 from limb_baseline.belief import Belief, pooled_tau, refit
 from limb_baseline.utils import RolloutLog, execute_plan
@@ -72,6 +73,8 @@ class PlannerSettings:
 
 
 DEFAULT_PLANNER_SETTINGS = PlannerSettings()
+# Metres either side of its home pose the base motion planner may sample.
+BASE_REACH = 3.0
 
 
 class PlanningTimeout(BaseException):
@@ -217,7 +220,7 @@ def build_episode_env(task: Task, theta: NDArray[np.float64], settings: PlannerS
             limb_range_of_motion=theta_to_range_of_motion(theta),
         ),
     )
-    return create_env(
+    env = create_env(
         current_variant().name,
         config=config,
         standoff=settings.standoff,
@@ -228,6 +231,13 @@ def build_episode_env(task: Task, theta: NDArray[np.float64], settings: PlannerS
         robot_base_z=settings.robot_base_z,
         body_mass=BodyMass(total=settings.body_mass_kg),
     )
+    # The base ships with infinite bounds, which the base motion planner cannot sample
+    # from once a straight drive is blocked (the furnished scenes); box it around home.
+    base = env.robot.base
+    home = env.robot.get_base()
+    base.pose_lower_bound = SE2Pose(home.x - BASE_REACH, home.y - BASE_REACH, -np.pi)
+    base.pose_upper_bound = SE2Pose(home.x + BASE_REACH, home.y + BASE_REACH, np.pi)
+    return env
 
 
 def make_sampling_context(settings: PlannerSettings = DEFAULT_PLANNER_SETTINGS):

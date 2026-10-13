@@ -22,8 +22,8 @@
 #       EXTRA=--vary-geometry OUT=data/dream/generative_models \
 #           FIG=figures/dream/generative_models scripts/run_dream.sh fresh 20 4
 #
-# PEOPLE, OUT, FIG and EXTRA (more dream_pipeline flags for every run, e.g. --random-goals)
-# apply to every mode.
+# PEOPLE, OUT, FIG, VARIANT (scene and limb, default isolated-left-arm) and EXTRA (more
+# dream_pipeline flags for every run, e.g. --random-goals) apply to every mode.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -43,6 +43,7 @@ MAX_JOBS="${MAX_JOBS:-16}"
 OUT="${OUT:-data/dream/$NAME}"
 FIG="${FIG:-figures/dream/$NAME}"
 EXTRA="${EXTRA:-}"
+VARIANT="${VARIANT:-isolated-left-arm}"
 LOGS="$OUT/logs"
 mkdir -p "$LOGS"
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
@@ -55,7 +56,7 @@ run() { # person condition n_dreams tag seed_mode model [more dream_pipeline fla
     shift 6
     while [ "$(jobs -rp | wc -l)" -ge "$MAX_JOBS" ]; do wait -n || true; done
     python -m limb_baseline.dream_pipeline --condition "$condition" --n-dreams "$dreams" \
-        --num-episodes "$N" --variation 0.3 --variant isolated-left-arm \
+        --num-episodes "$N" --variation 0.3 --variant "$VARIANT" \
         --person "$person" --model "$model" --particles 32 --confidence 0.5 \
         --seed-mode "$seed_mode" --out "$OUT/${tag}_p$person.csv" --tag "$tag" "$@" $EXTRA \
         > "$LOGS/${tag}_p$person.log" 2>&1 &

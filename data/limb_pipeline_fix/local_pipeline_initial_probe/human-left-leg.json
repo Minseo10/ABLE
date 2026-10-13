@@ -1,0 +1,17 @@
+{
+  "solved": true,
+  "goal_reached": true,
+  "plan_time": 48.10093140602112,
+  "execute_time": 0.3289835453033447,
+  "num_torque_steps": 433,
+  "num_control_steps": 36,
+  "mpc_simulator_steps": 165888,
+  "rom_violation_steps": 0,
+  "worst_rom_violation": 0.0,
+  "rom_margin": 0.1698401904315744,
+  "failure_reason": "",
+  "num_segments": 1,
+  "variant": "human-left-leg",
+  "particle_constraints": true,
+  "body_mass_kg": 62.5
+}

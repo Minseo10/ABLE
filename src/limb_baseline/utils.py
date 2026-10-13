@@ -6,8 +6,8 @@ the renamed base-pose and IK helpers, so the planner repo stays untouched.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import Iterator
 
 import numpy as np
 from kinder_pddlstream_planning.limbrepositioning3d.stream import (
@@ -20,12 +20,21 @@ from kinder_pddlstream_planning.limbrepositioning3d.utils import (
     JointTorques,
     _limb_state,
     advance,
-    base_candidates as _base_candidates_for,
+    arm_in_collision,
+    base_in_collision,
     engage_grasp,
+    exceeds_human_torque_limits,
+    exceeds_robot_torque_limits,
     grasp_ik,
     hold_torque,
+    human_in_collision,
+    limb_out_of_limits,
     release_grasp,
+    robot_motion_violation,
     saved_sim_state,
+)
+from kinder_pddlstream_planning.limbrepositioning3d.utils import (
+    base_candidates as _base_candidates_for,
 )
 from pybullet_helpers.geometry import Pose
 from pybullet_helpers.joint import JointPositions, JointVelocities
@@ -91,21 +100,34 @@ def execute_plan(
             release_grasp(sim)
             for target_base in base_plan[1:]:
                 sim.robot.set_base(target_base)
+                if ctx.check_base_collisions and base_in_collision(ctx):
+                    return False
         elif name == "grasp":
             _, _, base_conf, arm_trajectory, _ = args
             assert isinstance(arm_trajectory, ArmTrajectory)
             sim.robot.set_base(base_conf)
             for waypoint in arm_trajectory.joint_plan:
                 sim.robot.arm.set_joints(list(waypoint))
+                if arm_in_collision(ctx) or human_in_collision(ctx):
+                    return False
             engage_grasp(sim)
         elif name == "move_limb":
             _, _, _, _, _, _, torque_trajectory, _ = args
             assert isinstance(torque_trajectory, TorqueTrajectory)
             for torque in torque_trajectory.robot_torques:
+                commanded = np.asarray(torque, dtype=np.float64) + hold_torque(sim)
+                if exceeds_robot_torque_limits(ctx, commanded):
+                    return False
                 if log is None:
-                    advance(sim, np.asarray(torque, dtype=np.float64) + hold_torque(sim))
+                    human = advance(sim, commanded)
                 else:
-                    advance_logged(sim, torque, log)
+                    human = advance_logged(sim, torque, log)
+                if exceeds_human_torque_limits(ctx, human):
+                    return False
+                if robot_motion_violation(ctx) or limb_out_of_limits(ctx):
+                    return False
+                if arm_in_collision(ctx) or human_in_collision(ctx):
+                    return False
         else:
             raise ValueError(f"Unknown action: {name}")
     return sim.goal_reached()

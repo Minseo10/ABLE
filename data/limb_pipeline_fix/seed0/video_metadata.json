@@ -1,0 +1,146 @@
+[
+  {
+    "variant": "isolated-left-arm",
+    "frames": 53,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 100
+  },
+  {
+    "variant": "isolated-right-arm",
+    "frames": 61,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 500
+  },
+  {
+    "variant": "isolated-left-leg",
+    "frames": 58,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 100
+  },
+  {
+    "variant": "human-left-arm",
+    "frames": 53,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 100
+  },
+  {
+    "variant": "human-right-leg",
+    "frames": 54,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 100
+  },
+  {
+    "variant": "isolated-right-leg",
+    "frames": 54,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 100
+  },
+  {
+    "variant": "human-right-arm",
+    "frames": 68,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 500
+  },
+  {
+    "variant": "bed-left-arm",
+    "frames": 63,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 100
+  },
+  {
+    "variant": "bed-right-arm",
+    "frames": 52,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 100
+  },
+  {
+    "variant": "wheelchair-right-arm",
+    "frames": 53,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 100
+  },
+  {
+    "variant": "wheelchair-left-arm",
+    "frames": 57,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 100
+  },
+  {
+    "variant": "bed-left-leg",
+    "frames": 55,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 100
+  },
+  {
+    "variant": "human-left-leg",
+    "frames": 58,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 100
+  },
+  {
+    "variant": "wheelchair-left-leg",
+    "frames": 76,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 100
+  },
+  {
+    "variant": "bed-right-leg",
+    "frames": 52,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 300
+  },
+  {
+    "variant": "wheelchair-right-leg",
+    "frames": 65,
+    "size": [
+      512,
+      548
+    ],
+    "duration_ms": 100
+  }
+]

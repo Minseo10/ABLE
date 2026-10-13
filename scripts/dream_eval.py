@@ -7,6 +7,7 @@ Each learned run's rows come from its checkpoint, matched to the refit that adde
     python scripts/dream_eval.py backfill data/dream/fresh_goals data/dream/warmstart_compare
     python scripts/dream_eval.py screen data/dream/generative_models [--figure]
     python scripts/dream_eval.py sampling-steps data/dream/generative_models
+    python scripts/dream_eval.py planner data/dream/generative_models [--from-episode 10]
 """
 
 from __future__ import annotations
@@ -26,6 +27,7 @@ CUT = 14
 K = 8
 SPEC = "net:256x256:d0.3:hist"
 FEATURE_SETS = ("base", "floor", "key", "floor shuffled")
+SCREEN_COLUMNS = ("single", "best_of_8", "energy", "nll", "fit_seconds")
 SCREEN_MODELS = {
     "regression": SPEC,
     "regression + noise": SPEC,
@@ -35,6 +37,8 @@ SCREEN_MODELS = {
     "conditional VAE": "gen:cvae:hist",
     "energy-based": "gen:ebm:hist",
 }
+# The models with a density; the regression's is a Gaussian at its train residual scale.
+DENSITY_MODELS = ("mixture density", "flow matching", "diffusion")
 STEPS = (1, 2, 5, 10, 25, 50, 100)
 # label: (model kind, the attribute holding its number of sampling steps)
 SAMPLERS = {"flow matching": ("flow", "integration_steps"), "diffusion": ("ddpm", "sample_steps")}
@@ -108,6 +112,12 @@ def energy_score(samples, y, std):
     fit = np.linalg.norm(s - t, axis=-1).mean(1)
     spread = np.linalg.norm(s[:, :, None] - s[:, None], axis=-1).mean((1, 2)) / 2
     return float((fit - spread).mean() / np.sqrt(y.shape[1]))
+
+
+def gaussian_nll(mean, scale, y, std):
+    """Per-dimension negative log-likelihood, in nats, of labels standardized by `std`."""
+    z = (y - mean) / scale
+    return float((0.5 * z ** 2 + np.log(scale / std) + 0.5 * np.log(2 * np.pi)).mean())
 
 
 # --- belief-features ---------------------------------------------------------------------
@@ -231,20 +241,24 @@ def screen_job(job):
     model = make_regressor(SCREEN_MODELS[label]).fit(xt, yt)
     fit_seconds = time.perf_counter() - started
     best = model.predict(xs)
+    nll = float("nan")
     if label == "regression + noise":
         scale = (yt - model.predict(xt)).std(0)
         rng = np.random.default_rng(0)
         draws = best[:, None] + rng.normal(size=(len(xs), K - 1, yt.shape[1])) * scale
+        nll = gaussian_nll(best, scale, ys, std)
     elif label == "regression":
         draws = best[:, None].repeat(K - 1, axis=1)
     else:
         draws = model.sample(xs, K - 1, seed=0)
+        if label in DENSITY_MODELS:
+            nll = float(-(model.log_prob(xs, ys) + np.log(std).sum()).mean() / ys.shape[1])
     candidates = np.concatenate([best[:, None], draws], 1)
     return {"run": stem, "model": label, "rows": len(xs),
             "single": float(nmse(best, ys, var).mean()),
             "best_of_8": float(nmse(candidates, ys[:, None], var).min(1).mean()),
             "energy": energy_score(candidates, ys, std) if label != "regression" else float("nan"),
-            "fit_seconds": fit_seconds}
+            "nll": nll, "fit_seconds": fit_seconds}
 
 
 def screen_figure(frame: pd.DataFrame, out: Path, data: str):
@@ -254,16 +268,22 @@ def screen_figure(frame: pd.DataFrame, out: Path, data: str):
     import matplotlib.pyplot as plt
 
     order = list(SCREEN_MODELS)
-    med = frame.groupby("model")[["single", "best_of_8", "energy", "fit_seconds"]].median().loc[order]
-    fig, axes = plt.subplots(1, 4, figsize=(15, 3.8), sharey=True)
+    med = frame.groupby("model")[list(SCREEN_COLUMNS)].median().loc[order]
+    fig, axes = plt.subplots(1, 5, figsize=(18.5, 3.8), sharey=True)
     titles = {"single": "Most likely plan (nMSE)", "best_of_8": "Best of 8 candidates (nMSE)",
-              "energy": "Energy score of 8 (lower better)", "fit_seconds": "Fit time (s, one CPU)"}
+              "energy": "Energy score of 8 (lower better)",
+              "nll": "Held-out NLL (nats/dim, lower better)", "fit_seconds": "Fit time (s, one CPU)"}
     colors = ["#8C8C8C", "#b0b0b0", "#2a78d6", "#1baf7a", "#eb6834", "#e87ba4", "#4a3aa7"]
     for ax, column in zip(axes, titles):
         ax.barh(range(len(order)), med[column], color=colors)
+        # A diffusion NLL tens of nats per dimension would flatten the others: cut its bar.
+        limit = 1.3 * med[column][med[column] < 5].max() if column == "nll" else np.inf
         for i, v in enumerate(med[column]):
             if np.isfinite(v):
-                ax.text(v, i, f" {v:.2f}" if column != "fit_seconds" else f" {v:.0f}", va="center", fontsize=8)
+                ax.text(min(v, limit), i, f" {v:.2f}" if column != "fit_seconds" else f" {v:.0f}",
+                        va="center", ha="left" if v <= limit else "right", fontsize=8)
+        if np.isfinite(limit):
+            ax.set_xlim(0, limit)
         ax.set_title(titles[column], loc="left", fontsize=10, fontweight="bold")
         ax.spines[["top", "right"]].set_visible(False)
     shown = {"regression": "MLP 256×256 + vel/torque",
@@ -282,7 +302,10 @@ def screen(args):
     """Offline screen of generative warm-start models.
 
     Per learned run: the single most likely plan, the best of 8 candidates (the most likely
-    plan and 7 draws, as the step-mode MPC picks), and the energy score of 8 draws.
+    plan and 7 draws, as the step-mode MPC picks), the energy score of 8 draws, and the
+    held-out negative log-likelihood per plan dimension (labels standardized by the train
+    std), which differs from the KL divergence to the true plan distribution by a constant
+    shared by all models. Flow matching and diffusion give their continuous ODE's density.
     `regression + noise` is today's seeding: the regression plan and 7 copies with Gaussian
     noise at the regression's train residual scale. `--figure` redraws from the saved CSV.
     """
@@ -295,7 +318,7 @@ def screen(args):
             rows = pool.map(screen_job, jobs)
         pd.DataFrame(rows).to_csv(results, index=False)
     frame = pd.read_csv(results)
-    print(frame.groupby("model")[["single", "best_of_8", "energy", "fit_seconds"]].median()
+    print(frame.groupby("model")[list(SCREEN_COLUMNS)].median()
           .loc[list(SCREEN_MODELS)].round(3).to_string())
     name = Path(args.directory).name
     screen_figure(frame, Path("figures/dream") / name / "generative_screen.png", name)
@@ -385,6 +408,32 @@ def sampling_steps(args):
     steps_figure(frame, reference, Path("figures/dream") / directory.name / "sampling_steps.png")
 
 
+# --- planner -----------------------------------------------------------------------------
+
+
+def planner(args):
+    """What the planner got from each line's seeds, over every person and real episode.
+
+    `seed_accept` is the share of offered seeds the MPC step took over a full search, and
+    `seeded_share` the share of all MPC steps that ran on a seed.
+    """
+    data = Path(args.directory)
+    frame = pd.concat(pd.read_csv(p) for p in sorted(data.glob("*_p??.csv")))
+    frame = frame[frame.episode >= args.from_episode]
+    frame["reached"] = frame.goal_reached.astype(str) == "True"
+    g = frame.groupby("tag")
+    seeded, rejected = g.seeded_steps.sum(), g.seed_rejected.sum()
+    table = pd.DataFrame({
+        "reached": g.reached.mean(), "rollouts_mean": g.rollouts.mean(),
+        "rollouts_median": g.rollouts.median(), "plan_time_mean": g.plan_time.mean(),
+        "plan_time_median": g.plan_time.median(), "seed_accept": seeded / (seeded + rejected),
+        "seeded_share": seeded / g.mpc_steps.sum(), "goal_distance_mean": g.goal_distance.mean(),
+    })
+    print(table.round(3).to_string())
+    suffix = f"_from{args.from_episode}" if args.from_episode else ""
+    table.to_csv(data / f"planner_metrics{suffix}.csv")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -404,6 +453,9 @@ def main():
     sub.add_argument("directory")
     sub.add_argument("--figure", action="store_true")
     add("sampling-steps", sampling_steps).add_argument("directory")
+    sub = add("planner", planner)
+    sub.add_argument("directory")
+    sub.add_argument("--from-episode", type=int, default=0)
     args = parser.parse_args()
     args.function(args)
 

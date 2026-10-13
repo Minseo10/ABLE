@@ -1,0 +1,16 @@
+pybullet build time: Mar 13 2026 19:11:15
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootisolated-left-leg 1.0 20 error 0.43352560222905057 valid 64
+isolated-left-leg 1.0 40 error 0.4184660092287267 valid 64
+isolated-left-leg 1.0 60 error 0.2023751502320419 valid 64
+isolated-left-leg 1.0 80 error 0.3454054721900546 valid 62
+isolated-left-leg 1.0 100 error 0.41628406076901125 valid 64
+isolated-left-leg 1.0 120 error 0.2026460796715286 valid 64
+isolated-left-leg 1.0 140 error 0.3318095664464593 valid 26
+isolated-left-leg 1.0 160 error 0.2835659463233884 valid 62
+isolated-left-leg 1.0 180 error 0.20414914711946297 valid 64
+isolated-left-leg 1.0 200 error 0.1454123950766819 valid 64
+RESULT {'variant': 'isolated-left-leg', 'mass_scale': 1.0, 'rollouts': 64, 'control_steps': 200, 'physics_steps': 2400, 'wall_seconds': 571.580712258, 'closed_error': 0.1454123950766819, 'replay_error': 0.1454123950766819, 'max_joint_trace_discrepancy': 0.0, 'final_joint_trace_discrepancy': 0.0}

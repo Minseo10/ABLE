@@ -1,0 +1,5 @@
+{"variant": "bed-left-arm", "seed": 0, "plan_found": true, "goal_reached": true, "plan_time": 74.70814251899719, "total_time": 94.76397943496704, "failure_reason": ""}
+{"variant": "bed-right-arm", "seed": 0, "plan_found": true, "goal_reached": true, "plan_time": 84.64154124259949, "total_time": 99.02319884300232, "failure_reason": ""}
+{"variant": "wheelchair-right-leg", "seed": 0, "plan_found": true, "goal_reached": true, "plan_time": 236.05266880989075, "total_time": 251.5679793357849, "failure_reason": ""}
+{"variant": "wheelchair-left-arm", "seed": 0, "plan_found": true, "goal_reached": true, "plan_time": 409.36012601852417, "total_time": 429.6408405303955, "failure_reason": ""}
+{"variant": "isolated-left-leg", "seed": 0, "plan_found": false, "goal_reached": false, "plan_time": 900.0155668258667, "total_time": 900.0155668258667, "failure_reason": "killed 300 s past the planning budget"}
