@@ -33,10 +33,10 @@ wandb/
 
 # Local work kept out of the repo
 paper/
-figures/variant_sweep/
-videos/variant_sweep/
+figures/variant_sweep*/
+videos/variant_sweep*/
 data/dream/variants/
-data/variant_sweep/
+data/variant_sweep*/
 figures/dream/variants/
 scripts/variant_sweep.py
 tmp/
