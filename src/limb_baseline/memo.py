@@ -33,6 +33,7 @@ from kinder_pddlstream_planning.limbrepositioning3d import stream as planner_str
 from kinder_pddlstream_planning.limbrepositioning3d.stream import (
     LimbStreamContext,
     MPCConfig,
+    NoFeasibleMotion,
     TorqueTrajectory,
     plan_limb_motion,
 )
@@ -89,6 +90,9 @@ class SeedConfig:
     # goal-directed candidates, a bar the seed cannot influence; a worse seed sends the
     # step to the full batch.
     tolerance: float = 0.0
+    # Step mode: score seed then draws until one beats the feedback candidates; a miss
+    # reuses the scored rollouts in the full batch. False: score all, rerun batch on a miss.
+    reuse: bool = True
 
 
 @dataclass
@@ -102,6 +106,17 @@ class SeedStats:
     policy_reached: int = 0
     policy_steps: int = 0
     policy_seconds: float = 0.0
+    # CPU seconds (`time.process_time`, unaffected by load) per phase: model, seed
+    # scoring (bar included), full batch. `scored_rollouts` counts all seeding rollouts.
+    model_seconds: float = 0.0
+    score_seconds: float = 0.0
+    full_seconds: float = 0.0
+    scored_rollouts: int = 0
+    # Full-batch rollouts beyond those reused from seeding.
+    full_rollouts: int = 0
+    # Physics steps simulated; rollouts that break a limit stop early.
+    scored_physics: int = 0
+    full_physics: int = 0
     policy_failure: str = ""
     policy_final_error: float = float("nan")
     # Fraction of the remaining error each committed seed removed over its horizon.
@@ -115,6 +130,9 @@ class SeedStats:
         self.seeded_steps = self.full_steps = self.seed_rejected = 0
         self.policy_tried = self.policy_reached = self.policy_steps = 0
         self.policy_seconds = 0.0
+        self.model_seconds = self.score_seconds = self.full_seconds = 0.0
+        self.scored_rollouts = self.full_rollouts = 0
+        self.scored_physics = self.full_physics = 0
         self.policy_failure, self.policy_final_error = "", float("nan")
         self.seed_progress, self.rejected_progress, self.seed_margin = [], [], []
 
@@ -124,6 +142,15 @@ STATS = SeedStats()
 # The seed the MPC's noise draws from on the next construction, when set.
 MPC_NOISE_SEED: int | None = None
 _STOCK_MPC = planner_stream.PredictiveSamplingMPC
+_STOCK_ADVANCE = planner_stream.advance
+# Physics steps `advance` has taken in this process.
+_ADVANCES = 0
+
+
+def _counting_advance(*args, **kwargs):
+    global _ADVANCES  # pylint: disable=global-statement
+    _ADVANCES += 1
+    return _STOCK_ADVANCE(*args, **kwargs)
 
 
 class _SeededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
@@ -160,10 +187,11 @@ class _SeededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
         hook = self._ctx.warm_start
         if hook is None or SEED.rollouts <= 0:
             STATS.full_steps += 1
-            return super().step()
+            return self._full_step()
         ctx, sim, cfg = self._ctx, self._sim, self._cfg
         error = limb_error(ctx, sim.limb.get_joint_positions(), self._goal)
         start = capture_state(sim)
+        started = time.process_time()
         seed = self._clip(np.asarray(hook(start, self._goal, self._step_index), float))
         scale = cfg.noise_scale * float(
             np.clip(error / cfg.noise_reference_error, cfg.min_noise_ratio, 1.0)
@@ -178,6 +206,9 @@ class _SeededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
                 self._clip(seed + self._rng.normal(scale=scale, size=seed.shape))
                 for _ in range(SEED.rollouts - 1)
             ]
+        scoring = time.process_time()
+        STATS.model_seconds += scoring - started
+        scored_before, physics_before = self._scored, self._physics
         # A seed given per control step is rolled out verbatim; control points are
         # interpolated as the MPC's own candidates are.
         exact = seed.shape[0] == cfg.horizon
@@ -191,6 +222,8 @@ class _SeededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
             solution, *_ = np.linalg.lstsq(control_basis(cfg), points, rcond=None)
             return self._clip(solution)
         reach = max(ctx.goal_atol - cfg.replay_slack, ctx.goal_atol / 2)
+        if SEED.reuse:
+            return self._reusing_step(start, error, scale, batch, exact, reach, scoring)
 
         # The bar: the MPC's own goal-directed candidates, proportional pushes toward
         # the goal at each gain with a noisy twin. Unlike the shifted nominal they owe
@@ -208,14 +241,14 @@ class _SeededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
         # came from. Its noisy copies are only a backup when it falls short.
         chosen = None
         rejected, cost = self._score(start, expand(seed))
-        seed_terminal = limb_error(ctx, sim.limb.get_joint_positions(), self._goal)
+        seed_terminal = self._rollout_error()
         seed_cost = cost
         if sampler is not None and SEED.rollouts > 1:
             # Draws are alternatives, not backups: score them all and keep the cheapest.
             best = None if rejected else (cost, seed, seed_terminal)
             for points in batch[1:]:
                 rejected_draw, cost = self._score(start, expand(points))
-                terminal = limb_error(ctx, sim.limb.get_joint_positions(), self._goal)
+                terminal = self._rollout_error()
                 if not rejected_draw and (best is None or cost < best[0]):
                     best = (cost, points, terminal)
             if best is not None and passes(0, best[0], best[2]):
@@ -228,7 +261,7 @@ class _SeededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
             best = None
             for points in batch[1:]:
                 rejected_copy, cost = self._score(start, expand(points))
-                terminal = limb_error(ctx, sim.limb.get_joint_positions(), self._goal)
+                terminal = self._rollout_error()
                 if not rejected_copy and (best is None or cost < best[0]):
                     best = (cost, points, terminal)
             if best is not None and passes(0, best[0], best[2]):
@@ -236,6 +269,9 @@ class _SeededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
             options = [c for c in ([] if rejected else [seed_cost]) + ([best[0]] if best else [])]
             STATS.seed_margin.append(min(options) / bar if options else float("inf"))
         restore_state(sim, start, regrasp=False)
+        STATS.score_seconds += time.process_time() - scoring
+        STATS.scored_rollouts += self._scored - scored_before
+        STATS.scored_physics += self._physics - physics_before
         if os.environ.get("MEMO_DEBUG"):
             print(
                 f"seed step={self._step_index} error={error:.4f} "
@@ -252,12 +288,119 @@ class _SeededMPC(_STOCK_MPC):  # type: ignore[misc,valid-type]
         STATS.rejected_progress.append((error - seed_terminal) / max(error, 1e-9))
         STATS.seed_rejected += 1
         STATS.full_steps += 1
-        return super().step()
+        return self._full_step()
+
+    def _reusing_step(self, start, error, scale, batch, exact, reach, scoring) -> list:
+        """Score seed and draws lazily; a miss reuses them in the full batch."""
+        cfg, physics_before = self._cfg, self._physics
+
+        def as_nominal(points):
+            if not exact:
+                return points
+            solution, *_ = np.linalg.lstsq(control_basis(cfg), points, rcond=None)
+            return self._clip(solution)
+
+        # (nominal control points, torques, (rejected, cost)) per rollout.
+        scored = []
+
+        def score(nominal, torques):
+            scored.append((nominal, torques, self._score(start, torques)))
+            return scored[-1][2]
+
+        # The bar is model-independent (the full batch scores these anyway), so a poor
+        # policy cannot vouch for itself.
+        bar_candidates = self._feedback_candidates(start) or self._directed_candidates(scale)
+        bar = float("inf")
+        for points in bar_candidates:
+            rejected, cost = score(points, self._expand(points))
+            if not rejected:
+                bar = min(bar, cost * (1.0 + SEED.tolerance))
+        chosen = None
+        for points in batch:
+            torques = points if exact else self._expand(points)
+            rejected, cost = score(as_nominal(points), torques)
+            terminal = self._rollout_error()
+            if not rejected and (terminal < reach or cost <= bar):
+                chosen = (scored[-1], terminal)
+                break
+        model_costs = [c for _, _, (r, c) in scored[len(bar_candidates):] if not r]
+        STATS.seed_margin.append(
+            (chosen[0][2][1] if chosen else min(model_costs, default=float("inf"))) / bar
+        )
+        STATS.score_seconds += time.process_time() - scoring
+        STATS.scored_rollouts += len(scored)
+        STATS.scored_physics += self._physics - physics_before
+        if chosen is not None:
+            (nominal, torques, _), terminal = chosen
+            STATS.seeded_steps += 1
+            STATS.seed_progress.append((error - terminal) / max(error, 1e-9))
+            self._nominal = nominal
+            self._step_index += self._commit
+            return [list(t) for t in torques[: self._commit]]
+        STATS.seed_rejected += 1
+        STATS.full_steps += 1
+        started = time.process_time()
+        try:
+            return self._finish_batch(start, error, scored)
+        finally:
+            STATS.full_seconds += time.process_time() - started
+
+    def _finish_batch(self, start, error, scored) -> list:
+        """The stock step, minus what the seeding phase already scored."""
+        cfg, hook = self._cfg, self._ctx.warm_start
+        # Sample only the rest of the batch, minus feedback candidates and seed.
+        self._cfg = dataclasses.replace(
+            cfg, feedback_gains=(), num_rollouts=max(cfg.num_rollouts - len(scored), 0)
+        )
+        self._ctx.warm_start = None
+        try:
+            fresh = self._sample_candidates(error, start)
+        finally:
+            self._cfg, self._ctx.warm_start = cfg, hook
+        physics_before = self._physics
+        for points in fresh:
+            torques = self._expand(points)
+            scored.append((points, torques, self._score(start, torques)))
+        STATS.full_rollouts += len(fresh)
+        STATS.full_physics += self._physics - physics_before
+        nominal, torques, (rejected, _) = min(scored, key=lambda entry: entry[2])
+        if rejected:
+            raise NoFeasibleMotion("all MPC candidates violate constraints")
+        self._nominal = nominal
+        self._step_index += self._commit
+        return [list(t) for t in torques[: self._commit]]
+
+    def _rollout_error(self) -> float:
+        """Limb-to-goal error at the end of the last scored rollout."""
+        return limb_error(
+            self._rollout_ctx, self._rollout_sim.limb.get_joint_positions(), self._goal
+        )
+
+    _scored = 0
+    _physics = 0
+
+    def _score(self, *args, **kwargs):
+        self._scored += 1
+        before = _ADVANCES
+        try:
+            return super()._score(*args, **kwargs)
+        finally:
+            self._physics += _ADVANCES - before
+
+    def _full_step(self) -> list:
+        started, scored, physics = time.process_time(), self._scored, self._physics
+        try:
+            return super().step()
+        finally:
+            STATS.full_seconds += time.process_time() - started
+            STATS.full_rollouts += self._scored - scored
+            STATS.full_physics += self._physics - physics
 
 
 def install_mpc() -> None:
     """Have the planner build the seeded MPC from here on."""
     planner_stream.PredictiveSamplingMPC = _SeededMPC
+    planner_stream.advance = _counting_advance
 
 
 # --------------------------------------------------------------- plan mode

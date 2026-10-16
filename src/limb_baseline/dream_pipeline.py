@@ -30,6 +30,7 @@ import pickle
 import time
 import traceback
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -110,6 +111,8 @@ class DreamConfig:
     # Grasp, base pose and IK are sampled afresh for every plan (real or dreamed), seeded
     # by the plan's own noise seed, instead of fixed by the run's task seed.
     vary_geometry: bool = False
+    # Planner for every episode: PDDLStream, or the POMDP planner via POUCT or POMCP.
+    planner: str = "pddlstream"
     dream_pool: int = 200
     # With `fresh_goals`: goals drawn uniformly over the person's true range instead of
     # within `variation` of the nominal goal.
@@ -380,12 +383,21 @@ class Memory:
 
 
 def planning_effort(stats: SeedStats, mpc: MPCConfig) -> dict:
-    """The notebook's "shooting samples": MPC rollouts, plus one per policy rollout."""
-    searched = stats.full_steps * mpc.num_rollouts + stats.seeded_steps * SEED.rollouts
+    """The notebook's "shooting samples": MPC rollouts, plus one per policy rollout.
+
+    `rollouts` counts every simulated rollout once; `rollouts_kept` is the older count
+    (`SEED.rollouts` per seeded step, bar and rejected seeds excluded).
+    """
+    searched = stats.full_rollouts + stats.scored_rollouts
+    kept = stats.full_steps * mpc.num_rollouts + stats.seeded_steps * SEED.rollouts
     return {
         "mpc_steps": stats.full_steps + stats.seeded_steps,
         "rollouts": searched + stats.policy_tried,
+        "rollouts_kept": kept + stats.policy_tried,
         "simulator_steps": searched * mpc.horizon * mpc.action_repeat
+        + stats.policy_steps * mpc.action_repeat,
+        # `simulator_steps` less early stops.
+        "physics_steps": stats.scored_physics + stats.full_physics
         + stats.policy_steps * mpc.action_repeat,
     }
 
@@ -398,10 +410,12 @@ def plan_and_execute(
     settings: PlannerSettings,
     geometry_seed: int,
     noise_seed: int,
+    planner: str = "pddlstream",
 ) -> tuple[EpisodeResult, dict]:
     """Plan `task` under the belief and run it on person `theta`.
 
     `geometry_seed` fixes grasp, base pose and IK; only the MPC noise takes `noise_seed`.
+    `planner` is PDDLStream, or "pouct" or "pomcp" for the POMDP planner.
     """
     memo_module.MPC_NOISE_SEED = noise_seed
     STATS.reset()
@@ -412,7 +426,17 @@ def plan_and_execute(
     if memory.memo is not None:
         memory.memo.current = believed.belief.key_features()
     target, retargeted = believed.retarget(task)
-    result = run_episode(
+    if planner == "pddlstream":
+        plan_episode = run_episode
+    else:
+        # Lazy import: the POMDP planner is optional.
+        from limb_baseline.pomdp_model import PLAN_ONCE
+        from limb_baseline.pomdp_planner import run_episode_plan_once
+
+        plan_episode = partial(
+            run_episode_plan_once, config=dataclasses.replace(PLAN_ONCE, solver=planner)
+        )
+    result = plan_episode(
         target,
         theta,
         belief=believed.belief,
@@ -427,6 +451,7 @@ def plan_and_execute(
         "solved": result.solved,
         "goal_reached": result.goal_reached,
         "plan_time": round(result.plan_time, 2),
+        "plan_cpu_time": round(result.plan_cpu_time, 2),
         "execute_time": round(result.execute_time, 2),
         **planning_effort(STATS, settings.mpc),
         "memo_hits": memo.hits if memo else 0,
@@ -437,6 +462,12 @@ def plan_and_execute(
         "policy_reached": STATS.policy_reached,
         "policy_steps": STATS.policy_steps,
         "policy_seconds": round(STATS.policy_seconds, 2),
+        "model_seconds": round(STATS.model_seconds, 2),
+        "score_seconds": round(STATS.score_seconds, 2),
+        "full_seconds": round(STATS.full_seconds, 2),
+        "scored_rollouts": STATS.scored_rollouts,
+        "scored_physics": STATS.scored_physics,
+        "full_physics": STATS.full_physics,
         "policy_failure": STATS.policy_failure,
         "seeded_steps": STATS.seeded_steps,
         "full_steps": STATS.full_steps,
@@ -505,7 +536,7 @@ def dream_once(
         snapshot = memory.snapshot()
         result, stats = plan_and_execute(
             task, hypothesis, under, memory, settings,
-            seed if config.vary_geometry else geometry_seed, seed,
+            seed if config.vary_geometry else geometry_seed, seed, config.planner,
         )
         memory.learner.context.update(role=role, goal=task_index)
         fit_time = memory.memorize(result, snapshot, settings.mpc)
@@ -568,7 +599,8 @@ def refile(task: Task, believed: Believed, imagined: Believed, memory: Memory) -
 # What must match for a checkpoint to be resumed; everything but the episode count.
 IDENTITY = ("condition", "model", "n_dreams", "all_goals", "num_goals", "variation",
             "particles", "confidence", "dream_max_time", "seed_mode", "seed_rollouts",
-            "variant", "person", "task_seed")
+            "variant", "person", "task_seed", "planner", "seed_reuse", "num_rollouts",
+            "feedback")
 
 
 def checkpoint_path(out: Path) -> Path:
@@ -665,6 +697,7 @@ def run_sequence(
         "fresh_goals": config.fresh_goals,
         "random_goals": config.random_goals,
         "vary_geometry": config.vary_geometry,
+        "planner": config.planner,
         "num_goals": len(task_set),
         "variation": config.variation,
         "particles": config.particles,
@@ -672,6 +705,9 @@ def run_sequence(
         "dream_max_time": config.dream_max_time,
         "seed_mode": SEED.mode,
         "seed_rollouts": SEED.rollouts,
+        "seed_reuse": SEED.reuse,
+        "num_rollouts": settings.mpc.num_rollouts,
+        "feedback": bool(settings.mpc.feedback_gains),
         "variant": current_variant().name,
         "person": person,
         "task_seed": task_seed,
@@ -686,8 +722,11 @@ def run_sequence(
     if resume and checkpoint.exists():
         with open(checkpoint, "rb") as handle:
             state = pickle.load(handle)
-        mismatch = {k: (state["common"][k], common[k]) for k in IDENTITY
-                    if state["common"][k] != common[k]}
+        # Defaults for checkpoints that predate these fields.
+        saved = {"planner": "pddlstream", "seed_reuse": False,
+                 "num_rollouts": MPCConfig.num_rollouts, "feedback": True,
+                 **state["common"]}
+        mismatch = {k: (saved[k], common[k]) for k in IDENTITY if saved[k] != common[k]}
         if mismatch:
             raise ValueError(f"{checkpoint} is from another run: {mismatch}")
         start = state["episode"]
@@ -783,6 +822,7 @@ def run_sequence(
             result, stats = plan_and_execute(
                 task, theta, believed, memory, settings,
                 record["mpc_seed"] if config.vary_geometry else task_seed, record["mpc_seed"],
+                config.planner,
             )
             record.update(stats)
             record["fit_time"] = round(memory.memorize(result, snapshot, settings.mpc), 2)
@@ -829,6 +869,9 @@ def main() -> None:
                         help="Dreams before every episode; plain ignores them.")
     parser.add_argument("--all-goals", action="store_true",
                         help="Each dream also solves every goal of the task set.")
+    parser.add_argument("--planner", choices=("pddlstream", "pouct", "pomcp"),
+                        default=DreamConfig.planner,
+                        help="PDDLStream, or the POMDP planner solved by POUCT or POMCP")
     parser.add_argument("--vary-geometry", action="store_true",
                         help="Sample grasp, base pose and IK afresh for every plan.")
     parser.add_argument("--random-goals", action="store_true",
@@ -854,6 +897,10 @@ def main() -> None:
                         help="plan: roll the seed out whole, search only if it fails; "
                              "step: offer the seed as batch 0 of every MPC step.")
     parser.add_argument("--seed-rollouts", type=int, default=SEED.rollouts)
+    parser.add_argument("--no-seed-reuse", dest="seed_reuse", action="store_false",
+                        help="Step mode: the earlier scoring, which scores every draw "
+                             "against the directed candidates and runs a rejected step's "
+                             "full batch from scratch.")
     # The arm every dream experiment and the tuning rows use; the package default is the
     # right arm, which a bare command would otherwise silently switch to.
     parser.add_argument("--variant", choices=VARIANTS, default="isolated-left-arm")
@@ -864,6 +911,9 @@ def main() -> None:
                         help="Planner budget per real episode, in seconds, enforced exactly "
                              "(the planner is stopped mid-stream at the deadline).")
     parser.add_argument("--num-rollouts", type=int, default=MPCConfig.num_rollouts)
+    parser.add_argument("--no-feedback", dest="feedback", action="store_false",
+                        help="Drop the MPC's feedback-controller candidates, leaving it "
+                             "the sampled rollouts alone.")
     parser.add_argument("--max-control-steps", type=int, default=MPCConfig.max_control_steps)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--tag", type=str, default="")
@@ -878,11 +928,14 @@ def main() -> None:
     select_variant(args.variant)
     SEED.mode = args.seed_mode
     SEED.rollouts = args.seed_rollouts
+    SEED.reuse = args.seed_reuse
     mpc = dataclasses.replace(
         MPCConfig(),
         num_rollouts=args.num_rollouts,
         max_control_steps=args.max_control_steps,
     )
+    if not args.feedback:
+        mpc = dataclasses.replace(mpc, feedback_gains=())
     settings = PlannerSettings(max_time=args.max_time, mpc=mpc, hard_time_limit=True)
     config = DreamConfig(
         n_dreams=args.n_dreams,
@@ -890,6 +943,7 @@ def main() -> None:
         fresh_goals=args.fresh_goals or args.random_goals,
         random_goals=args.random_goals,
         vary_geometry=args.vary_geometry,
+        planner=args.planner,
         num_goals=args.num_goals,
         variation=args.variation,
         num_episodes=args.num_episodes,

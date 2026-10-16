@@ -21,19 +21,27 @@
 #       cache and 1-candidate regression lines come from
 #       EXTRA=--vary-geometry OUT=data/dream/generative_models \
 #           FIG=figures/dream/generative_models scripts/run_dream.sh fresh 20 4
+#   scripts/run_dream.sh planners [N=20] [D=4]
+#       PDDLStream vs POMDP (PLANNERS="pddlstream pouct"): plain, and each MODELS model with
+#       D and 0 dreams; fresh goals, varied geometry, step mode, K=8 (K="3 8" runs both)
+#       -> data/dream/planners. Longest first, interleaved; MAX_JOBS default 12. Compare
+#       `plan_cpu_time` (not inflated by core contention) as well as `plan_time`.
+#       FAIR=1: runs rotate one pinned core every ROTATE s (default 60), and filler runs
+#       ($OUT/filler) keep MAX_JOBS busy until the last real run ends.
 #
 # PEOPLE, OUT, FIG, VARIANT (scene and limb, default isolated-left-arm) and EXTRA (more
 # dream_pipeline flags for every run, e.g. --random-goals) apply to every mode.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-MODE="${1:?usage: run_dream.sh warmstart|fresh|generative [N=20] [D=4]}"
+MODE="${1:?usage: run_dream.sh warmstart|fresh|generative|planners [N=20] [D=4]}"
 N="${2:-20}"
 D="${3:-4}"
 case "$MODE" in
     warmstart) NAME=warmstart_compare ;;
     fresh) NAME=fresh_goals ;;
     generative) NAME=generative_models ;;
+    planners) NAME=planners; MAX_JOBS="${MAX_JOBS:-12}" ;;
     *) echo "unknown mode: $MODE" >&2; exit 1 ;;
 esac
 PEOPLE="${PEOPLE:-23 24 25 26 29}"
@@ -51,15 +59,93 @@ if [ -z "${CONDA_PREFIX:-}" ] && [ -d "$HOME/anaconda3/envs/kinder/bin" ]; then
     export PATH="$HOME/anaconda3/envs/kinder/bin:$PATH"
 fi
 
+# One physical core per run, alternating L3 domains (the 9950X's two CCDs). PIN=0 disables.
+PIN="${PIN:-1}"
+CORES=()
+if [ "$PIN" = 1 ] && command -v taskset > /dev/null; then
+    mapfile -t by_cache < <(for c in /sys/devices/system/cpu/cpu[0-9]*; do
+        echo "$(cat "$c/cache/index3/shared_cpu_list" 2>/dev/null || echo 0) $(cat "$c/topology/thread_siblings_list")"
+    done | sort -u | sort -t' ' -k2,2n)
+    mapfile -t domains < <(printf '%s\n' "${by_cache[@]}" | cut -d' ' -f1 | sort -u)
+    for ((i = 0; ; i++)); do
+        added=0
+        for d in "${domains[@]}"; do
+            mapfile -t mine < <(printf '%s\n' "${by_cache[@]}" | awk -v d="$d" '$1 == d {print $2}')
+            if [ "$i" -lt "${#mine[@]}" ]; then CORES+=("${mine[$i]}"); added=1; fi
+        done
+        [ "$added" = 1 ] || break
+    done
+    [ "$MAX_JOBS" -le "${#CORES[@]}" ] || MAX_JOBS="${#CORES[@]}"
+fi
+SLOT_PIDS=()
+REAL_PIDS=()
+FAIR="${FAIR:-0}"
+ROTATE="${ROTATE:-60}"
+
 run() { # person condition n_dreams tag seed_mode model [more dream_pipeline flags]
     local person="$1" condition="$2" dreams="$3" tag="$4" seed_mode="$5" model="$6"
     shift 6
-    while [ "$(jobs -rp | wc -l)" -ge "$MAX_JOBS" ]; do wait -n || true; done
-    python -m limb_baseline.dream_pipeline --condition "$condition" --n-dreams "$dreams" \
+    local slot=-1 i pin=()
+    while :; do
+        for ((i = 0; i < MAX_JOBS; i++)); do
+            if [ -z "${SLOT_PIDS[$i]:-}" ] || ! kill -0 "${SLOT_PIDS[$i]}" 2>/dev/null; then
+                slot=$i; break
+            fi
+        done
+        [ "$slot" -ge 0 ] && break
+        wait -n || true
+    done
+    [ "${#CORES[@]}" -gt 0 ] && pin=(taskset -c "${CORES[$slot]}")
+    "${pin[@]}" python -m limb_baseline.dream_pipeline --condition "$condition" --n-dreams "$dreams" \
         --num-episodes "$N" --variation 0.3 --variant "$VARIANT" \
         --person "$person" --model "$model" --particles 32 --confidence 0.5 \
         --seed-mode "$seed_mode" --out "$OUT/${tag}_p$person.csv" --tag "$tag" "$@" $EXTRA \
         > "$LOGS/${tag}_p$person.log" 2>&1 &
+    SLOT_PIDS[$slot]=$!
+    REAL_PIDS+=("$!")
+}
+
+rotate() { # shift the runs under $OUT one core every ROTATE seconds
+    local offset=0 n="${#CORES[@]}" pids i pid
+    [ "$MAX_JOBS" -lt "$n" ] && n="$MAX_JOBS"
+    while :; do
+        mapfile -t pids < <(ps -eo pid=,args= | awk -v out="--out $OUT/" \
+            '$2 ~ /python/ && index($0, "limb_baseline.dream_pipeline") && index($0, out) {print $1}' | sort -n)
+        for ((i = 0; i < ${#pids[@]} && i < n; i++)); do
+            for pid in "${pids[$i]}" $(pgrep -P "${pids[$i]}" || true); do
+                taskset -a -cp "${CORES[$(((i + offset) % n))]}" "$pid" > /dev/null 2>&1 || true
+            done
+        done
+        offset=$((offset + 1))
+        sleep "$ROTATE"
+    done
+}
+
+finish() { # wait for the real runs; with FAIR=1, fill freed cores with filler runs
+    if [ "$FAIR" != 1 ]; then wait; return; fi
+    local fillers=() alive busy pid k=0 planner
+    mkdir -p "$OUT/filler"
+    while :; do
+        alive=0
+        for pid in "${REAL_PIDS[@]}"; do kill -0 "$pid" 2> /dev/null && alive=$((alive + 1)); done
+        [ "$alive" -eq 0 ] && break
+        busy="$alive"
+        for pid in "${fillers[@]}"; do kill -0 "$pid" 2> /dev/null && busy=$((busy + 1)); done
+        while [ "$busy" -lt "$MAX_JOBS" ]; do
+            planner=pddlstream; [ $((k % 2)) = 1 ] && planner=pouct
+            python -m limb_baseline.dream_pipeline --condition plain --n-dreams 0 \
+                --num-episodes 100 --variation 0.3 --variant "$VARIANT" --person $((100 + k)) \
+                --model ridge --particles 32 --confidence 0.5 --seed-mode plan \
+                --planner "$planner" --fresh-goals --vary-geometry --tag filler $EXTRA \
+                --out "$OUT/filler/filler_$k.csv" > "$LOGS/filler_$k.log" 2>&1 &
+            fillers+=("$!")
+            k=$((k + 1)); busy=$((busy + 1))
+        done
+        sleep 20
+    done
+    [ "${#fillers[@]}" -gt 0 ] && kill "${fillers[@]}" 2> /dev/null || true
+    [ -n "${ROTATOR:-}" ] && kill "$ROTATOR" 2> /dev/null || true
+    wait || true
 }
 
 warmstart() {
@@ -108,6 +194,34 @@ generative() {
         done
     done
     wait
+}
+
+planners() {
+    # Longest first, interleaved, so every line sees roughly the same load.
+    local planners="${PLANNERS:-pddlstream pouct}" ks="${K:-8}"
+    local models="${MODELS:-gen:flow:hist gen:ddpm:hist}" p planner m name k dreams
+    local flags=(--fresh-goals --vary-geometry)
+    if [ "$FAIR" = 1 ] && [ "${#CORES[@]}" -gt 0 ]; then rotate & ROTATOR=$!; fi
+    for dreams in "$D" 0; do
+        for p in $PEOPLE; do
+            for planner in $planners; do
+                for m in $models; do
+                    for k in $ks; do
+                        name="$(echo "$m" | cut -d: -f1-2 | tr ':' '_')"
+                        run "$p" learned "$dreams" "${planner}_${name}_${dreams}_step_k$k" \
+                            step "$m" --planner "$planner" "${flags[@]}" --seed-rollouts "$k"
+                    done
+                done
+            done
+        done
+    done
+    for p in $PEOPLE; do
+        for planner in $planners; do
+            run "$p" plain 0 "${planner}_plain_0" plan ridge --planner "$planner" "${flags[@]}"
+        done
+    done
+    finish
+    python scripts/dream_figures.py summary --csv "$OUT"/*_p*[0-9].csv --out "$FIG/summary.png" --per-person
 }
 
 "$MODE"

@@ -11,6 +11,7 @@ import signal
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from functools import partial
 
 import numpy as np
 from kinder.envs.dynamic3d.limbs import BodyMass
@@ -129,6 +130,8 @@ class EpisodeResult:
     solved: bool = False
     goal_reached: bool = False
     plan_time: float = 0.0
+    # Process CPU time; unlike `plan_time`, comparable across machine loads.
+    plan_cpu_time: float = 0.0
     execute_time: float = 0.0
     num_torque_steps: int = 0
     num_control_steps: int = 0
@@ -311,27 +314,15 @@ def dense_rows(segments, log: RolloutLog, belief_features, mpc: MPCConfig) -> li
     return rows
 
 
-def run_episode(
+def open_episode(
     task: Task,
     theta: NDArray[np.float64],
-    belief: Belief | None = None,
-    believed_theta: NDArray[np.float64] | None = None,
-    warm_start: WarmStartModel | None = None,
-    seed: int = 0,
-    settings: PlannerSettings = DEFAULT_PLANNER_SETTINGS,
+    believed_theta: NDArray[np.float64],
+    seed: int,
+    settings: PlannerSettings,
     particle_limits: ParticleLimits | None = None,
-) -> EpisodeResult:
-    """Plan and execute one episode, returning what it cost and whether it worked.
-
-    `believed_theta` is the one range the planner plans inside; `particle_limits`
-    replaces that box with a chance constraint over belief particles when given.
-    """
-    result = EpisodeResult()
-    rng = np.random.default_rng(seed)
-    belief_features = (
-        belief.as_features() if belief is not None else np.zeros(2 * len(theta))
-    )
-
+):
+    """One episode's env and stream context at the task start; caller closes `sim`."""
     sim = build_episode_env(task, np.full(len(theta), ENVELOPE), settings)
     try:
         sim.reset(seed=seed)
@@ -344,21 +335,92 @@ def run_episode(
             ctx.in_believed_limits = particle_limits
         ctx.true_joint_limits = joint_limits(theta)
         ctx.base_pose_hint = task.base_pose
+        reset_to_start(ctx)
+    except BaseException:
+        sim.close()
+        raise
+    return sim, ctx
+
+
+def count_effort(result: EpisodeResult, segments: list[tuple], mpc: MPCConfig) -> None:
+    """Add the planning effort of `segments` to `result`."""
+    result.num_segments += len(segments)
+    for _, _, trajectory in segments:
+        if not trajectory.robot_torques:
+            continue
+        result.num_torque_steps += len(trajectory.robot_torques)
+        result.num_control_steps += len(trajectory.robot_torques) // mpc.action_repeat
+        # Every control step rolls `num_rollouts` candidates over the horizon.
+        result.mpc_simulator_steps += (
+            len(trajectory.robot_torques)
+            // mpc.action_repeat
+            * mpc.num_rollouts
+            * mpc.horizon
+            * mpc.action_repeat
+        )
+
+
+def score_range_of_motion(result: EpisodeResult, ctx) -> None:
+    """Check `result.limb_path` against the true limits; a violation is a failure."""
+    lower, upper = np.asarray(ctx.true_joint_limits[0]), np.asarray(
+        ctx.true_joint_limits[1]
+    )
+    margins = [
+        float(np.min(np.minimum(np.asarray(q) - lower, upper - np.asarray(q))))
+        for q in result.limb_path
+    ]
+    if margins:
+        result.rom_margin = min(margins)
+    result.rom_violation_steps = sum(m < 0.0 for m in margins)
+    result.worst_rom_violation = max((-m for m in margins if m < 0.0), default=0.0)
+    if result.rom_violation_steps:
+        result.goal_reached = False
+        result.failure_reason = (
+            f"drove the limb {result.worst_rom_violation:.3f} rad past the "
+            "person's true anatomical limit"
+        )
+
+
+def run_episode(
+    task: Task,
+    theta: NDArray[np.float64],
+    belief: Belief | None = None,
+    believed_theta: NDArray[np.float64] | None = None,
+    warm_start: WarmStartModel | None = None,
+    seed: int = 0,
+    settings: PlannerSettings = DEFAULT_PLANNER_SETTINGS,
+    particle_limits: ParticleLimits | None = None,
+    plan_fn=None,
+) -> EpisodeResult:
+    """Plan and execute one episode, returning what it cost and whether it worked.
+
+    `believed_theta` is the one range the planner plans inside; `particle_limits`
+    replaces that box with a chance constraint over belief particles when given.
+    `plan_fn(ctx, max_time)` returns a plan or None (default PDDLStream).
+    """
+    result = EpisodeResult()
+    belief_features = (
+        belief.as_features() if belief is not None else np.zeros(2 * len(theta))
+    )
+    if plan_fn is None:
+        plan_fn = partial(plan_limbrepositioning3d, verbose=False)
+
+    sim, ctx = open_episode(task, theta, believed_theta, seed, settings, particle_limits)
+    try:
         if warm_start is not None:
             ctx.warm_start = warm_start.as_hook(belief_features)
-        reset_to_start(ctx)
 
-        started = time.time()
+        started, cpu_started = time.time(), time.process_time()
         try:
             with hard_deadline(settings.max_time if settings.hard_time_limit else None):
-                plan = plan_limbrepositioning3d(
-                    ctx, max_time=settings.max_time, verbose=False
-                )
+                plan = plan_fn(ctx, max_time=settings.max_time)
         except PlanningTimeout as timeout:
             result.plan_time = time.time() - started
+            result.plan_cpu_time = time.process_time() - cpu_started
             result.failure_reason = str(timeout)
             return result
         result.plan_time = time.time() - started
+        result.plan_cpu_time = time.process_time() - cpu_started
         result.solved = plan is not None
         if plan is None:
             result.failure_reason = (
@@ -370,22 +432,7 @@ def run_episode(
 
         mpc = settings.mpc
         segments = _move_limb_segments(plan)
-        result.num_segments = len(segments)
-        for start_state, goal_conf, trajectory in segments:
-            if not trajectory.robot_torques:
-                continue
-            result.num_torque_steps += len(trajectory.robot_torques)
-            result.num_control_steps += (
-                len(trajectory.robot_torques) // mpc.action_repeat
-            )
-            # Every control step rolls `num_rollouts` candidates over the horizon.
-            result.mpc_simulator_steps += (
-                len(trajectory.robot_torques)
-                // mpc.action_repeat
-                * mpc.num_rollouts
-                * mpc.horizon
-                * mpc.action_repeat
-            )
+        count_effort(result, segments, mpc)
 
         reset_to_start(ctx)
         log = RolloutLog()
@@ -397,25 +444,7 @@ def run_episode(
 
         result.segments = dense_rows(segments, log, belief_features, mpc)
         result.limb_path = [list(q) for q in log.limb_positions]
-
-        lower, upper = np.asarray(ctx.true_joint_limits[0]), np.asarray(
-            ctx.true_joint_limits[1]
-        )
-        margins = [
-            float(np.min(np.minimum(np.asarray(q) - lower, upper - np.asarray(q))))
-            for q in log.limb_positions
-        ]
-        if margins:
-            result.rom_margin = min(margins)
-        result.rom_violation_steps = sum(m < 0.0 for m in margins)
-        result.worst_rom_violation = max((-m for m in margins if m < 0.0), default=0.0)
-        # Reaching the goal through the person is not a success.
-        if result.rom_violation_steps:
-            result.goal_reached = False
-            result.failure_reason = (
-                f"drove the limb {result.worst_rom_violation:.3f} rad past the "
-                "person's true anatomical limit"
-            )
+        score_range_of_motion(result, ctx)
         return result
     finally:
         sim.close()

@@ -90,12 +90,19 @@ def _model_name(model: str) -> str:
     return f"learned {model}"
 
 
+PLANNER_NAMES = {"pddlstream": "PDDLStream", "pouct": "POUCT", "pomcp": "POMCP"}
+
+
 def _series(frame: pd.DataFrame) -> list[tuple[str, dict, pd.DataFrame]]:
     """One (label, style, rows) per line: plain, then cache, ridge, MLP; no dreams first."""
     out = []
     frame = frame.assign(seed_rollouts=frame.get("seed_rollouts", 1))
-    keys = ["condition", "model", "n_dreams", "seed_mode", "seed_rollouts"]
-    for (condition, model, n_dreams, seed_mode, candidates), rows in frame.groupby(keys):
+    # Older CSVs have no planner column; they all used PDDLStream.
+    planners = frame.get("planner", pd.Series("pddlstream", index=frame.index))
+    frame = frame.assign(planner=planners.fillna("pddlstream"))
+    several = frame["planner"].nunique() > 1
+    keys = ["planner", "condition", "model", "n_dreams", "seed_mode", "seed_rollouts"]
+    for (planner, condition, model, n_dreams, seed_mode, candidates), rows in frame.groupby(keys):
         family = _family(condition, model, seed_mode)
         if condition == "plain":
             label = "plain (no memory)"
@@ -109,7 +116,12 @@ def _series(frame: pd.DataFrame) -> list[tuple[str, dict, pd.DataFrame]]:
         style = {"color": COLORS[family],
                  "ls": ":" if candidates > 1 and family.startswith("net") else
                        "--" if condition != "plain" and n_dreams == 0 else "-"}
-        out.append(((list(COLORS).index(family), int(n_dreams), int(candidates), label), label, style, rows))
+        if several:
+            label = f"{PLANNER_NAMES.get(planner, planner)}: {label}"
+            if planner != "pddlstream":
+                style["ls"] = "-."
+        order = (list(COLORS).index(family), int(n_dreams), int(candidates), planner, label)
+        out.append((order, label, style, rows))
     out.sort(key=lambda s: s[0])
     return [(label, style, rows) for _, label, style, rows in out]
 
