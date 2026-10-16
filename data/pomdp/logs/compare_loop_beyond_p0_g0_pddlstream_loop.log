@@ -1,0 +1,40 @@
+
+Iteration: 1 | Complexity: 0 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.000 | Sample Time: 0.000 | Total Time: 0.000
+Attempt: 1 | Results: 0 | Depth: 0 | Success: False | Time: 0.023
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 0 to 1
+
+Iteration: 2 | Complexity: 1 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.024 | Sample Time: 0.000 | Total Time: 0.024
+Attempt: 1 | Results: 2 | Depth: 0 | Success: False | Time: 0.031
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 1 to 2
+
+Iteration: 3 | Complexity: 2 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.056 | Sample Time: 0.000 | Total Time: 0.056
+Attempt: 1 | Results: 3 | Depth: 0 | Success: False | Time: 0.034
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 2 to 3
+
+Iteration: 4 | Complexity: 3 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.090 | Sample Time: 0.000 | Total Time: 0.090
+Attempt: 1 | Results: 11 | Depth: 1 | Success: False | Time: 0.241
+Attempt: 2 | Results: 14 | Depth: 0 | Success: True | Time: 0.355
+Stream plan (7, 7, 0.001): [sample-grasp:(limb)->(#g5), plan-grasp-motion:(limb, #g5, qL6624, qL6576)->(#q5, #a5, #s11), plan-limb-motion:(#s11, qL6576)->(#t6, #s12), check-human-joint-limits:(#s11, qL6576, #t6, #s12)->(), check-human-torque-limits:(#s11, qL6576, #t6, #s12)->(), check-robot-torque-limits:(#s11, qL6576, #t6, #s12)->(), plan-base-motion:(SE2Pose(x=0.3921042240001188, y=0.9102393664576361, rot=-0.814), #q5)->(#b5)]
+Action plan (3, 3.000): [move_base(SE2Pose(x=0.3921042240001188, y=0.9102393664576361, rot=-0.814), #b5, #q5), grasp(limb, #g5, #q5, #a5, #s11), move_limb(limb, #g5, #q5, #s11, qL6624, qL6576, #t6, #s12)]
+plan-limb-motion: generated a trajectory with 574 steps.
+Summary: {complexity: 3, cost: 3.000, evaluations: 23, iterations: 4, length: 2, run_time: 147.243, sample_time: 146.796, search_time: 0.448, skeletons: 1, solutions: 1, solved: True, timeout: False}
+
+Iteration: 1 | Complexity: 0 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 10 | Eager Calls: 0 | Cost: inf | Search Time: 0.000 | Sample Time: 0.000 | Total Time: 0.000
+Attempt: 1 | Results: 0 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 0 to 1
+
+Iteration: 2 | Complexity: 1 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 10 | Eager Calls: 0 | Cost: inf | Search Time: 0.001 | Sample Time: 0.000 | Total Time: 0.001
+Attempt: 1 | Results: 6 | Depth: 1 | Success: False | Time: 0.007
+Attempt: 2 | Results: 9 | Depth: 0 | Success: True | Time: 0.013
+Stream plan (4, 4, 0.000): [plan-limb-motion:(s5472, qL4480)->(#t8, #s14), check-human-torque-limits:(s5472, qL4480, #t8, #s14)->(), check-human-joint-limits:(s5472, qL4480, #t8, #s14)->(), check-robot-torque-limits:(s5472, qL4480, #t8, #s14)->()]
+Action plan (1, 1.000): [move_limb(limb, Pose(position=(-0.02906116284430027, 0.01299381721764803, 0.09408942610025406), orientation=(0.5, -0.5, -0.5, 0.5)), SE2Pose(x=1.0987193532944062, y=0.11021036974134713, rot=0.0), s5472, qL9664, qL4480, #t8, #s14)]
+plan-limb-motion: generated a trajectory with 348 steps.
+Summary: {complexity: 1, cost: 1.000, evaluations: 16, iterations: 2, length: 2, run_time: 72.983, sample_time: 72.969, search_time: 0.014, skeletons: 1, solutions: 1, solved: True, timeout: False}

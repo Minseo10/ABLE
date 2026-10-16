@@ -1,0 +1,26 @@
+
+Iteration: 1 | Complexity: 0 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.000 | Sample Time: 0.000 | Total Time: 0.000
+Attempt: 1 | Results: 0 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 0 to 1
+
+Iteration: 2 | Complexity: 1 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.001 | Sample Time: 0.000 | Total Time: 0.001
+Attempt: 1 | Results: 2 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 1 to 2
+
+Iteration: 3 | Complexity: 2 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.002 | Sample Time: 0.000 | Total Time: 0.002
+Attempt: 1 | Results: 3 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 2 to 3
+
+Iteration: 4 | Complexity: 3 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.004 | Sample Time: 0.000 | Total Time: 0.004
+Attempt: 1 | Results: 11 | Depth: 1 | Success: False | Time: 0.010
+Attempt: 2 | Results: 14 | Depth: 0 | Success: True | Time: 0.016
+Stream plan (7, 7, 0.001): [sample-grasp:(limb)->(#g4), plan-grasp-motion:(limb, #g4, qL6416, qL6032)->(#q4, #a4, #s8), plan-limb-motion:(#s8, qL6032)->(#t4, #s9), check-human-torque-limits:(#s8, qL6032, #t4, #s9)->(), check-robot-torque-limits:(#s8, qL6032, #t4, #s9)->(), check-human-joint-limits:(#s8, qL6032, #t4, #s9)->(), plan-base-motion:(SE2Pose(x=0.3921042240001188, y=0.9102393664576361, rot=-0.814), #q4)->(#b4)]
+Action plan (3, 3.000): [move_base(SE2Pose(x=0.3921042240001188, y=0.9102393664576361, rot=-0.814), #b4, #q4), grasp(limb, #g4, #q4, #a4, #s8), move_limb(limb, #g4, #q4, #s8, qL6416, qL6032, #t4, #s9)]
+plan-limb-motion: generated a trajectory with 411 steps.
+Summary: {complexity: 3, cost: 3.000, evaluations: 23, iterations: 4, length: 2, run_time: 98.169, sample_time: 98.148, search_time: 0.021, skeletons: 1, solutions: 1, solved: True, timeout: False}
