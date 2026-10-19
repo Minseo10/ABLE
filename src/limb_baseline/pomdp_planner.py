@@ -58,7 +58,9 @@ from limb_baseline.pomdp_model import (
     particle_belief,
     pose_of,
     surviving,
+    target_of,
 )
+from limb_baseline.pomcpow import POMCPOW
 from limb_baseline.tasks import Task
 from limb_baseline.warmstart import WarmStartModel
 
@@ -147,8 +149,11 @@ def make_agent(state: DomainState, facts: Facts, thetas, config: PomdpConfig, rn
     )
 
 
-def make_solver(facts: Facts, config: PomdpConfig):
-    """POUCT or POMCP, per `config.solver`."""
+def make_solver(facts: Facts, config: PomdpConfig, rng: np.random.Generator | None = None):
+    """POUCT, POMCP or POMCPOW, per `config.solver`."""
+    if config.solver == "pomcpow":
+        # Base, grasp, the limb moves and stop.
+        return POMCPOW(config, max_depth=config.max_limb_moves + 3, rng=rng)
     solvers = {"pouct": pomdp_py.POUCT, "pomcp": pomdp_py.POMCP}
     if config.solver not in solvers:
         raise ValueError(f"Unknown solver {config.solver!r}; expected one of {list(solvers)}")
@@ -165,7 +170,7 @@ def search(
     state: DomainState, facts: Facts, thetas, config: PomdpConfig, rng: np.random.Generator
 ):
     """The solver's preferred action from `state` (its `theta` is ignored)."""
-    return make_solver(facts, config).plan(make_agent(state, facts, thetas, config, rng))
+    return make_solver(facts, config, rng).plan(make_agent(state, facts, thetas, config, rng))
 
 
 def solve_limb_motion(ctx: LimbStreamContext, state, target: LimbConf):
@@ -224,7 +229,7 @@ class Session:
             while not state.done:
                 if agent is None:
                     agent = make_agent(state, facts, alive, self.config, self.rng)
-                    solver = make_solver(facts, self.config)
+                    solver = make_solver(facts, self.config, self.rng)
                 action = solver.plan(agent)
                 outcome = "planned"
                 if isinstance(action, MoveBase):
@@ -236,11 +241,16 @@ class Session:
                     approach, coupled = facts.kin[(state.base, action.grasp)]
                     grasp, base = facts.grasps[action.grasp], facts.bases[state.base]
                     plan.append(("grasp", (name, grasp, base, approach, coupled)))
-                elif isinstance(action, MoveLimb):
-                    target = LimbConf(tuple(facts.target(action.waypoint)))
+                elif (along := target_of(action, facts.num_waypoints)) is not None:
+                    target = LimbConf(tuple(facts.path.point(along)))
                     solved = solve_limb_motion(ctx, coupled, target)
                     if solved is None:
-                        facts.blocked.add((state.base, state.grasp, action.waypoint))
+                        # Waypoints (the goal included) by index, other targets by value.
+                        if isinstance(action, MoveLimb):
+                            step = action.waypoint
+                        else:
+                            step = facts.num_waypoints if along >= 1.0 - 1e-9 else along
+                        facts.blocked.add((state.base, state.grasp, step))
                         failed, outcome = True, "MPC failed or a check rejected it"
                     else:
                         trajectory, reached = solved

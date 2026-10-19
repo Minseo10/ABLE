@@ -18,7 +18,7 @@ from pathlib import Path
 
 import numpy as np
 
-PLANNERS = ("pddlstream", "pouct", "pomcp")
+PLANNERS = ("pddlstream", "pouct", "pomcp", "pomcpow")
 
 
 def starting_belief(person: int, nominal_init):

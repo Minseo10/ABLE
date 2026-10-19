@@ -90,7 +90,8 @@ def _model_name(model: str) -> str:
     return f"learned {model}"
 
 
-PLANNER_NAMES = {"pddlstream": "PDDLStream", "pouct": "POUCT", "pomcp": "POMCP"}
+PLANNER_NAMES = {"pddlstream": "PDDLStream", "pouct": "POUCT", "pomcp": "POMCP",
+                 "pomcpow": "POMCPOW"}
 
 
 def _series(frame: pd.DataFrame) -> list[tuple[str, dict, pd.DataFrame]]:

@@ -1,5 +1,6 @@
 """Tests for the POUCT search on hand-made facts: no simulator, no MPC."""
 
+import dataclasses
 import time
 from types import SimpleNamespace
 
@@ -10,8 +11,11 @@ from limb_baseline.human import active_motions
 from limb_baseline.pomdp_model import (
     Clear,
     Grasp,
+    Limit,
     MoveBase,
     MoveLimb,
+    MoveLimbTo,
+    Observation,
     PomdpConfig,
     Stop,
     Transition,
@@ -129,3 +133,60 @@ def test_pomcp_keeps_one_tree_down_the_plan(monkeypatch):
             assert len(built) == trees
         else:
             assert len(built) == len(plan)
+
+
+def test_pomcpow_moves_straight_to_a_safe_goal():
+    config = PomdpConfig(num_waypoints=1, solver="pomcpow")
+    facts = example_facts(0.7, num_waypoints=1)
+    transition, rng = Transition(facts), np.random.default_rng(0)
+    thetas = people([0.8, 0.9, 1.0, 1.1])
+    state, plan = facts.root(thetas[0]), []
+    while not state.done:
+        plan.append(search(state, facts, thetas, config, rng))
+        state = transition.sample(state, plan[-1])
+    assert plan == [MoveBase(0), Grasp(0), MoveLimbTo(1.0)]
+
+
+def test_pomcpow_stops_at_a_continuous_target_short_of_a_risky_goal():
+    config = PomdpConfig(num_waypoints=1, solver="pomcpow")
+    facts = example_facts(0.9, num_waypoints=1)
+    transition, rng = Transition(facts), np.random.default_rng(0)
+    # Reach is 0.5 + 0.4 * along: everyone clears 0.625, one in four the goal.
+    thetas = people([0.75, 0.78, 0.82, 1.0])
+    grasped = transition.sample(
+        transition.sample(facts.root(thetas[0]), MoveBase(0)), Grasp(0)
+    )
+    action = search(grasped, facts, thetas, config, rng)
+    assert isinstance(action, MoveLimbTo) and 0.45 < action.along <= 0.625
+
+
+def test_limit_readings_are_a_distribution_over_bins():
+    facts = example_facts(0.9, num_waypoints=1)
+    config = PomdpConfig()
+    model = Observation(facts, config, np.random.default_rng(0))
+    hit = dataclasses.replace(facts.root(people([0.8])[0]), hit=0, done=True)
+    total = sum(model.probability(Limit(0, b), hit, MoveLimbTo(1.0)) for b in range(-100, 200))
+    assert abs(total - 1.0) < 1e-6
+    assert model.probability(Clear(), hit, MoveLimbTo(1.0)) == 0.0
+    assert model.probability(Clear(), facts.root(), MoveBase(0)) == 1.0
+
+
+def test_pomcpow_blocks_a_failed_goal_and_plans_another_pair(monkeypatch):
+    facts = example_facts(0.7, num_waypoints=1, pairs=((0, 0), (1, 1)))
+    attempts = []
+
+    def fake_mpc(ctx, state, target):
+        attempts.append(target)
+        return None if len(attempts) == 1 else ("torques", "reached")
+
+    monkeypatch.setattr(pomdp_planner, "solve_limb_motion", fake_mpc)
+    ctx = SimpleNamespace(limb_name="limb", start_base_pose="start")
+    session = Session(ctx, PomdpConfig(num_waypoints=1, solver="pomcpow"),
+                      np.random.default_rng(0))
+    thetas = people([0.8, 0.9, 1.0, 1.1])
+    plan = session._plan(facts, session._root(facts), thetas, time.time() + 60)
+
+    assert [step for step, _ in plan] == ["move_base", "grasp", "move_limb"]
+    (blocked_base, _, waypoint), = facts.blocked
+    assert len(attempts) == 2 and waypoint == 1
+    assert plan[0][1][2] is facts.bases[1 - blocked_base]

@@ -415,7 +415,7 @@ def plan_and_execute(
     """Plan `task` under the belief and run it on person `theta`.
 
     `geometry_seed` fixes grasp, base pose and IK; only the MPC noise takes `noise_seed`.
-    `planner` is PDDLStream, or "pouct" or "pomcp" for the POMDP planner.
+    `planner` is PDDLStream, or "pouct", "pomcp" or "pomcpow" for the POMDP planner.
     """
     memo_module.MPC_NOISE_SEED = noise_seed
     STATS.reset()
@@ -869,7 +869,7 @@ def main() -> None:
                         help="Dreams before every episode; plain ignores them.")
     parser.add_argument("--all-goals", action="store_true",
                         help="Each dream also solves every goal of the task set.")
-    parser.add_argument("--planner", choices=("pddlstream", "pouct", "pomcp"),
+    parser.add_argument("--planner", choices=("pddlstream", "pouct", "pomcp", "pomcpow"),
                         default=DreamConfig.planner,
                         help="PDDLStream, or the POMDP planner solved by POUCT or POMCP")
     parser.add_argument("--vary-geometry", action="store_true",

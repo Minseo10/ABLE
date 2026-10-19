@@ -7,6 +7,7 @@ ends the episode and is observed. Simulator-free: planning and execution are in 
 from __future__ import annotations
 
 import dataclasses
+import math
 from dataclasses import dataclass, field
 from types import SimpleNamespace
 
@@ -37,10 +38,19 @@ class PomdpConfig:
     # Limit-reading bin width (scale units of `theta`) and noise (radians).
     resolution: float = 0.02
     tau: float = 0.05
-    # "pouct": a new tree per plan step; "pomcp": one tree kept down the plan.
+    # "pouct": a new tree per plan step; "pomcp": one tree kept down the plan;
+    # "pomcpow": continuous `move_limb` targets, a new tree per plan step.
     solver: str = "pouct"
     num_sims: int = 3000
     exploration: float = 5.0
+    # POMCPOW: simulations, and progressive widening k * N^alpha for actions and
+    # observations (tuned on `example_facts`; wider action widening underrates the root).
+    pomcpow_sims: int = 10000
+    action_widening: tuple[float, float] = (1.0, 0.5)
+    observation_widening: tuple[float, float] = (4.0, 0.5)
+    # POMCPOW: limb moves per plan, and how close to a failed target a new one may be.
+    max_limb_moves: int = 3
+    block_radius: float = 0.05
     # Draws of `theta` when the belief has no particles.
     belief_draws: int = 32
 
@@ -87,6 +97,26 @@ class MoveLimb(pomdp_py.Action):
     """Move the limb to waypoint `waypoint`; the last is the goal."""
 
     waypoint: int
+
+
+@dataclass(frozen=True)
+class MoveLimbTo(pomdp_py.Action):
+    """Move the limb to fraction `along` of the line (POMCPOW's continuous target)."""
+
+    along: float
+
+
+def is_limb_move(action) -> bool:
+    return isinstance(action, (MoveLimb, MoveLimbTo))
+
+
+def target_of(action, num_waypoints: int) -> float | None:
+    """A limb move's target as a fraction of the line; None for other actions."""
+    if isinstance(action, MoveLimbTo):
+        return action.along
+    if isinstance(action, MoveLimb):
+        return action.waypoint / num_waypoints
+    return None
 
 
 @dataclass(frozen=True)
@@ -220,6 +250,13 @@ class Facts:
             and (base, grasp, k) not in self.blocked
         ]
 
+    def target_open(self, base: int, grasp: int, along: float, radius: float) -> bool:
+        """Whether a continuous target is clear of the failed ones on this pair."""
+        return not any(
+            (b, g) == (base, grasp) and isinstance(a, float) and abs(a - along) < radius
+            for b, g, a in self.blocked
+        )
+
     def usable(self) -> bool:
         return any(self.open(base, grasp) for base, grasp in self.kin)
 
@@ -271,19 +308,25 @@ class Transition(pomdp_py.TransitionModel):
             return dataclasses.replace(
                 state, grasp=action.grasp, arm=tuple(grasped.robot_positions), hit=-1
             )
-        n = facts.num_waypoints
-        along, motion = facts.path.advance(state.along, action.waypoint / n, state.theta)
+        target = target_of(action, facts.num_waypoints)
+        along, motion = facts.path.advance(state.along, target, state.theta)
         if motion >= 0:
             return dataclasses.replace(
                 state, limb=tuple(facts.path.point(along)), along=along, hit=motion, done=True
             )
+        # A continuous target's arm joints are unknown until IK at commit time.
+        arm = (
+            state.arm
+            if isinstance(action, MoveLimbTo)
+            else tuple(facts.reach[(state.base, state.grasp)][action.waypoint - 1])
+        )
         return dataclasses.replace(
             state,
-            arm=tuple(facts.reach[(state.base, state.grasp)][action.waypoint - 1]),
-            limb=tuple(facts.target(action.waypoint)),
+            arm=arm,
+            limb=tuple(facts.path.point(target)),
             along=along,
             hit=-1,
-            done=action.waypoint == n,
+            done=target >= 1.0 - 1e-9,
         )
 
 
@@ -293,13 +336,26 @@ class Observation(pomdp_py.ObservationModel):
     def __init__(self, facts: Facts, config: PomdpConfig, rng: np.random.Generator) -> None:
         self.facts, self.config, self.rng = facts, config, rng
 
+    def _noise(self, motion: int) -> float:
+        return self.config.tau / self.facts.path.magnitudes[motion]
+
     def sample(self, next_state: DomainState, action):
-        if not isinstance(action, MoveLimb) or next_state.hit < 0:
+        if not is_limb_move(action) or next_state.hit < 0:
             return Clear()
         motion = next_state.hit
-        noise = self.rng.normal(0.0, self.config.tau / self.facts.path.magnitudes[motion])
-        reading = next_state.theta[motion] + noise
+        reading = next_state.theta[motion] + self.rng.normal(0.0, self._noise(motion))
         return Limit(motion, int(round(reading / self.config.resolution)))
+
+    def probability(self, observation, next_state: DomainState, action) -> float:
+        hit = next_state.hit if is_limb_move(action) else -1
+        if isinstance(observation, Clear):
+            return float(hit < 0)
+        if observation.motion != hit:
+            return 0.0
+        # The Gaussian reading's mass in the observed bin.
+        width, sigma = self.config.resolution, self._noise(hit) * math.sqrt(2.0)
+        low = (observation.bin - 0.5) * width - next_state.theta[hit]
+        return 0.5 * (math.erf((low + width) / sigma) - math.erf(low / sigma))
 
 
 class Reward(pomdp_py.RewardModel):
@@ -312,7 +368,7 @@ class Reward(pomdp_py.RewardModel):
         config = self.config
         if state.done or isinstance(action, Stop):
             return 0.0
-        if not isinstance(action, MoveLimb):
+        if not is_limb_move(action):
             return -config.action_cost
         if next_state.hit >= 0:
             forfeited = config.goal_reward * state.along
@@ -344,6 +400,45 @@ class Policy(pomdp_py.RolloutPolicy):
         # Stop is always legal and worth zero: a leaf's lower bound.
         return Stop()
 
+    def random_action(self, state: DomainState, rng: np.random.Generator):
+        """POMCPOW's rollout: a random legal step, or a random target then `Stop`."""
+        if state.done:
+            return Stop()
+        if state.grasp < 0:
+            actions = self.get_all_actions(state)
+            moves = [a for a in actions if not isinstance(a, Stop)]
+            return moves[rng.integers(len(moves))] if moves else Stop()
+        if state.along >= 1.0 - 1e-9 or rng.random() < 0.5:
+            return Stop()
+        return MoveLimbTo(float(rng.uniform(state.along, 1.0)))
+
+    def new_action(self, state: DomainState, tried, rng: np.random.Generator, config):
+        """POMCPOW's next untried action: the finite ones first, then continuous targets.
+
+        With the limb grasped: `Stop`, the goal if open, then targets drawn uniformly
+        between the limb and the goal, away from failed ones. None when exhausted.
+        """
+        if state.done or state.grasp < 0:
+            return next((a for a in self.get_all_actions(state) if a not in tried), None)
+        facts, base, grasp = self.facts, state.base, state.grasp
+        if Stop() not in tried:
+            return Stop()
+        if state.along >= 1.0 - 1e-9 or (base, grasp) not in facts.kin:
+            return None
+        goal = MoveLimbTo(1.0)
+        if goal not in tried and facts.num_waypoints in facts.open(base, grasp, state.along):
+            return goal
+        for _ in range(10):
+            along = round(float(rng.uniform(state.along, 1.0)), 3)
+            action = MoveLimbTo(along)
+            if (
+                state.along < along < 1.0
+                and action not in tried
+                and facts.target_open(base, grasp, along, config.block_radius)
+            ):
+                return action
+        return None
+
 
 # --------------------------------------------------------------------- belief
 
@@ -357,9 +452,9 @@ def particle_belief(state: DomainState, thetas) -> pomdp_py.Particles:
 
 def surviving(facts: Facts, state: DomainState, action, thetas) -> list:
     """Particles under which `action` meets no limit: the belief after `Clear`."""
-    if not isinstance(action, MoveLimb):
+    target = target_of(action, facts.num_waypoints)
+    if target is None:
         return list(thetas)
-    target = action.waypoint / facts.num_waypoints
     return [theta for theta in thetas if facts.path.advance(state.along, target, theta)[1] < 0]
 
 

@@ -27,7 +27,7 @@ LABEL = {
     "ABLE flow": "ABLE, flow matching",
     "ABLE ddpm": "ABLE, diffusion",
 }
-PLANNERS = {"pddlstream": "PDDLStream", "pouct": "POUCT"}
+PLANNERS = {"pddlstream": "PDDLStream", "pouct": "POUCT", "pomcpow": "POMCPOW"}
 LATE = 5  # episodes from here on are summarised
 
 
