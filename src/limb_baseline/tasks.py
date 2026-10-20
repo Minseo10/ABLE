@@ -265,13 +265,33 @@ class ReachableTaskSampler:
             f"no limb configuration clear of the furniture in {self.max_conf_draws} draws"
         )
 
+    def _self_colliding(self, robot_init) -> bool:
+        """Whether the arm hits itself there; the arm planner can never leave such a start."""
+        from kinder_pddlstream_planning.limbrepositioning3d.utils import extend_with_fingers
+        from pybullet_helpers.motion_planning import check_collisions_with_held_object
+
+        from limb_baseline.utils import saved_sim_state
+
+        sim = self.ctx.sim
+        with saved_sim_state(sim):
+            return check_collisions_with_held_object(
+                sim.robot.arm, [], sim.physics_client_id, None, None,
+                extend_with_fingers(list(robot_init)),
+            )
+
     def _draw_robot_init(self, rng: np.random.Generator) -> NDArray[np.float64]:
         """The robot's own start, jittered around the variant's."""
         nominal = np.asarray(scene_config().robot_initial_joints, np.float64)
-        return nominal + rng.uniform(
-            -self.distribution.robot_jitter,
-            self.distribution.robot_jitter,
-            size=NUM_ROBOT_JOINTS,
+        for _ in range(self.max_conf_draws):
+            robot_init = nominal + rng.uniform(
+                -self.distribution.robot_jitter,
+                self.distribution.robot_jitter,
+                size=NUM_ROBOT_JOINTS,
+            )
+            if not self._self_colliding(robot_init):
+                return robot_init
+        raise RuntimeError(
+            f"no self-collision-free robot start in {self.max_conf_draws} draws"
         )
 
     def sample_init(
