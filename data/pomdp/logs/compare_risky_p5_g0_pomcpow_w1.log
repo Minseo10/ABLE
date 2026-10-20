@@ -1,0 +1,3 @@
+plan-limb-motion: MPC rollout no constraint-valid MPC candidate.
+plan-limb-motion: MPC rollout robot joint limits.
+plan-limb-motion: generated a trajectory with 561 steps.

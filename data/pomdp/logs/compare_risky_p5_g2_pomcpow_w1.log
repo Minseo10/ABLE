@@ -1,0 +1,5 @@
+plan-limb-motion: MPC rollout motion attempt exceeded 180 s.
+plan-limb-motion: MPC rollout replayed open-loop past the robot velocity limit.
+plan-limb-motion: MPC rollout replayed open-loop to 0.287, outside the tolerance.
+plan-limb-motion: MPC rollout replayed open-loop to 0.189, outside the tolerance.
+plan-limb-motion: generated a trajectory with 526 steps.
