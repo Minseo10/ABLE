@@ -1,6 +1,8 @@
-"""Compare PDDLStream with the POMDP planner, solved by POUCT and by POMCP.
+"""Compare PDDLStream with the POMDP planners: POUCT, POMCP and POMCPOW.
 
 All planners share person, goal, prior belief, particles and seed; one process per episode.
+`--goal-mode risky` poses goals that pass the belief check but that some particles
+place past the person's limit, where stopping short can pay.
 
     python scripts/pomdp_compare.py --people 3 --goals 3 --jobs 9 \\
         --out data/pomdp/compare.csv
@@ -49,6 +51,59 @@ def draw_tasks(person: int, num_goals: int) -> tuple[list, tuple]:
     return task_set.tasks, tuple(task_set.nominal.limb_init)
 
 
+def particle_share(limits, goal) -> float:
+    """The share of belief particles that allow `goal`."""
+    goal = np.asarray(goal, dtype=np.float64)
+    return float(np.mean(np.all((limits.lower <= goal) & (goal <= limits.upper), axis=1)))
+
+
+def draw_risky_tasks(person: int, num_goals: int, band: tuple[float, float]) -> tuple[list, tuple]:
+    """Goals from the nominal start whose particle share lies in `band`."""
+    from limb_baseline.human import theta_to_joint_limits
+    from limb_baseline.tasks import DEFAULT_TASK_DISTRIBUTION
+    from limb_baseline.dream_pipeline import distance
+    from limb_baseline.worker import task_sampler
+
+    tasks, nominal_init = draw_tasks(person, 1)
+    nominal = tasks[0]
+    _, believed, _ = starting_belief(person, nominal_init)
+    sampler = task_sampler()
+    # Directions toward the widest plausible range.
+    low, high = theta_to_joint_limits(np.quantile(believed.limits.particles, 0.95, axis=0))
+    rng = np.random.default_rng(person + 1000)
+    init = np.asarray(nominal.limb_init, dtype=np.float64)
+    separations = np.linspace(DEFAULT_TASK_DISTRIBUTION.min_separation,
+                              DEFAULT_TASK_DISTRIBUTION.max_separation, 41)
+    found = []
+    for _ in range(2000):
+        # A direction, then a distance on it whose share is in `band`; particle boxes are
+        # convex, so the share only falls along it.
+        toward = sampler._draw_limb_conf(rng, low, high)  # pylint: disable=protected-access
+        length = distance(init, toward)
+        if length < 1e-6:
+            continue
+        candidates = [init + (toward - init) * d / length for d in separations]
+        candidates = [g for g in candidates
+                      if band[0] <= particle_share(believed.limits, g) <= band[1]]
+        if not candidates:
+            continue
+        goal = candidates[int(rng.integers(len(candidates)))]
+        if not sampler._reachable_from(nominal.base_pose, nominal.limb_init, goal):  # pylint: disable=protected-access
+            continue
+        found.append(dataclasses.replace(nominal, limb_goal=tuple(goal)))
+        if len(found) == num_goals:
+            return found, nominal_init
+    raise RuntimeError(f"only {len(found)} risky goals for person {person}")
+
+
+def draw_risky_fresh(variant: str, person: int, num_goals: int, band) -> tuple[list, tuple]:
+    """`draw_risky_tasks` in a fresh process: sampling depends on the simulator's history."""
+    from limb_baseline.variant import select
+
+    select(variant)
+    return draw_risky_tasks(person, num_goals, band)
+
+
 def run_one(job: dict, on_search=None) -> dict:
     """Run one planner's episode; return its CSV row."""
     from limb_baseline.variant import select
@@ -58,6 +113,7 @@ def run_one(job: dict, on_search=None) -> dict:
     from kinder_pddlstream_planning.limbrepositioning3d.stream import MPCConfig
 
     from limb_baseline.dream_pipeline import distance, goal_distance, observe
+    from limb_baseline.human import theta_to_joint_limits
     from limb_baseline.planner import PlannerSettings, run_episode
     from limb_baseline.pomdp_model import PLAN_ONCE
     from limb_baseline.pomdp_planner import run_episode_plan_once
@@ -86,13 +142,20 @@ def run_one(job: dict, on_search=None) -> dict:
                 )
                 result = run_episode_plan_once(*shared, believed.limits, config, on_search)
             after, _ = observe(believed.belief, result.limb_path, theta)
+            lower, upper = theta_to_joint_limits(theta)
+            goal = np.asarray(target.limb_goal)
+            reached = goal_distance(task, result)
             row.update(
                 theta=" ".join(f"{v:.3f}" for v in theta),
                 goal_beyond_belief=retargeted,
                 retarget_shift=round(distance(target.limb_goal, task.limb_goal), 4),
+                goal_particle_share=round(particle_share(believed.limits, goal), 3),
+                goal_in_true_range=bool(np.all((lower <= goal) & (goal <= upper))),
                 solved=result.solved,
                 goal_reached=result.goal_reached,
-                goal_distance=round(goal_distance(task, result), 4),
+                goal_distance=round(reached, 4),
+                # Share of the way to the goal at the end.
+                progress=round(1.0 - reached / distance(task.limb_init, task.limb_goal), 3),
                 plan_time=round(result.plan_time, 1),
                 execute_time=round(result.execute_time, 1),
                 moves=result.num_segments,
@@ -113,11 +176,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     parser.add_argument("--variant", default="isolated-left-arm")
     parser.add_argument("--people", type=int, default=3)
+    parser.add_argument("--person-ids", type=int, nargs="+", help="instead of range(--people)")
     parser.add_argument("--goals", type=int, default=3, help="goals per person")
     parser.add_argument("--planners", nargs="+", default=list(PLANNERS), choices=PLANNERS)
     parser.add_argument("--num-waypoints", type=int, nargs="+", default=[1],
-                        help="POMDP move_limb targets on the line to the goal; each "
-                             "count is its own planner, e.g. pomcp_w4")
+                        help="POUCT/POMCP move_limb targets on the line to the goal; each "
+                             "count is its own planner, e.g. pomcp_w4 (POMCPOW: always 1)")
+    parser.add_argument("--goal-mode", choices=("fresh", "risky"), default="fresh")
+    parser.add_argument("--risk-band", type=float, nargs=2, default=(0.5, 0.85),
+                        help="risky goals: the share of particles allowing the goal")
     parser.add_argument("--num-rollouts", type=int, default=64)
     parser.add_argument("--max-time", type=float, default=600.0)
     parser.add_argument("--jobs", type=int, default=9)
@@ -134,11 +201,19 @@ def main() -> None:
     configurations = [
         (planner, None, 1) if planner == "pddlstream" else (f"{planner}_w{n}", planner, n)
         for planner in args.planners
-        for n in ([1] if planner == "pddlstream" else args.num_waypoints)
+        for n in ([1] if planner in ("pddlstream", "pomcpow") else args.num_waypoints)
     ]
+    people = list(args.person_ids or range(args.people))
+    context = multiprocessing.get_context("spawn")
+    if args.goal_mode == "risky":
+        with context.Pool(min(len(people), args.jobs), maxtasksperchild=1) as pool:
+            drawn = pool.starmap(draw_risky_fresh, [
+                (args.variant, person, args.goals, tuple(args.risk_band)) for person in people
+            ])
+    else:
+        drawn = [draw_tasks(person, args.goals) for person in people]
     jobs = []
-    for person in range(args.people):
-        tasks, nominal_init = draw_tasks(person, args.goals)
+    for person, (tasks, nominal_init) in zip(people, drawn):
         for goal, task in enumerate(tasks):
             for planner, solver, waypoints in configurations:
                 jobs.append({
@@ -158,7 +233,6 @@ def main() -> None:
     print(f"TOTAL {len(jobs)} episodes", flush=True)
     out.parent.mkdir(parents=True, exist_ok=True)
     rows = []
-    context = multiprocessing.get_context("spawn")
     with ProcessPoolExecutor(max_workers=args.jobs, mp_context=context) as pool:
         futures = [pool.submit(run_one, job) for job in jobs]
         for done in as_completed(futures):
