@@ -95,6 +95,8 @@ RETARGET_MARGIN = 0.05
 # starts at zero: a start on the edge leaves the planner no room to move without
 # touching the believed limit it has just learned from that start.
 START_FRACTION = 0.8
+# POMDP planner overrides of `PLAN_ONCE` (e.g. num_grasps), set by `--pomdp-pairs`.
+POMDP_OVERRIDES: dict = {}
 
 
 @dataclass(frozen=True)
@@ -434,7 +436,8 @@ def plan_and_execute(
         from limb_baseline.pomdp_planner import run_episode_plan_once
 
         plan_episode = partial(
-            run_episode_plan_once, config=dataclasses.replace(PLAN_ONCE, solver=planner)
+            run_episode_plan_once,
+            config=dataclasses.replace(PLAN_ONCE, solver=planner, **POMDP_OVERRIDES),
         )
     result = plan_episode(
         target,
@@ -872,6 +875,8 @@ def main() -> None:
     parser.add_argument("--planner", choices=("pddlstream", "pouct", "pomcp", "pomcpow"),
                         default=DreamConfig.planner,
                         help="PDDLStream, or the POMDP planner solved by POUCT or POMCP")
+    parser.add_argument("--pomdp-pairs", type=int, nargs=2, metavar=("GRASPS", "BASES"),
+                        help="POMDP planner: grasps per refill and base poses per grasp.")
     parser.add_argument("--vary-geometry", action="store_true",
                         help="Sample grasp, base pose and IK afresh for every plan.")
     parser.add_argument("--random-goals", action="store_true",
@@ -927,6 +932,9 @@ def main() -> None:
     make_regressor(args.model)  # fail on a bad spec before any planning
     select_variant(args.variant)
     SEED.mode = args.seed_mode
+    if args.pomdp_pairs:
+        grasps, bases = args.pomdp_pairs
+        POMDP_OVERRIDES.update(num_grasps=grasps, bases_per_grasp=bases)
     SEED.rollouts = args.seed_rollouts
     SEED.reuse = args.seed_reuse
     mpc = dataclasses.replace(
