@@ -43,6 +43,7 @@ __all__ = [
     "RolloutLog",
     "advance_logged",
     "base_candidates",
+    "execute_action",
     "execute_plan",
     "grasp_ik",
     "saved_sim_state",
@@ -83,54 +84,62 @@ def advance_logged(sim, correction, log: RolloutLog) -> HumanTorques:
     return human
 
 
+def execute_action(
+    ctx: LimbStreamContext, name: str, args: tuple, log: RolloutLog | None = None
+) -> bool:
+    """Execute one plan action; False if it broke a constraint.
+
+    Only `move_limb` steps are logged, so `log` indexes torque steps one to one.
+    """
+    sim = ctx.sim
+    if name == "move_base":
+        _, base_plan, _ = args
+        release_grasp(sim)
+        for target_base in base_plan[1:]:
+            sim.robot.set_base(target_base)
+            if ctx.check_base_collisions and base_in_collision(ctx):
+                return False
+    elif name == "grasp":
+        _, _, base_conf, arm_trajectory, _ = args
+        assert isinstance(arm_trajectory, ArmTrajectory)
+        sim.robot.set_base(base_conf)
+        for waypoint in arm_trajectory.joint_plan:
+            sim.robot.arm.set_joints(list(waypoint))
+            if arm_in_collision(ctx) or human_in_collision(ctx):
+                return False
+        engage_grasp(sim)
+    elif name == "move_limb":
+        _, _, _, _, _, _, torque_trajectory, _ = args
+        assert isinstance(torque_trajectory, TorqueTrajectory)
+        for torque in torque_trajectory.robot_torques:
+            commanded = np.asarray(torque, dtype=np.float64) + hold_torque(sim)
+            if exceeds_robot_torque_limits(ctx, commanded):
+                return False
+            if log is None:
+                human = advance(sim, commanded)
+            else:
+                human = advance_logged(sim, torque, log)
+            if exceeds_human_torque_limits(ctx, human):
+                return False
+            if robot_motion_violation(ctx) or limb_out_of_limits(ctx):
+                return False
+            if arm_in_collision(ctx) or human_in_collision(ctx):
+                return False
+    else:
+        raise ValueError(f"Unknown action: {name}")
+    return True
+
+
 def execute_plan(
     ctx: LimbStreamContext,
     plan: list[tuple[str, tuple]],
     log: RolloutLog | None = None,
 ) -> bool:
-    """`run.execute_plan`, with the optional per-step log `main` no longer takes.
-
-    Same action handling as the planner's own; only the `move_limb` steps are logged, so
-    `log` indexes torque steps one to one.
-    """
-    sim = ctx.sim
+    """`run.execute_plan`, with the optional per-step log `main` no longer takes."""
     for name, args in plan:
-        if name == "move_base":
-            _, base_plan, _ = args
-            release_grasp(sim)
-            for target_base in base_plan[1:]:
-                sim.robot.set_base(target_base)
-                if ctx.check_base_collisions and base_in_collision(ctx):
-                    return False
-        elif name == "grasp":
-            _, _, base_conf, arm_trajectory, _ = args
-            assert isinstance(arm_trajectory, ArmTrajectory)
-            sim.robot.set_base(base_conf)
-            for waypoint in arm_trajectory.joint_plan:
-                sim.robot.arm.set_joints(list(waypoint))
-                if arm_in_collision(ctx) or human_in_collision(ctx):
-                    return False
-            engage_grasp(sim)
-        elif name == "move_limb":
-            _, _, _, _, _, _, torque_trajectory, _ = args
-            assert isinstance(torque_trajectory, TorqueTrajectory)
-            for torque in torque_trajectory.robot_torques:
-                commanded = np.asarray(torque, dtype=np.float64) + hold_torque(sim)
-                if exceeds_robot_torque_limits(ctx, commanded):
-                    return False
-                if log is None:
-                    human = advance(sim, commanded)
-                else:
-                    human = advance_logged(sim, torque, log)
-                if exceeds_human_torque_limits(ctx, human):
-                    return False
-                if robot_motion_violation(ctx) or limb_out_of_limits(ctx):
-                    return False
-                if arm_in_collision(ctx) or human_in_collision(ctx):
-                    return False
-        else:
-            raise ValueError(f"Unknown action: {name}")
-    return sim.goal_reached()
+        if not execute_action(ctx, name, args, log):
+            return False
+    return ctx.sim.goal_reached()
 
 
 def base_candidates(

@@ -1,0 +1,619 @@
+pybullet build time: Mar 13 2026 19:11:15
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootnearby person 0: 3 goals
+nearby person 1: 3 goals
+nearby person 2: 3 goals
+nearby person 3: 3 goals
+nearby person 4: 3 goals
+nearby person 5: 3 goals
+nearby person 6: 3 goals
+nearby person 7: 3 goals
+beyond person 0: 3 goals
+beyond person 1: 3 goals
+beyond person 2: 0 goals
+beyond person 3: 0 goals
+beyond person 4: 3 goals
+beyond person 5: 0 goals
+beyond person 6: 3 goals
+beyond person 7: 3 goals
+TOTAL 117 episodes
+pybullet build time: Mar 13 2026 19:11:15
+pybullet build time: Mar 13 2026 19:11:15
+pybullet build time: Mar 13 2026 19:11:15
+pybullet build time: Mar 13 2026 19:11:15
+pybullet build time: Mar 13 2026 19:11:15
+pybullet build time: Mar 13 2026 19:11:15
+pybullet build time: Mar 13 2026 19:11:15
+pybullet build time: Mar 13 2026 19:11:15
+pybullet build time: Mar 13 2026 19:11:15
+pybullet build time: Mar 13 2026 19:11:15
+pybullet build time: Mar 13 2026 19:11:15
+pybullet build time: Mar 13 2026 19:11:15
+pybullet build time: Mar 13 2026 19:11:15
+pybullet build time: Mar 13 2026 19:11:15
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameNo inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootbase_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[1/117] {'planner': 'pddlstream', 'person': 1, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0498, 'plan_time': 73.7, 'execute_time': 1.2, 'moves': 1, 'control_steps': 33, 'mpc_rollouts': 2112, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3392, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[2/117] {'planner': 'pomdp_loop', 'person': 0, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 76.0, 'execute_time': 0.1, 'moves': 1, 'control_steps': 31, 'mpc_rollouts': 1984, 'rom_violation_steps': 0, 'belief_width_before': 0.341, 'belief_width_after': 0.3401, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[3/117] {'planner': 'pomdp_once', 'person': 0, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 76.9, 'execute_time': 0.1, 'moves': 1, 'control_steps': 31, 'mpc_rollouts': 1984, 'rom_violation_steps': 0, 'belief_width_before': 0.341, 'belief_width_after': 0.3401, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[4/117] {'planner': 'pddlstream', 'person': 0, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0496, 'plan_time': 83.8, 'execute_time': 0.2, 'moves': 1, 'control_steps': 41, 'mpc_rollouts': 2624, 'rom_violation_steps': 0, 'belief_width_before': 0.341, 'belief_width_after': 0.3394, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[5/117] {'planner': 'pomdp_once', 'person': 0, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0497, 'plan_time': 95.3, 'execute_time': 0.2, 'moves': 1, 'control_steps': 40, 'mpc_rollouts': 2560, 'rom_violation_steps': 0, 'belief_width_before': 0.341, 'belief_width_after': 0.3101, 'failure_reason': ''}
+[6/117] {'planner': 'pomdp_loop', 'person': 0, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.05, 'plan_time': 95.4, 'execute_time': 0.2, 'moves': 1, 'control_steps': 38, 'mpc_rollouts': 2432, 'rom_violation_steps': 0, 'belief_width_before': 0.341, 'belief_width_after': 0.3107, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[7/117] {'planner': 'pddlstream', 'person': 0, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 105.5, 'execute_time': 1.2, 'moves': 1, 'control_steps': 42, 'mpc_rollouts': 2688, 'rom_violation_steps': 0, 'belief_width_before': 0.341, 'belief_width_after': 0.3179, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[8/117] {'planner': 'pddlstream', 'person': 0, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0497, 'plan_time': 112.3, 'execute_time': 0.2, 'moves': 1, 'control_steps': 58, 'mpc_rollouts': 3712, 'rom_violation_steps': 0, 'belief_width_before': 0.341, 'belief_width_after': 0.3101, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[9/117] {'planner': 'pomdp_once', 'person': 1, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0497, 'plan_time': 117.1, 'execute_time': 0.2, 'moves': 1, 'control_steps': 48, 'mpc_rollouts': 3072, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3205, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[10/117] {'planner': 'pddlstream', 'person': 1, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0497, 'plan_time': 117.9, 'execute_time': 0.2, 'moves': 1, 'control_steps': 48, 'mpc_rollouts': 3072, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3205, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[11/117] {'planner': 'pomdp_loop', 'person': 1, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.05, 'plan_time': 131.2, 'execute_time': 0.2, 'moves': 1, 'control_steps': 52, 'mpc_rollouts': 3328, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3204, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[12/117] {'planner': 'pomdp_loop', 'person': 0, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0495, 'plan_time': 144.7, 'execute_time': 0.2, 'moves': 2, 'control_steps': 53, 'mpc_rollouts': 3392, 'rom_violation_steps': 0, 'belief_width_before': 0.341, 'belief_width_after': 0.3204, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[13/117] {'planner': 'pomdp_once', 'person': 0, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.05, 'plan_time': 155.0, 'execute_time': 0.4, 'moves': 1, 'control_steps': 90, 'mpc_rollouts': 5760, 'rom_violation_steps': 0, 'belief_width_before': 0.341, 'belief_width_after': 0.3158, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[14/117] {'planner': 'pddlstream', 'person': 1, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0497, 'plan_time': 92.8, 'execute_time': 0.1, 'moves': 1, 'control_steps': 30, 'mpc_rollouts': 1920, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3219, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[15/117] {'planner': 'pomdp_once', 'person': 1, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0498, 'plan_time': 106.2, 'execute_time': 1.2, 'moves': 1, 'control_steps': 35, 'mpc_rollouts': 2240, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3219, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[16/117] {'planner': 'pomdp_loop', 'person': 1, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0498, 'plan_time': 105.8, 'execute_time': 0.2, 'moves': 1, 'control_steps': 35, 'mpc_rollouts': 2240, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3219, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[17/117] {'planner': 'pddlstream', 'person': 3, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.963 0.815 0.832', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 65.5, 'execute_time': 0.1, 'moves': 1, 'control_steps': 20, 'mpc_rollouts': 1280, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[18/117] {'planner': 'pomdp_once', 'person': 3, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.963 0.815 0.832', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0496, 'plan_time': 77.1, 'execute_time': 0.1, 'moves': 1, 'control_steps': 23, 'mpc_rollouts': 1472, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[19/117] {'planner': 'pomdp_once', 'person': 1, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 267.1, 'execute_time': 0.2, 'moves': 1, 'control_steps': 36, 'mpc_rollouts': 2304, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3391, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[20/117] {'planner': 'pomdp_loop', 'person': 3, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.963 0.815 0.832', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0496, 'plan_time': 77.6, 'execute_time': 0.1, 'moves': 1, 'control_steps': 23, 'mpc_rollouts': 1472, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[21/117] {'planner': 'pddlstream', 'person': 3, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.963 0.815 0.832', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 87.7, 'execute_time': 0.1, 'moves': 1, 'control_steps': 29, 'mpc_rollouts': 1856, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[22/117] {'planner': 'pomdp_loop', 'person': 1, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 267.6, 'execute_time': 0.2, 'moves': 1, 'control_steps': 36, 'mpc_rollouts': 2304, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3391, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[23/117] {'planner': 'pomdp_once', 'person': 3, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.963 0.815 0.832', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 82.3, 'execute_time': 0.1, 'moves': 1, 'control_steps': 25, 'mpc_rollouts': 1600, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[24/117] {'planner': 'pomdp_loop', 'person': 3, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.963 0.815 0.832', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 81.8, 'execute_time': 0.1, 'moves': 1, 'control_steps': 25, 'mpc_rollouts': 1600, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[25/117] {'planner': 'pddlstream', 'person': 3, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.963 0.815 0.832', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0496, 'plan_time': 91.0, 'execute_time': 1.2, 'moves': 1, 'control_steps': 30, 'mpc_rollouts': 1920, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[26/117] {'planner': 'pomdp_once', 'person': 3, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.963 0.815 0.832', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0498, 'plan_time': 96.8, 'execute_time': 0.2, 'moves': 1, 'control_steps': 34, 'mpc_rollouts': 2176, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[27/117] {'planner': 'pddlstream', 'person': 4, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0496, 'plan_time': 92.9, 'execute_time': 0.1, 'moves': 1, 'control_steps': 27, 'mpc_rollouts': 1728, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.3018, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[28/117] {'planner': 'pomdp_loop', 'person': 3, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.963 0.815 0.832', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0498, 'plan_time': 98.0, 'execute_time': 0.2, 'moves': 1, 'control_steps': 34, 'mpc_rollouts': 2176, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[29/117] {'planner': 'pomdp_once', 'person': 4, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0496, 'plan_time': 95.9, 'execute_time': 0.1, 'moves': 1, 'control_steps': 29, 'mpc_rollouts': 1856, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.3022, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[30/117] {'planner': 'pomdp_loop', 'person': 4, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0496, 'plan_time': 95.7, 'execute_time': 0.2, 'moves': 1, 'control_steps': 29, 'mpc_rollouts': 1856, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.3022, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[31/117] {'planner': 'pddlstream', 'person': 4, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': True, 'retarget_shift': 0.2853, 'solved': True, 'goal_reached': True, 'goal_distance': 0.3002, 'plan_time': 114.9, 'execute_time': 0.1, 'moves': 1, 'control_steps': 35, 'mpc_rollouts': 2240, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2865, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[32/117] {'planner': 'pomdp_once', 'person': 4, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': True, 'retarget_shift': 0.2853, 'solved': True, 'goal_reached': True, 'goal_distance': 0.2801, 'plan_time': 107.4, 'execute_time': 0.1, 'moves': 1, 'control_steps': 33, 'mpc_rollouts': 2112, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2862, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[33/117] {'planner': 'pddlstream', 'person': 4, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 118.1, 'execute_time': 0.2, 'moves': 1, 'control_steps': 36, 'mpc_rollouts': 2304, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2866, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[34/117] {'planner': 'pomdp_once', 'person': 4, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 115.2, 'execute_time': 0.2, 'moves': 1, 'control_steps': 38, 'mpc_rollouts': 2432, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2875, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[35/117] {'planner': 'pomdp_loop', 'person': 4, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': True, 'retarget_shift': 0.2853, 'solved': True, 'goal_reached': True, 'goal_distance': 0.2369, 'plan_time': 141.4, 'execute_time': 0.2, 'moves': 2, 'control_steps': 41, 'mpc_rollouts': 2624, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2834, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[36/117] {'planner': 'pomdp_loop', 'person': 4, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 117.8, 'execute_time': 0.2, 'moves': 1, 'control_steps': 38, 'mpc_rollouts': 2432, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2875, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[37/117] {'planner': 'pddlstream', 'person': 5, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.780 0.701 0.863', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0498, 'plan_time': 86.9, 'execute_time': 0.1, 'moves': 1, 'control_steps': 32, 'mpc_rollouts': 2048, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[38/117] {'planner': 'pddlstream', 'person': 5, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.780 0.701 0.863', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0498, 'plan_time': 134.6, 'execute_time': 0.2, 'moves': 1, 'control_steps': 46, 'mpc_rollouts': 2944, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[39/117] {'planner': 'pomdp_loop', 'person': 5, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.780 0.701 0.863', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0498, 'plan_time': 117.5, 'execute_time': 0.1, 'moves': 1, 'control_steps': 34, 'mpc_rollouts': 2176, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[40/117] {'planner': 'pddlstream', 'person': 2, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.928 0.822 0.838', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 0.9024, 'plan_time': 600.0, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'hit the 600 s hard planning time limit'}
+[41/117] {'planner': 'pomdp_once', 'person': 2, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.928 0.822 0.838', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 0.9024, 'plan_time': 600.0, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'hit the 600 s hard planning time limit'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[42/117] {'planner': 'pomdp_once', 'person': 5, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.780 0.701 0.863', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 130.6, 'execute_time': 0.3, 'moves': 1, 'control_steps': 55, 'mpc_rollouts': 3520, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[43/117] {'planner': 'pomdp_loop', 'person': 2, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.928 0.822 0.838', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 0.9024, 'plan_time': 600.0, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'hit the 600 s hard planning time limit'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[44/117] {'planner': 'pddlstream', 'person': 2, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.928 0.822 0.838', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 0.5093, 'plan_time': 600.0, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'hit the 600 s hard planning time limit'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[45/117] {'planner': 'pomdp_once', 'person': 2, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.928 0.822 0.838', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 0.5093, 'plan_time': 600.0, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'hit the 600 s hard planning time limit'}
+[46/117] {'planner': 'pomdp_loop', 'person': 2, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.928 0.822 0.838', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 0.5093, 'plan_time': 600.0, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'hit the 600 s hard planning time limit'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[47/117] {'planner': 'pddlstream', 'person': 2, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.928 0.822 0.838', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 0.9504, 'plan_time': 600.0, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'hit the 600 s hard planning time limit'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[48/117] {'planner': 'pomdp_once', 'person': 2, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.928 0.822 0.838', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 0.9504, 'plan_time': 600.0, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'hit the 600 s hard planning time limit'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[49/117] {'planner': 'pomdp_once', 'person': 5, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.780 0.701 0.863', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 97.5, 'execute_time': 0.1, 'moves': 1, 'control_steps': 28, 'mpc_rollouts': 1792, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[50/117] {'planner': 'pomdp_loop', 'person': 2, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.928 0.822 0.838', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 0.9504, 'plan_time': 600.0, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'hit the 600 s hard planning time limit'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[51/117] {'planner': 'pomdp_loop', 'person': 5, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.780 0.701 0.863', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 94.9, 'execute_time': 0.1, 'moves': 1, 'control_steps': 28, 'mpc_rollouts': 1792, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[52/117] {'planner': 'pddlstream', 'person': 5, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.780 0.701 0.863', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.05, 'plan_time': 97.3, 'execute_time': 0.1, 'moves': 1, 'control_steps': 34, 'mpc_rollouts': 2176, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[53/117] {'planner': 'pomdp_loop', 'person': 5, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.780 0.701 0.863', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0495, 'plan_time': 95.9, 'execute_time': 0.2, 'moves': 1, 'control_steps': 29, 'mpc_rollouts': 1856, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[54/117] {'planner': 'pomdp_once', 'person': 5, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.780 0.701 0.863', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0495, 'plan_time': 97.7, 'execute_time': 0.1, 'moves': 1, 'control_steps': 29, 'mpc_rollouts': 1856, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[55/117] {'planner': 'pomdp_loop', 'person': 6, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.05, 'plan_time': 83.3, 'execute_time': 1.2, 'moves': 1, 'control_steps': 26, 'mpc_rollouts': 1664, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[56/117] {'planner': 'pomdp_once', 'person': 6, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.05, 'plan_time': 85.1, 'execute_time': 0.1, 'moves': 1, 'control_steps': 26, 'mpc_rollouts': 1664, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[57/117] {'planner': 'pomdp_once', 'person': 6, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0497, 'plan_time': 109.1, 'execute_time': 0.1, 'moves': 1, 'control_steps': 34, 'mpc_rollouts': 2176, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[58/117] {'planner': 'pddlstream', 'person': 6, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.05, 'plan_time': 112.7, 'execute_time': 0.2, 'moves': 1, 'control_steps': 34, 'mpc_rollouts': 2176, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[59/117] {'planner': 'pomdp_loop', 'person': 6, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0497, 'plan_time': 110.9, 'execute_time': 0.1, 'moves': 1, 'control_steps': 32, 'mpc_rollouts': 2048, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[60/117] {'planner': 'pddlstream', 'person': 6, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 97.1, 'execute_time': 0.1, 'moves': 1, 'control_steps': 29, 'mpc_rollouts': 1856, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[61/117] {'planner': 'pomdp_loop', 'person': 6, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0497, 'plan_time': 112.0, 'execute_time': 0.1, 'moves': 1, 'control_steps': 30, 'mpc_rollouts': 1920, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[62/117] {'planner': 'pomdp_once', 'person': 6, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 125.4, 'execute_time': 0.1, 'moves': 1, 'control_steps': 33, 'mpc_rollouts': 2112, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[63/117] {'planner': 'pddlstream', 'person': 6, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': True, 'goal_reached': True, 'goal_distance': 0.05, 'plan_time': 169.2, 'execute_time': 0.3, 'moves': 1, 'control_steps': 60, 'mpc_rollouts': 3840, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[64/117] {'planner': 'pddlstream', 'person': 0, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': True, 'retarget_shift': 0.1825, 'solved': True, 'goal_reached': True, 'goal_distance': 0.2321, 'plan_time': 146.0, 'execute_time': 0.2, 'moves': 1, 'control_steps': 47, 'mpc_rollouts': 3008, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.31, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[65/117] {'planner': 'pddlstream', 'person': 0, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': True, 'retarget_shift': 0.1854, 'solved': True, 'goal_reached': True, 'goal_distance': 0.2337, 'plan_time': 120.1, 'execute_time': 0.2, 'moves': 1, 'control_steps': 44, 'mpc_rollouts': 2816, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3094, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[66/117] {'planner': 'pomdp_once', 'person': 0, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': True, 'retarget_shift': 0.1854, 'solved': True, 'goal_reached': True, 'goal_distance': 0.2337, 'plan_time': 123.6, 'execute_time': 0.2, 'moves': 1, 'control_steps': 44, 'mpc_rollouts': 2816, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3094, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[67/117] {'planner': 'pomdp_loop', 'person': 0, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': True, 'retarget_shift': 0.1825, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0707, 'plan_time': 337.9, 'execute_time': 0.5, 'moves': 2, 'control_steps': 99, 'mpc_rollouts': 6336, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.2965, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[68/117] {'planner': 'pddlstream', 'person': 7, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': True, 'retarget_shift': 0.0912, 'solved': False, 'goal_reached': False, 'goal_distance': 1.4402, 'plan_time': 475.8, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[69/117] {'planner': 'pomdp_once', 'person': 7, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': True, 'retarget_shift': 0.0912, 'solved': False, 'goal_reached': False, 'goal_distance': 1.4402, 'plan_time': 482.1, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[70/117] {'planner': 'pomdp_loop', 'person': 7, 'goal': 0, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': True, 'retarget_shift': 0.0912, 'solved': False, 'goal_reached': False, 'goal_distance': 1.4402, 'plan_time': 484.6, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[71/117] {'planner': 'pddlstream', 'person': 7, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 1.2134, 'plan_time': 483.4, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[72/117] {'planner': 'pomdp_once', 'person': 0, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': True, 'retarget_shift': 0.1825, 'solved': True, 'goal_reached': True, 'goal_distance': 0.2321, 'plan_time': 460.7, 'execute_time': 0.2, 'moves': 1, 'control_steps': 47, 'mpc_rollouts': 3008, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.31, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[73/117] {'planner': 'pomdp_loop', 'person': 7, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 1.2134, 'plan_time': 484.4, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[74/117] {'planner': 'pomdp_once', 'person': 7, 'goal': 2, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 1.2134, 'plan_time': 486.6, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[75/117] {'planner': 'pomdp_once', 'person': 7, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 0.8779, 'plan_time': 506.2, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[76/117] {'planner': 'pddlstream', 'person': 7, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 0.8779, 'plan_time': 506.4, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[77/117] {'planner': 'pomdp_loop', 'person': 7, 'goal': 1, 'goals': 'nearby', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': False, 'retarget_shift': 0.0, 'solved': False, 'goal_reached': False, 'goal_distance': 0.8779, 'plan_time': 506.6, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[78/117] {'planner': 'pddlstream', 'person': 0, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': True, 'retarget_shift': 0.1315, 'solved': True, 'goal_reached': True, 'goal_distance': 0.1814, 'plan_time': 322.8, 'execute_time': 0.2, 'moves': 1, 'control_steps': 45, 'mpc_rollouts': 2880, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3093, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[79/117] {'planner': 'pddlstream', 'person': 1, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': True, 'retarget_shift': 0.1997, 'solved': True, 'goal_reached': True, 'goal_distance': 0.2496, 'plan_time': 97.1, 'execute_time': 0.1, 'moves': 1, 'control_steps': 32, 'mpc_rollouts': 2048, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3056, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[80/117] {'planner': 'pomdp_once', 'person': 0, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': True, 'retarget_shift': 0.1315, 'solved': True, 'goal_reached': True, 'goal_distance': 0.1205, 'plan_time': 332.4, 'execute_time': 0.2, 'moves': 1, 'control_steps': 48, 'mpc_rollouts': 3072, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.306, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[81/117] {'planner': 'pomdp_once', 'person': 1, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': True, 'retarget_shift': 0.1997, 'solved': True, 'goal_reached': True, 'goal_distance': 0.2496, 'plan_time': 102.2, 'execute_time': 0.1, 'moves': 1, 'control_steps': 32, 'mpc_rollouts': 2048, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3056, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[82/117] {'planner': 'pddlstream', 'person': 1, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': True, 'retarget_shift': 0.1131, 'solved': True, 'goal_reached': True, 'goal_distance': 0.1562, 'plan_time': 116.0, 'execute_time': 0.2, 'moves': 1, 'control_steps': 37, 'mpc_rollouts': 2368, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3042, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[83/117] {'planner': 'pddlstream', 'person': 4, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': True, 'retarget_shift': 0.1358, 'solved': True, 'goal_reached': True, 'goal_distance': 0.1667, 'plan_time': 106.0, 'execute_time': 0.1, 'moves': 1, 'control_steps': 32, 'mpc_rollouts': 2048, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2881, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[84/117] {'planner': 'pomdp_once', 'person': 4, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': True, 'retarget_shift': 0.1358, 'solved': True, 'goal_reached': True, 'goal_distance': 0.1667, 'plan_time': 104.2, 'execute_time': 0.1, 'moves': 1, 'control_steps': 32, 'mpc_rollouts': 2048, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2881, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[85/117] {'planner': 'pomdp_loop', 'person': 1, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': True, 'retarget_shift': 0.1997, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 151.6, 'execute_time': 0.2, 'moves': 2, 'control_steps': 48, 'mpc_rollouts': 3072, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.2918, 'failure_reason': ''}
+[86/117] {'planner': 'pomdp_once', 'person': 4, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': True, 'retarget_shift': 0.061, 'solved': True, 'goal_reached': True, 'goal_distance': 0.111, 'plan_time': 66.6, 'execute_time': 0.1, 'moves': 1, 'control_steps': 20, 'mpc_rollouts': 1280, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2907, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[87/117] {'planner': 'pddlstream', 'person': 4, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': True, 'retarget_shift': 0.061, 'solved': True, 'goal_reached': True, 'goal_distance': 0.1107, 'plan_time': 80.1, 'execute_time': 0.1, 'moves': 1, 'control_steps': 23, 'mpc_rollouts': 1472, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2911, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[88/117] {'planner': 'pddlstream', 'person': 1, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': True, 'retarget_shift': 0.2557, 'solved': True, 'goal_reached': True, 'goal_distance': 0.263, 'plan_time': 138.6, 'execute_time': 0.2, 'moves': 1, 'control_steps': 43, 'mpc_rollouts': 2752, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3013, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[89/117] {'planner': 'pomdp_once', 'person': 1, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': True, 'retarget_shift': 0.2557, 'solved': True, 'goal_reached': True, 'goal_distance': 0.2619, 'plan_time': 144.2, 'execute_time': 0.2, 'moves': 1, 'control_steps': 44, 'mpc_rollouts': 2816, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3016, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[90/117] {'planner': 'pomdp_once', 'person': 1, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': True, 'retarget_shift': 0.1131, 'solved': True, 'goal_reached': True, 'goal_distance': 0.1449, 'plan_time': 163.1, 'execute_time': 0.2, 'moves': 1, 'control_steps': 55, 'mpc_rollouts': 3520, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.3033, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[91/117] {'planner': 'pomdp_loop', 'person': 0, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': True, 'retarget_shift': 0.1315, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 260.8, 'execute_time': 0.3, 'moves': 3, 'control_steps': 77, 'mpc_rollouts': 4928, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3003, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[92/117] {'planner': 'pomdp_loop', 'person': 4, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': True, 'retarget_shift': 0.1358, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 152.0, 'execute_time': 0.2, 'moves': 2, 'control_steps': 45, 'mpc_rollouts': 2880, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2801, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[93/117] {'planner': 'pomdp_loop', 'person': 1, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': True, 'retarget_shift': 0.2557, 'solved': True, 'goal_reached': True, 'goal_distance': 0.05, 'plan_time': 196.0, 'execute_time': 1.0, 'moves': 2, 'control_steps': 60, 'mpc_rollouts': 3840, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.288, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[94/117] {'planner': 'pddlstream', 'person': 6, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': True, 'retarget_shift': 0.4286, 'solved': True, 'goal_reached': True, 'goal_distance': 0.4786, 'plan_time': 64.3, 'execute_time': 0.1, 'moves': 1, 'control_steps': 19, 'mpc_rollouts': 1216, 'rom_violation_steps': 0, 'belief_width_before': 0.3143, 'belief_width_after': 0.302, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[95/117] {'planner': 'pomdp_loop', 'person': 1, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.952 1.023 0.950', 'goal_beyond_belief': True, 'retarget_shift': 0.1131, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0499, 'plan_time': 216.9, 'execute_time': 0.3, 'moves': 2, 'control_steps': 67, 'mpc_rollouts': 4288, 'rom_violation_steps': 0, 'belief_width_before': 0.3401, 'belief_width_after': 0.2988, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[96/117] {'planner': 'pomdp_loop', 'person': 4, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': True, 'retarget_shift': 0.061, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0498, 'plan_time': 109.7, 'execute_time': 0.1, 'moves': 2, 'control_steps': 31, 'mpc_rollouts': 1984, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2867, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[97/117] {'planner': 'pomdp_once', 'person': 4, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': True, 'retarget_shift': 0.1646, 'solved': True, 'goal_reached': True, 'goal_distance': 0.2145, 'plan_time': 93.4, 'execute_time': 0.1, 'moves': 1, 'control_steps': 32, 'mpc_rollouts': 2048, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2897, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[98/117] {'planner': 'pomdp_once', 'person': 6, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': True, 'retarget_shift': 0.4286, 'solved': True, 'goal_reached': True, 'goal_distance': 0.4784, 'plan_time': 70.2, 'execute_time': 0.1, 'moves': 1, 'control_steps': 20, 'mpc_rollouts': 1280, 'rom_violation_steps': 0, 'belief_width_before': 0.3143, 'belief_width_after': 0.3021, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[99/117] {'planner': 'pddlstream', 'person': 4, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': True, 'retarget_shift': 0.1646, 'solved': True, 'goal_reached': True, 'goal_distance': 0.186, 'plan_time': 114.2, 'execute_time': 0.2, 'moves': 1, 'control_steps': 36, 'mpc_rollouts': 2304, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2877, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[100/117] {'planner': 'pddlstream', 'person': 6, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': True, 'retarget_shift': 0.3493, 'solved': True, 'goal_reached': True, 'goal_distance': 0.37, 'plan_time': 109.8, 'execute_time': 0.2, 'moves': 1, 'control_steps': 43, 'mpc_rollouts': 2752, 'rom_violation_steps': 0, 'belief_width_before': 0.3143, 'belief_width_after': 0.2992, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[101/117] {'planner': 'pomdp_once', 'person': 6, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': True, 'retarget_shift': 0.3493, 'solved': True, 'goal_reached': True, 'goal_distance': 0.3699, 'plan_time': 112.0, 'execute_time': 0.2, 'moves': 1, 'control_steps': 43, 'mpc_rollouts': 2752, 'rom_violation_steps': 0, 'belief_width_before': 0.3143, 'belief_width_after': 0.2992, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[102/117] {'planner': 'pomdp_loop', 'person': 0, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.919 0.880 0.996', 'goal_beyond_belief': True, 'retarget_shift': 0.1854, 'solved': True, 'goal_reached': False, 'goal_distance': 0.131, 'plan_time': 600.0, 'execute_time': 0.3, 'moves': 2, 'control_steps': 77, 'mpc_rollouts': 4928, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3008, 'failure_reason': 'no further move was chosen or solved before the believed edge'}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[103/117] {'planner': 'pomdp_loop', 'person': 4, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.802 0.874 1.150', 'goal_beyond_belief': True, 'retarget_shift': 0.1646, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0496, 'plan_time': 156.6, 'execute_time': 0.2, 'moves': 2, 'control_steps': 49, 'mpc_rollouts': 3136, 'rom_violation_steps': 0, 'belief_width_before': 0.3111, 'belief_width_after': 0.2769, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_rootb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[104/117] {'planner': 'pddlstream', 'person': 6, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': True, 'retarget_shift': 0.0919, 'solved': True, 'goal_reached': True, 'goal_distance': 0.1359, 'plan_time': 138.0, 'execute_time': 0.2, 'moves': 1, 'control_steps': 49, 'mpc_rollouts': 3136, 'rom_violation_steps': 0, 'belief_width_before': 0.3143, 'belief_width_after': 0.3003, 'failure_reason': ''}
+[105/117] {'planner': 'pomdp_loop', 'person': 6, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': True, 'retarget_shift': 0.3493, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0496, 'plan_time': 188.1, 'execute_time': 0.3, 'moves': 2, 'control_steps': 68, 'mpc_rollouts': 4352, 'rom_violation_steps': 0, 'belief_width_before': 0.3143, 'belief_width_after': 0.2759, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[106/117] {'planner': 'pomdp_once', 'person': 6, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': True, 'retarget_shift': 0.0919, 'solved': True, 'goal_reached': True, 'goal_distance': 0.1315, 'plan_time': 150.0, 'execute_time': 0.2, 'moves': 1, 'control_steps': 50, 'mpc_rollouts': 3200, 'rom_violation_steps': 0, 'belief_width_before': 0.3143, 'belief_width_after': 0.2994, 'failure_reason': ''}
+b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
+base_root[107/117] {'planner': 'pomdp_loop', 'person': 6, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': True, 'retarget_shift': 0.4286, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0497, 'plan_time': 194.6, 'execute_time': 0.3, 'moves': 4, 'control_steps': 58, 'mpc_rollouts': 3712, 'rom_violation_steps': 0, 'belief_width_before': 0.3143, 'belief_width_after': 0.2723, 'failure_reason': ''}
+[108/117] {'planner': 'pomdp_loop', 'person': 6, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '1.058 1.166 0.879', 'goal_beyond_belief': True, 'retarget_shift': 0.0919, 'solved': True, 'goal_reached': True, 'goal_distance': 0.0497, 'plan_time': 165.2, 'execute_time': 0.3, 'moves': 2, 'control_steps': 87, 'mpc_rollouts': 5568, 'rom_violation_steps': 0, 'belief_width_before': 0.3143, 'belief_width_after': 0.2971, 'failure_reason': ''}
+[109/117] {'planner': 'pddlstream', 'person': 7, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': True, 'retarget_shift': 0.0845, 'solved': False, 'goal_reached': False, 'goal_distance': 1.1449, 'plan_time': 429.3, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+[110/117] {'planner': 'pddlstream', 'person': 7, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': True, 'retarget_shift': 0.0608, 'solved': False, 'goal_reached': False, 'goal_distance': 1.3336, 'plan_time': 458.7, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+[111/117] {'planner': 'pomdp_once', 'person': 7, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': True, 'retarget_shift': 0.0608, 'solved': False, 'goal_reached': False, 'goal_distance': 1.3336, 'plan_time': 460.5, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+[112/117] {'planner': 'pomdp_loop', 'person': 7, 'goal': 0, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': True, 'retarget_shift': 0.0608, 'solved': False, 'goal_reached': False, 'goal_distance': 1.3336, 'plan_time': 461.5, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+[113/117] {'planner': 'pomdp_once', 'person': 7, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': True, 'retarget_shift': 0.0845, 'solved': False, 'goal_reached': False, 'goal_distance': 1.1449, 'plan_time': 423.9, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+[114/117] {'planner': 'pomdp_loop', 'person': 7, 'goal': 2, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': True, 'retarget_shift': 0.0845, 'solved': False, 'goal_reached': False, 'goal_distance': 1.1449, 'plan_time': 429.7, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+[115/117] {'planner': 'pddlstream', 'person': 7, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': True, 'retarget_shift': 0.0954, 'solved': False, 'goal_reached': False, 'goal_distance': 1.4808, 'plan_time': 561.6, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+[116/117] {'planner': 'pomdp_once', 'person': 7, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': True, 'retarget_shift': 0.0954, 'solved': False, 'goal_reached': False, 'goal_distance': 1.4808, 'plan_time': 560.6, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}
+[117/117] {'planner': 'pomdp_loop', 'person': 7, 'goal': 1, 'goals': 'beyond', 'variant': 'isolated-left-arm', 'theta': '0.900 0.945 0.859', 'goal_beyond_belief': True, 'retarget_shift': 0.0954, 'solved': False, 'goal_reached': False, 'goal_distance': 1.4808, 'plan_time': 560.7, 'execute_time': 0.0, 'moves': 0, 'control_steps': 0, 'mpc_rollouts': 0, 'rom_violation_steps': 0, 'belief_width_before': 0.3532, 'belief_width_after': 0.3532, 'failure_reason': 'no limb motion was attempted (planner ran out of time)'}

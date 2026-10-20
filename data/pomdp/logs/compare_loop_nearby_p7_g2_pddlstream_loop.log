@@ -1,0 +1,187 @@
+
+Iteration: 1 | Complexity: 0 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.000 | Sample Time: 0.000 | Total Time: 0.000
+Attempt: 1 | Results: 0 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 0 to 1
+
+Iteration: 2 | Complexity: 1 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.001 | Sample Time: 0.000 | Total Time: 0.001
+Attempt: 1 | Results: 2 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 1 to 2
+
+Iteration: 3 | Complexity: 2 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.002 | Sample Time: 0.000 | Total Time: 0.002
+Attempt: 1 | Results: 3 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 2 to 3
+
+Iteration: 4 | Complexity: 3 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.003 | Sample Time: 0.000 | Total Time: 0.003
+Attempt: 1 | Results: 11 | Depth: 1 | Success: False | Time: 0.008
+Attempt: 2 | Results: 14 | Depth: 0 | Success: True | Time: 0.015
+Stream plan (7, 7, 0.001): [sample-grasp:(limb)->(#g6), plan-grasp-motion:(limb, #g6, qL5712, qL8672)->(#q6, #a6, #s14), plan-limb-motion:(#s14, qL8672)->(#t8, #s15), check-robot-torque-limits:(#s14, qL8672, #t8, #s15)->(), check-human-joint-limits:(#s14, qL8672, #t8, #s15)->(), check-human-torque-limits:(#s14, qL8672, #t8, #s15)->(), plan-base-motion:(SE2Pose(x=0.3921042240001188, y=0.9102393664576361, rot=-0.814), #q6)->(#b6)]
+Action plan (3, 3.000): [move_base(SE2Pose(x=0.3921042240001188, y=0.9102393664576361, rot=-0.814), #b6, #q6), grasp(limb, #g6, #q6, #a6, #s14), move_limb(limb, #g6, #q6, #s14, qL5712, qL8672, #t8, #s15)]
+Sampling for up to -27.896 seconds
+Sampling while complexity <= 3
+
+Iteration: 5 | Complexity: 3 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 10 | Eager Calls: 0 | Cost: inf | Search Time: 0.018 | Sample Time: 27.914 | Total Time: 27.932
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 3 to 4
+Sampling until new output values
+Sampling for up to -27.895 seconds
+Sampling while complexity <= 4
+
+Iteration: 6 | Complexity: 4 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 11 | Eager Calls: 0 | Cost: inf | Search Time: 0.019 | Sample Time: 54.914 | Total Time: 54.933
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 4 to 5
+Sampling until new output values
+Sampling for up to -54.894 seconds
+Sampling while complexity <= 5
+
+Iteration: 7 | Complexity: 5 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 12 | Eager Calls: 0 | Cost: inf | Search Time: 0.020 | Sample Time: 83.133 | Total Time: 83.153
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 5 to 6
+Sampling until new output values
+Sampling for up to -83.111 seconds
+Sampling while complexity <= 6
+
+Iteration: 8 | Complexity: 6 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 13 | Eager Calls: 0 | Cost: inf | Search Time: 0.022 | Sample Time: 109.497 | Total Time: 109.519
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 6 to 7
+Sampling until new output values
+Sampling for up to -109.474 seconds
+Sampling while complexity <= 7
+
+Iteration: 9 | Complexity: 7 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 14 | Eager Calls: 0 | Cost: inf | Search Time: 0.023 | Sample Time: 139.497 | Total Time: 139.520
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 7 to 8
+Sampling until new output values
+Sampling for up to -139.472 seconds
+Sampling while complexity <= 8
+
+Iteration: 10 | Complexity: 8 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 15 | Eager Calls: 0 | Cost: inf | Search Time: 0.024 | Sample Time: 167.174 | Total Time: 167.198
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 8 to 9
+Sampling until new output values
+Sampling for up to -167.148 seconds
+Sampling while complexity <= 9
+
+Iteration: 11 | Complexity: 9 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 16 | Eager Calls: 0 | Cost: inf | Search Time: 0.026 | Sample Time: 193.180 | Total Time: 193.206
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 9 to 10
+Sampling until new output values
+Sampling for up to -193.153 seconds
+Sampling while complexity <= 10
+
+Iteration: 12 | Complexity: 10 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 17 | Eager Calls: 0 | Cost: inf | Search Time: 0.027 | Sample Time: 220.055 | Total Time: 220.082
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 10 to 11
+Sampling until new output values
+Sampling for up to -220.026 seconds
+Sampling while complexity <= 11
+
+Iteration: 13 | Complexity: 11 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 18 | Eager Calls: 0 | Cost: inf | Search Time: 0.029 | Sample Time: 247.514 | Total Time: 247.543
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 11 to 12
+Sampling until new output values
+Sampling for up to -247.484 seconds
+Sampling while complexity <= 12
+
+Iteration: 14 | Complexity: 12 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 19 | Eager Calls: 0 | Cost: inf | Search Time: 0.031 | Sample Time: 275.414 | Total Time: 275.445
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 12 to 13
+Sampling until new output values
+Sampling for up to -275.382 seconds
+Sampling while complexity <= 13
+
+Iteration: 15 | Complexity: 13 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 20 | Eager Calls: 0 | Cost: inf | Search Time: 0.032 | Sample Time: 303.249 | Total Time: 303.281
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 13 to 14
+Sampling until new output values
+Sampling for up to -303.215 seconds
+Sampling while complexity <= 14
+
+Iteration: 16 | Complexity: 14 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 21 | Eager Calls: 0 | Cost: inf | Search Time: 0.034 | Sample Time: 330.723 | Total Time: 330.757
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 14 to 15
+Sampling until new output values
+Sampling for up to -330.688 seconds
+Sampling while complexity <= 15
+
+Iteration: 17 | Complexity: 15 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 22 | Eager Calls: 0 | Cost: inf | Search Time: 0.036 | Sample Time: 357.114 | Total Time: 357.149
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 15 to 16
+Sampling until new output values
+Sampling for up to -357.076 seconds
+Sampling while complexity <= 16
+
+Iteration: 18 | Complexity: 16 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 23 | Eager Calls: 0 | Cost: inf | Search Time: 0.037 | Sample Time: 382.831 | Total Time: 382.868
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 16 to 17
+Sampling until new output values
+Sampling for up to -382.792 seconds
+Sampling while complexity <= 17
+
+Iteration: 19 | Complexity: 17 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 24 | Eager Calls: 0 | Cost: inf | Search Time: 0.039 | Sample Time: 409.551 | Total Time: 409.590
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 17 to 18
+Sampling until new output values
+Sampling for up to -409.510 seconds
+Sampling while complexity <= 18
+
+Iteration: 20 | Complexity: 18 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 25 | Eager Calls: 0 | Cost: inf | Search Time: 0.041 | Sample Time: 435.766 | Total Time: 435.807
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 18 to 19
+Sampling until new output values
+Sampling for up to -435.723 seconds
+Sampling while complexity <= 19
+
+Iteration: 21 | Complexity: 19 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 26 | Eager Calls: 0 | Cost: inf | Search Time: 0.043 | Sample Time: 464.106 | Total Time: 464.149
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 19 to 20
+Sampling until new output values
+Sampling for up to -464.062 seconds
+Sampling while complexity <= 20
+
+Iteration: 22 | Complexity: 20 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 27 | Eager Calls: 0 | Cost: inf | Search Time: 0.045 | Sample Time: 489.922 | Total Time: 489.967
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 20 to 21
+Sampling until new output values
+Summary: {complexity: 21, cost: inf, evaluations: 27, iterations: 22, length: inf, run_time: 489.969, sample_time: 489.922, search_time: 0.047, skeletons: 1, solutions: 0, solved: False, timeout: False}

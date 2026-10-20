@@ -1,0 +1,143 @@
+
+Iteration: 1 | Complexity: 0 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.000 | Sample Time: 0.000 | Total Time: 0.000
+Attempt: 1 | Results: 0 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 0 to 1
+
+Iteration: 2 | Complexity: 1 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.001 | Sample Time: 0.000 | Total Time: 0.001
+Attempt: 1 | Results: 2 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 1 to 2
+
+Iteration: 3 | Complexity: 2 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.002 | Sample Time: 0.000 | Total Time: 0.002
+Attempt: 1 | Results: 3 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 2 to 3
+
+Iteration: 4 | Complexity: 3 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.003 | Sample Time: 0.000 | Total Time: 0.003
+Attempt: 1 | Results: 11 | Depth: 1 | Success: False | Time: 0.008
+Attempt: 2 | Results: 14 | Depth: 0 | Success: True | Time: 0.015
+Stream plan (7, 7, 0.001): [sample-grasp:(limb)->(#g0), plan-grasp-motion:(limb, #g0, qL3328, qL8128)->(#q0, #a0, #s0), plan-limb-motion:(#s0, qL8128)->(#t0, #s1), check-human-torque-limits:(#s0, qL8128, #t0, #s1)->(), check-robot-torque-limits:(#s0, qL8128, #t0, #s1)->(), check-human-joint-limits:(#s0, qL8128, #t0, #s1)->(), plan-base-motion:(SE2Pose(x=0.3921042240001188, y=0.9102393664576361, rot=-0.814), #q0)->(#b0)]
+Action plan (3, 3.000): [move_base(SE2Pose(x=0.3921042240001188, y=0.9102393664576361, rot=-0.814), #b0, #q0), grasp(limb, #g0, #q0, #a0, #s0), move_limb(limb, #g0, #q0, #s0, qL3328, qL8128, #t0, #s1)]
+Sampling for up to -44.442 seconds
+Sampling while complexity <= 3
+
+Iteration: 5 | Complexity: 3 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 10 | Eager Calls: 0 | Cost: inf | Search Time: 0.020 | Sample Time: 44.460 | Total Time: 44.479
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.030
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 3 to 4
+Sampling until new output values
+Sampling for up to -44.412 seconds
+Sampling while complexity <= 4
+
+Iteration: 6 | Complexity: 4 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 11 | Eager Calls: 0 | Cost: inf | Search Time: 0.053 | Sample Time: 80.379 | Total Time: 80.432
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 4 to 5
+Sampling until new output values
+Sampling for up to -80.325 seconds
+Sampling while complexity <= 5
+
+Iteration: 7 | Complexity: 5 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 12 | Eager Calls: 0 | Cost: inf | Search Time: 0.054 | Sample Time: 127.256 | Total Time: 127.311
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 5 to 6
+Sampling until new output values
+Sampling for up to -127.201 seconds
+Sampling while complexity <= 6
+
+Iteration: 8 | Complexity: 6 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 13 | Eager Calls: 0 | Cost: inf | Search Time: 0.055 | Sample Time: 168.763 | Total Time: 168.818
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 6 to 7
+Sampling until new output values
+Sampling for up to -168.706 seconds
+Sampling while complexity <= 7
+
+Iteration: 9 | Complexity: 7 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 14 | Eager Calls: 0 | Cost: inf | Search Time: 0.057 | Sample Time: 210.009 | Total Time: 210.066
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 7 to 8
+Sampling until new output values
+Sampling for up to -209.951 seconds
+Sampling while complexity <= 8
+
+Iteration: 10 | Complexity: 8 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 15 | Eager Calls: 0 | Cost: inf | Search Time: 0.058 | Sample Time: 250.265 | Total Time: 250.323
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 8 to 9
+Sampling until new output values
+Sampling for up to -250.205 seconds
+Sampling while complexity <= 9
+
+Iteration: 11 | Complexity: 9 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 16 | Eager Calls: 0 | Cost: inf | Search Time: 0.061 | Sample Time: 304.185 | Total Time: 304.246
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.039
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 9 to 10
+Sampling until new output values
+Sampling for up to -304.087 seconds
+Sampling while complexity <= 10
+
+Iteration: 12 | Complexity: 10 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 17 | Eager Calls: 0 | Cost: inf | Search Time: 0.103 | Sample Time: 340.391 | Total Time: 340.494
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 10 to 11
+Sampling until new output values
+Sampling for up to -340.286 seconds
+Sampling while complexity <= 11
+
+Iteration: 13 | Complexity: 11 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 18 | Eager Calls: 0 | Cost: inf | Search Time: 0.105 | Sample Time: 389.161 | Total Time: 389.266
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 11 to 12
+Sampling until new output values
+Sampling for up to -389.055 seconds
+Sampling while complexity <= 12
+
+Iteration: 14 | Complexity: 12 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 19 | Eager Calls: 0 | Cost: inf | Search Time: 0.108 | Sample Time: 429.478 | Total Time: 429.587
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.050
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 12 to 13
+Sampling until new output values
+Sampling for up to -429.322 seconds
+Sampling while complexity <= 13
+
+Iteration: 15 | Complexity: 13 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 20 | Eager Calls: 0 | Cost: inf | Search Time: 0.162 | Sample Time: 472.181 | Total Time: 472.343
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 13 to 14
+Sampling until new output values
+Sampling for up to -472.018 seconds
+Sampling while complexity <= 14
+
+Iteration: 16 | Complexity: 14 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 21 | Eager Calls: 0 | Cost: inf | Search Time: 0.164 | Sample Time: 524.419 | Total Time: 524.584
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.049
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 14 to 15
+Sampling until new output values
+Sampling for up to -524.208 seconds
+Sampling while complexity <= 15
+
+Iteration: 17 | Complexity: 15 | Skeletons: 1 | Skeleton Queue: 1 | Disabled: 0 | Evaluations: 22 | Eager Calls: 0 | Cost: inf | Search Time: 0.216 | Sample Time: 574.237 | Total Time: 574.453
+Attempt: 1 | Results: 1 | Depth: 0 | Success: False | Time: 0.072
+Stream plan (inf, 0, inf): False
+Action plan (inf, inf): False
+No plan: increasing complexity from 15 to 16
+Sampling until new output values
+Sampling for up to -573.951 seconds
+Sampling while complexity <= 16

@@ -1,0 +1,37 @@
+
+Iteration: 1 | Complexity: 0 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.000 | Sample Time: 0.000 | Total Time: 0.000
+Attempt: 1 | Results: 0 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 0 to 1
+
+Iteration: 2 | Complexity: 1 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.001 | Sample Time: 0.000 | Total Time: 0.001
+Attempt: 1 | Results: 2 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 1 to 2
+
+Iteration: 3 | Complexity: 2 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.002 | Sample Time: 0.000 | Total Time: 0.002
+Attempt: 1 | Results: 3 | Depth: 0 | Success: False | Time: 0.001
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 2 to 3
+
+Iteration: 4 | Complexity: 3 | Skeletons: 0 | Skeleton Queue: 0 | Disabled: 0 | Evaluations: 9 | Eager Calls: 0 | Cost: inf | Search Time: 0.003 | Sample Time: 0.000 | Total Time: 0.003
+Attempt: 1 | Results: 11 | Depth: 1 | Success: False | Time: 0.008
+Attempt: 2 | Results: 14 | Depth: 0 | Success: True | Time: 0.014
+Stream plan (7, 7, 0.001): [sample-grasp:(limb)->(#g1), plan-grasp-motion:(limb, #g1, qL6528, qL6864)->(#q1, #a1, #s2), plan-limb-motion:(#s2, qL6864)->(#t1, #s3), check-human-torque-limits:(#s2, qL6864, #t1, #s3)->(), check-robot-torque-limits:(#s2, qL6864, #t1, #s3)->(), check-human-joint-limits:(#s2, qL6864, #t1, #s3)->(), plan-base-motion:(SE2Pose(x=0.3921042240001188, y=0.9102393664576361, rot=-0.814), #q1)->(#b1)]
+Action plan (3, 3.000): [move_base(SE2Pose(x=0.3921042240001188, y=0.9102393664576361, rot=-0.814), #b1, #q1), grasp(limb, #g1, #q1, #a1, #s2), move_limb(limb, #g1, #q1, #s2, qL6528, qL6864, #t1, #s3)]
+plan-limb-motion: MPC rollout motion attempt exceeded 180 s.
+Sampling for up to -180.134 seconds
+Sampling while complexity <= 3
+
+Iteration: 5 | Complexity: 3 | Skeletons: 1 | Skeleton Queue: 2 | Disabled: 0 | Evaluations: 16 | Eager Calls: 0 | Cost: inf | Search Time: 0.018 | Sample Time: 180.151 | Total Time: 180.169
+Attempt: 1 | Results: 8 | Depth: 0 | Success: False | Time: 0.002
+Stream plan (inf, 0, inf): None
+Action plan (inf, inf): None
+No plan: increasing complexity from 3 to 4
+Sampling for up to -180.131 seconds
+Sampling while complexity <= 4
+plan-limb-motion: generated a trajectory with 586 steps.
+Summary: {complexity: 4, cost: 3.000, evaluations: 29, iterations: 5, length: 2, run_time: 255.088, sample_time: 255.067, search_time: 0.020, skeletons: 1, solutions: 1, solved: True, timeout: False}

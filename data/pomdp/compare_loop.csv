@@ -1,0 +1,157 @@
+planner,person,goal,goals,variant,theta,goal_beyond_belief,retarget_shift,solved,goal_reached,goal_distance,plan_time,execute_time,moves,control_steps,mpc_rollouts,rom_violation_steps,belief_width_before,belief_width_after,failure_reason
+pddlstream,0,0,beyond,isolated-left-arm,0.919 0.880 0.996,True,0.1825,True,True,0.2321,151.6,0.2,1,47,3008,0,0.3532,0.31,
+pddlstream_loop,0,0,beyond,isolated-left-arm,0.919 0.880 0.996,True,0.1825,True,True,0.05,220.3,0.4,2,76,4864,0,0.3532,0.2942,
+pomdp_loop,0,0,beyond,isolated-left-arm,0.919 0.880 0.996,True,0.1825,True,True,0.0954,286.8,0.4,2,94,6016,0,0.3532,0.2985,
+pomdp_once,0,0,beyond,isolated-left-arm,0.919 0.880 0.996,True,0.1825,True,True,0.2321,458.4,0.2,1,47,3008,0,0.3532,0.31,
+pddlstream,0,1,beyond,isolated-left-arm,0.919 0.880 0.996,True,0.1854,True,True,0.2337,122.6,0.2,1,44,2816,0,0.3532,0.3094,
+pddlstream_loop,0,1,beyond,isolated-left-arm,0.919 0.880 0.996,True,0.1854,True,True,0.0499,175.1,0.3,2,62,3968,0,0.3532,0.2955,
+pomdp_loop,0,1,beyond,isolated-left-arm,0.919 0.880 0.996,True,0.1854,True,False,0.131,600.0,0.3,2,77,4928,0,0.3532,0.3008,no further move was chosen or solved before the believed edge
+pomdp_once,0,1,beyond,isolated-left-arm,0.919 0.880 0.996,True,0.1854,True,True,0.2337,124.3,0.2,1,44,2816,0,0.3532,0.3094,
+pddlstream,0,2,beyond,isolated-left-arm,0.919 0.880 0.996,True,0.1315,True,True,0.1814,324.9,0.2,1,45,2880,0,0.3532,0.3093,
+pddlstream_loop,0,2,beyond,isolated-left-arm,0.919 0.880 0.996,True,0.1315,True,True,0.0498,388.6,0.3,2,64,4096,0,0.3532,0.3001,
+pomdp_loop,0,2,beyond,isolated-left-arm,0.919 0.880 0.996,True,0.1315,True,True,0.0499,263.1,0.4,3,77,4928,0,0.3532,0.3003,
+pomdp_once,0,2,beyond,isolated-left-arm,0.919 0.880 0.996,True,0.1315,True,True,0.1205,336.1,1.2,1,48,3072,0,0.3532,0.306,
+pddlstream,1,0,beyond,isolated-left-arm,0.952 1.023 0.950,True,0.1997,True,True,0.2496,101.6,0.1,1,32,2048,0,0.3401,0.3056,
+pddlstream_loop,1,0,beyond,isolated-left-arm,0.952 1.023 0.950,True,0.1997,True,True,0.0499,156.1,0.2,2,48,3072,0,0.3401,0.2921,
+pomdp_loop,1,0,beyond,isolated-left-arm,0.952 1.023 0.950,True,0.1997,True,True,0.0499,152.7,0.2,2,48,3072,0,0.3401,0.2918,
+pomdp_once,1,0,beyond,isolated-left-arm,0.952 1.023 0.950,True,0.1997,True,True,0.2496,101.6,0.1,1,32,2048,0,0.3401,0.3056,
+pddlstream,1,1,beyond,isolated-left-arm,0.952 1.023 0.950,True,0.1131,True,True,0.1562,115.1,0.2,1,37,2368,0,0.3401,0.3042,
+pddlstream_loop,1,1,beyond,isolated-left-arm,0.952 1.023 0.950,True,0.1131,True,True,0.0499,169.0,0.2,2,51,3264,0,0.3401,0.2983,
+pomdp_loop,1,1,beyond,isolated-left-arm,0.952 1.023 0.950,True,0.1131,True,True,0.0499,218.5,0.3,2,67,4288,0,0.3401,0.2988,
+pomdp_once,1,1,beyond,isolated-left-arm,0.952 1.023 0.950,True,0.1131,True,True,0.1481,152.8,1.3,1,48,3072,0,0.3401,0.3023,
+pddlstream,1,2,beyond,isolated-left-arm,0.952 1.023 0.950,True,0.2557,True,True,0.263,138.0,0.2,1,43,2752,0,0.3401,0.3013,
+pddlstream_loop,1,2,beyond,isolated-left-arm,0.952 1.023 0.950,True,0.2557,True,True,0.0496,193.9,0.3,2,59,3776,0,0.3401,0.2878,
+pomdp_loop,1,2,beyond,isolated-left-arm,0.952 1.023 0.950,True,0.2557,True,True,0.0499,187.9,0.2,2,56,3584,0,0.3401,0.2879,
+pomdp_once,1,2,beyond,isolated-left-arm,0.952 1.023 0.950,True,0.2557,True,True,0.2619,143.6,0.2,1,44,2816,0,0.3401,0.3016,
+pddlstream,4,0,beyond,isolated-left-arm,0.802 0.874 1.150,True,0.1358,True,True,0.1667,106.5,0.1,1,32,2048,0,0.3111,0.2881,
+pddlstream_loop,4,0,beyond,isolated-left-arm,0.802 0.874 1.150,True,0.1358,True,True,0.0499,154.7,0.2,2,45,2880,0,0.3111,0.2801,
+pomdp_loop,4,0,beyond,isolated-left-arm,0.802 0.874 1.150,True,0.1358,True,True,0.0499,156.0,0.2,2,45,2880,0,0.3111,0.2801,
+pomdp_once,4,0,beyond,isolated-left-arm,0.802 0.874 1.150,True,0.1358,True,True,0.1667,107.6,0.1,1,32,2048,0,0.3111,0.2881,
+pddlstream,4,1,beyond,isolated-left-arm,0.802 0.874 1.150,True,0.061,True,True,0.1107,80.6,0.1,1,23,1472,0,0.3111,0.2911,
+pddlstream_loop,4,1,beyond,isolated-left-arm,0.802 0.874 1.150,True,0.061,True,True,0.0499,115.1,0.1,2,33,2112,0,0.3111,0.2868,
+pomdp_loop,4,1,beyond,isolated-left-arm,0.802 0.874 1.150,True,0.061,True,True,0.0498,112.8,0.1,2,31,1984,0,0.3111,0.2867,
+pomdp_once,4,1,beyond,isolated-left-arm,0.802 0.874 1.150,True,0.061,True,True,0.111,68.9,0.1,1,20,1280,0,0.3111,0.2907,
+pddlstream,4,2,beyond,isolated-left-arm,0.802 0.874 1.150,True,0.1646,True,True,0.186,114.1,0.2,1,36,2304,0,0.3111,0.2877,
+pddlstream_loop,4,2,beyond,isolated-left-arm,0.802 0.874 1.150,True,0.1646,True,True,0.0497,177.2,0.2,2,55,3520,0,0.3111,0.2774,
+pomdp_loop,4,2,beyond,isolated-left-arm,0.802 0.874 1.150,True,0.1646,True,True,0.0498,180.2,0.2,2,55,3520,0,0.3111,0.2768,
+pomdp_once,4,2,beyond,isolated-left-arm,0.802 0.874 1.150,True,0.1646,True,True,0.2145,109.0,0.2,1,36,2304,0,0.3111,0.2912,
+pddlstream,6,0,beyond,isolated-left-arm,1.058 1.166 0.879,True,0.3493,True,True,0.37,111.0,0.2,1,43,2752,0,0.3143,0.2992,
+pddlstream_loop,6,0,beyond,isolated-left-arm,1.058 1.166 0.879,True,0.3493,True,True,0.0498,211.4,1.3,3,73,4672,0,0.3143,0.2781,
+pomdp_loop,6,0,beyond,isolated-left-arm,1.058 1.166 0.879,True,0.3493,True,True,0.0496,193.0,0.3,2,68,4352,0,0.3143,0.2759,
+pomdp_once,6,0,beyond,isolated-left-arm,1.058 1.166 0.879,True,0.3493,True,True,0.3699,111.4,0.2,1,43,2752,0,0.3143,0.2992,
+pddlstream,6,1,beyond,isolated-left-arm,1.058 1.166 0.879,True,0.4286,True,True,0.4786,64.4,1.0,1,19,1216,0,0.3143,0.302,
+pddlstream_loop,6,1,beyond,isolated-left-arm,1.058 1.166 0.879,True,0.4286,True,True,0.0499,181.1,0.2,3,52,3328,0,0.3143,0.2714,
+pomdp_loop,6,1,beyond,isolated-left-arm,1.058 1.166 0.879,True,0.4286,True,True,0.0497,199.9,0.3,4,58,3712,0,0.3143,0.2723,
+pomdp_once,6,1,beyond,isolated-left-arm,1.058 1.166 0.879,True,0.4286,True,True,0.4784,69.5,0.1,1,20,1280,0,0.3143,0.3021,
+pddlstream,6,2,beyond,isolated-left-arm,1.058 1.166 0.879,True,0.0919,True,True,0.1359,139.6,0.2,1,49,3136,0,0.3143,0.3003,
+pddlstream_loop,6,2,beyond,isolated-left-arm,1.058 1.166 0.879,True,0.0919,True,True,0.0498,174.6,0.2,2,57,3648,0,0.3143,0.2968,
+pomdp_loop,6,2,beyond,isolated-left-arm,1.058 1.166 0.879,True,0.0919,True,True,0.0497,171.0,0.4,2,87,5568,0,0.3143,0.2971,
+pomdp_once,6,2,beyond,isolated-left-arm,1.058 1.166 0.879,True,0.0919,True,True,0.1315,151.8,0.2,1,50,3200,0,0.3143,0.2994,
+pddlstream,7,0,beyond,isolated-left-arm,0.900 0.945 0.859,True,0.0608,False,False,1.3336,521.4,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pddlstream_loop,7,0,beyond,isolated-left-arm,0.900 0.945 0.859,True,0.0608,False,False,1.3336,520.6,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pomdp_loop,7,0,beyond,isolated-left-arm,0.900 0.945 0.859,True,0.0608,False,False,1.3336,516.4,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pomdp_once,7,0,beyond,isolated-left-arm,0.900 0.945 0.859,True,0.0608,False,False,1.3336,525.9,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pddlstream,7,1,beyond,isolated-left-arm,0.900 0.945 0.859,True,0.0954,False,False,1.4808,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pddlstream_loop,7,1,beyond,isolated-left-arm,0.900 0.945 0.859,True,0.0954,False,False,1.4808,599.0,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pomdp_loop,7,1,beyond,isolated-left-arm,0.900 0.945 0.859,True,0.0954,False,False,1.4808,599.3,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pomdp_once,7,1,beyond,isolated-left-arm,0.900 0.945 0.859,True,0.0954,False,False,1.4808,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pddlstream,7,2,beyond,isolated-left-arm,0.900 0.945 0.859,True,0.0845,False,False,1.1449,473.4,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pddlstream_loop,7,2,beyond,isolated-left-arm,0.900 0.945 0.859,True,0.0845,False,False,1.1449,468.5,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pomdp_loop,7,2,beyond,isolated-left-arm,0.900 0.945 0.859,True,0.0845,False,False,1.1449,479.8,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pomdp_once,7,2,beyond,isolated-left-arm,0.900 0.945 0.859,True,0.0845,False,False,1.1449,473.1,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pddlstream,0,0,nearby,isolated-left-arm,0.919 0.880 0.996,False,0.0,True,True,0.0499,100.2,0.2,1,42,2688,0,0.341,0.3179,
+pddlstream_loop,0,0,nearby,isolated-left-arm,0.919 0.880 0.996,False,0.0,True,True,0.0499,99.2,0.2,1,42,2688,0,0.341,0.3179,
+pomdp_loop,0,0,nearby,isolated-left-arm,0.919 0.880 0.996,False,0.0,True,True,0.0495,138.0,0.2,2,53,3392,0,0.341,0.3204,
+pomdp_once,0,0,nearby,isolated-left-arm,0.919 0.880 0.996,False,0.0,True,True,0.05,148.5,1.5,1,90,5760,0,0.341,0.3158,
+pddlstream,0,1,nearby,isolated-left-arm,0.919 0.880 0.996,False,0.0,True,True,0.0497,107.9,0.2,1,58,3712,0,0.341,0.3101,
+pddlstream_loop,0,1,nearby,isolated-left-arm,0.919 0.880 0.996,False,0.0,True,True,0.0497,109.2,0.2,1,58,3712,0,0.341,0.3101,
+pomdp_loop,0,1,nearby,isolated-left-arm,0.919 0.880 0.996,False,0.0,True,True,0.05,88.2,0.2,1,38,2432,0,0.341,0.3107,
+pomdp_once,0,1,nearby,isolated-left-arm,0.919 0.880 0.996,False,0.0,True,True,0.0497,90.5,0.2,1,40,2560,0,0.341,0.3101,
+pddlstream,0,2,nearby,isolated-left-arm,0.919 0.880 0.996,False,0.0,True,True,0.0496,79.1,0.2,1,41,2624,0,0.341,0.3394,
+pddlstream_loop,0,2,nearby,isolated-left-arm,0.919 0.880 0.996,False,0.0,True,True,0.0496,77.3,0.2,1,41,2624,0,0.341,0.3394,
+pomdp_loop,0,2,nearby,isolated-left-arm,0.919 0.880 0.996,False,0.0,True,True,0.0499,72.5,0.1,1,31,1984,0,0.341,0.3401,
+pomdp_once,0,2,nearby,isolated-left-arm,0.919 0.880 0.996,False,0.0,True,True,0.0499,71.7,0.1,1,31,1984,0,0.341,0.3401,
+pddlstream,1,0,nearby,isolated-left-arm,0.952 1.023 0.950,False,0.0,True,True,0.0497,108.7,0.2,1,48,3072,0,0.3401,0.3205,
+pddlstream_loop,1,0,nearby,isolated-left-arm,0.952 1.023 0.950,False,0.0,True,True,0.0497,138.2,0.2,1,48,3072,0,0.3401,0.3205,
+pomdp_loop,1,0,nearby,isolated-left-arm,0.952 1.023 0.950,False,0.0,True,True,0.05,150.6,0.2,1,52,3328,0,0.3401,0.3204,
+pomdp_once,1,0,nearby,isolated-left-arm,0.952 1.023 0.950,False,0.0,True,True,0.0497,108.3,0.2,1,48,3072,0,0.3401,0.3205,
+pddlstream,1,1,nearby,isolated-left-arm,0.952 1.023 0.950,False,0.0,True,True,0.0498,94.9,0.1,1,33,2112,0,0.3401,0.3392,
+pddlstream_loop,1,1,nearby,isolated-left-arm,0.952 1.023 0.950,False,0.0,True,True,0.0498,95.7,0.1,1,33,2112,0,0.3401,0.3392,
+pomdp_loop,1,1,nearby,isolated-left-arm,0.952 1.023 0.950,False,0.0,True,True,0.0499,266.8,0.2,1,36,2304,0,0.3401,0.3391,
+pomdp_once,1,1,nearby,isolated-left-arm,0.952 1.023 0.950,False,0.0,True,True,0.0499,268.4,0.2,1,36,2304,0,0.3401,0.3391,
+pddlstream,1,2,nearby,isolated-left-arm,0.952 1.023 0.950,False,0.0,True,True,0.0497,91.9,0.1,1,30,1920,0,0.3401,0.3219,
+pddlstream_loop,1,2,nearby,isolated-left-arm,0.952 1.023 0.950,False,0.0,True,True,0.0497,94.8,0.2,1,30,1920,0,0.3401,0.3219,
+pomdp_loop,1,2,nearby,isolated-left-arm,0.952 1.023 0.950,False,0.0,True,True,0.0498,105.5,0.3,1,35,2240,0,0.3401,0.3219,
+pomdp_once,1,2,nearby,isolated-left-arm,0.952 1.023 0.950,False,0.0,True,True,0.0498,106.1,0.1,1,35,2240,0,0.3401,0.3219,
+pddlstream,2,0,nearby,isolated-left-arm,0.928 0.822 0.838,False,0.0,False,False,0.9024,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pddlstream_loop,2,0,nearby,isolated-left-arm,0.928 0.822 0.838,False,0.0,False,False,0.9024,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pomdp_loop,2,0,nearby,isolated-left-arm,0.928 0.822 0.838,False,0.0,False,False,0.9024,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pomdp_once,2,0,nearby,isolated-left-arm,0.928 0.822 0.838,False,0.0,False,False,0.9024,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pddlstream,2,1,nearby,isolated-left-arm,0.928 0.822 0.838,False,0.0,False,False,0.5093,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pddlstream_loop,2,1,nearby,isolated-left-arm,0.928 0.822 0.838,False,0.0,False,False,0.5093,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pomdp_loop,2,1,nearby,isolated-left-arm,0.928 0.822 0.838,False,0.0,False,False,0.5093,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pomdp_once,2,1,nearby,isolated-left-arm,0.928 0.822 0.838,False,0.0,False,False,0.5093,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pddlstream,2,2,nearby,isolated-left-arm,0.928 0.822 0.838,False,0.0,False,False,0.9504,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pddlstream_loop,2,2,nearby,isolated-left-arm,0.928 0.822 0.838,False,0.0,False,False,0.9504,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pomdp_loop,2,2,nearby,isolated-left-arm,0.928 0.822 0.838,False,0.0,False,False,0.9504,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pomdp_once,2,2,nearby,isolated-left-arm,0.928 0.822 0.838,False,0.0,False,False,0.9504,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pddlstream,3,0,nearby,isolated-left-arm,0.963 0.815 0.832,False,0.0,True,True,0.0499,70.2,0.1,1,20,1280,0,0.3532,0.3532,
+pddlstream_loop,3,0,nearby,isolated-left-arm,0.963 0.815 0.832,False,0.0,True,True,0.0499,67.9,1.1,1,20,1280,0,0.3532,0.3532,
+pomdp_loop,3,0,nearby,isolated-left-arm,0.963 0.815 0.832,False,0.0,True,True,0.0496,81.6,0.1,1,23,1472,0,0.3532,0.3532,
+pomdp_once,3,0,nearby,isolated-left-arm,0.963 0.815 0.832,False,0.0,True,True,0.0496,79.3,0.1,1,23,1472,0,0.3532,0.3532,
+pddlstream,3,1,nearby,isolated-left-arm,0.963 0.815 0.832,False,0.0,True,True,0.0499,91.0,0.1,1,29,1856,0,0.3532,0.3532,
+pddlstream_loop,3,1,nearby,isolated-left-arm,0.963 0.815 0.832,False,0.0,True,True,0.0499,91.2,1.2,1,29,1856,0,0.3532,0.3532,
+pomdp_loop,3,1,nearby,isolated-left-arm,0.963 0.815 0.832,False,0.0,True,True,0.0499,86.2,0.1,1,25,1600,0,0.3532,0.3532,
+pomdp_once,3,1,nearby,isolated-left-arm,0.963 0.815 0.832,False,0.0,True,True,0.0499,82.3,0.1,1,25,1600,0,0.3532,0.3532,
+pddlstream,3,2,nearby,isolated-left-arm,0.963 0.815 0.832,False,0.0,True,True,0.0496,92.5,0.1,1,30,1920,0,0.3532,0.3532,
+pddlstream_loop,3,2,nearby,isolated-left-arm,0.963 0.815 0.832,False,0.0,True,True,0.0496,95.0,0.1,1,30,1920,0,0.3532,0.3532,
+pomdp_loop,3,2,nearby,isolated-left-arm,0.963 0.815 0.832,False,0.0,True,True,0.0498,96.7,0.2,1,34,2176,0,0.3532,0.3532,
+pomdp_once,3,2,nearby,isolated-left-arm,0.963 0.815 0.832,False,0.0,True,True,0.0498,100.9,0.2,1,34,2176,0,0.3532,0.3532,
+pddlstream,4,0,nearby,isolated-left-arm,0.802 0.874 1.150,False,0.0,True,True,0.0496,92.0,0.1,1,27,1728,0,0.3111,0.3018,
+pddlstream_loop,4,0,nearby,isolated-left-arm,0.802 0.874 1.150,False,0.0,True,True,0.0496,92.9,0.1,1,27,1728,0,0.3111,0.3018,
+pomdp_loop,4,0,nearby,isolated-left-arm,0.802 0.874 1.150,False,0.0,True,True,0.0496,98.7,0.1,1,29,1856,0,0.3111,0.3022,
+pomdp_once,4,0,nearby,isolated-left-arm,0.802 0.874 1.150,False,0.0,True,True,0.0496,94.8,0.8,1,29,1856,0,0.3111,0.3022,
+pddlstream,4,1,nearby,isolated-left-arm,0.802 0.874 1.150,True,0.2853,True,True,0.3002,113.0,1.0,1,35,2240,0,0.3111,0.2865,
+pddlstream_loop,4,1,nearby,isolated-left-arm,0.802 0.874 1.150,True,0.2853,True,True,0.2035,154.4,0.2,2,46,2944,0,0.3111,0.2809,
+pomdp_loop,4,1,nearby,isolated-left-arm,0.802 0.874 1.150,True,0.2853,True,True,0.2369,142.1,0.2,2,41,2624,0,0.3111,0.2834,
+pomdp_once,4,1,nearby,isolated-left-arm,0.802 0.874 1.150,True,0.2853,True,True,0.2801,110.6,0.1,1,33,2112,0,0.3111,0.2862,
+pddlstream,4,2,nearby,isolated-left-arm,0.802 0.874 1.150,False,0.0,True,True,0.0499,116.5,0.2,1,36,2304,0,0.3111,0.2866,
+pddlstream_loop,4,2,nearby,isolated-left-arm,0.802 0.874 1.150,False,0.0,True,True,0.0499,117.4,0.2,1,36,2304,0,0.3111,0.2866,
+pomdp_loop,4,2,nearby,isolated-left-arm,0.802 0.874 1.150,False,0.0,True,True,0.0499,117.3,0.2,1,38,2432,0,0.3111,0.2875,
+pomdp_once,4,2,nearby,isolated-left-arm,0.802 0.874 1.150,False,0.0,True,True,0.0499,116.1,0.2,1,38,2432,0,0.3111,0.2875,
+pddlstream,5,0,nearby,isolated-left-arm,0.780 0.701 0.863,False,0.0,True,True,0.0499,130.6,0.2,1,55,3520,0,0.3532,0.3532,
+pddlstream_loop,5,0,nearby,isolated-left-arm,0.780 0.701 0.863,False,0.0,True,True,0.0499,131.3,0.2,1,55,3520,0,0.3532,0.3532,
+pomdp_loop,5,0,nearby,isolated-left-arm,0.780 0.701 0.863,False,0.0,True,True,0.0498,116.4,0.1,1,34,2176,0,0.3532,0.3532,
+pomdp_once,5,0,nearby,isolated-left-arm,0.780 0.701 0.863,False,0.0,True,True,0.0499,133.6,0.2,1,55,3520,0,0.3532,0.3532,
+pddlstream,5,1,nearby,isolated-left-arm,0.780 0.701 0.863,False,0.0,True,True,0.0499,85.5,0.1,1,30,1920,0,0.3532,0.3532,
+pddlstream_loop,5,1,nearby,isolated-left-arm,0.780 0.701 0.863,False,0.0,True,True,0.0498,87.8,0.1,1,32,2048,0,0.3532,0.3532,
+pomdp_loop,5,1,nearby,isolated-left-arm,0.780 0.701 0.863,False,0.0,True,True,0.0499,97.8,0.1,1,28,1792,0,0.3532,0.3532,
+pomdp_once,5,1,nearby,isolated-left-arm,0.780 0.701 0.863,False,0.0,True,True,0.0498,102.5,1.2,1,30,1920,0,0.3532,0.3532,
+pddlstream,5,2,nearby,isolated-left-arm,0.780 0.701 0.863,False,0.0,True,True,0.05,98.2,0.1,1,34,2176,0,0.3532,0.3532,
+pddlstream_loop,5,2,nearby,isolated-left-arm,0.780 0.701 0.863,False,0.0,True,True,0.05,97.3,0.1,1,34,2176,0,0.3532,0.3532,
+pomdp_loop,5,2,nearby,isolated-left-arm,0.780 0.701 0.863,False,0.0,True,True,0.0495,99.1,0.1,1,29,1856,0,0.3532,0.3532,
+pomdp_once,5,2,nearby,isolated-left-arm,0.780 0.701 0.863,False,0.0,True,True,0.0495,99.8,0.1,1,29,1856,0,0.3532,0.3532,
+pddlstream,6,0,nearby,isolated-left-arm,1.058 1.166 0.879,False,0.0,True,True,0.05,113.1,0.1,1,34,2176,0,0.3532,0.3532,
+pddlstream_loop,6,0,nearby,isolated-left-arm,1.058 1.166 0.879,False,0.0,True,True,0.05,113.5,0.1,1,34,2176,0,0.3532,0.3532,
+pomdp_loop,6,0,nearby,isolated-left-arm,1.058 1.166 0.879,False,0.0,True,True,0.0497,113.6,0.2,1,34,2176,0,0.3532,0.3532,
+pomdp_once,6,0,nearby,isolated-left-arm,1.058 1.166 0.879,False,0.0,True,True,0.0497,111.9,0.1,1,34,2176,0,0.3532,0.3532,
+pddlstream,6,1,nearby,isolated-left-arm,1.058 1.166 0.879,False,0.0,True,True,0.05,169.6,0.3,1,60,3840,0,0.3532,0.3532,
+pddlstream_loop,6,1,nearby,isolated-left-arm,1.058 1.166 0.879,False,0.0,True,True,0.05,170.4,0.3,1,60,3840,0,0.3532,0.3532,
+pomdp_loop,6,1,nearby,isolated-left-arm,1.058 1.166 0.879,False,0.0,True,True,0.05,87.0,0.1,1,26,1664,0,0.3532,0.3532,
+pomdp_once,6,1,nearby,isolated-left-arm,1.058 1.166 0.879,False,0.0,True,True,0.05,83.9,0.1,1,26,1664,0,0.3532,0.3532,
+pddlstream,6,2,nearby,isolated-left-arm,1.058 1.166 0.879,False,0.0,True,True,0.0499,98.5,0.1,1,29,1856,0,0.3532,0.3532,
+pddlstream_loop,6,2,nearby,isolated-left-arm,1.058 1.166 0.879,False,0.0,True,True,0.0499,97.6,0.1,1,29,1856,0,0.3532,0.3532,
+pomdp_loop,6,2,nearby,isolated-left-arm,1.058 1.166 0.879,False,0.0,True,True,0.0497,113.9,0.1,1,30,1920,0,0.3532,0.3532,
+pomdp_once,6,2,nearby,isolated-left-arm,1.058 1.166 0.879,False,0.0,True,True,0.0497,111.9,0.1,1,30,1920,0,0.3532,0.3532,
+pddlstream,7,0,nearby,isolated-left-arm,0.900 0.945 0.859,True,0.0912,False,False,1.4402,484.8,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pddlstream_loop,7,0,nearby,isolated-left-arm,0.900 0.945 0.859,True,0.0912,False,False,1.4402,482.6,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pomdp_loop,7,0,nearby,isolated-left-arm,0.900 0.945 0.859,True,0.0912,False,False,1.4402,488.2,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pomdp_once,7,0,nearby,isolated-left-arm,0.900 0.945 0.859,True,0.0912,False,False,1.4402,477.8,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pddlstream,7,1,nearby,isolated-left-arm,0.900 0.945 0.859,False,0.0,False,False,0.8779,513.3,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pddlstream_loop,7,1,nearby,isolated-left-arm,0.900 0.945 0.859,False,0.0,False,False,0.8779,508.3,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pomdp_loop,7,1,nearby,isolated-left-arm,0.900 0.945 0.859,False,0.0,False,False,0.8779,509.4,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pomdp_once,7,1,nearby,isolated-left-arm,0.900 0.945 0.859,False,0.0,False,False,0.8779,512.7,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pddlstream,7,2,nearby,isolated-left-arm,0.900 0.945 0.859,False,0.0,False,False,1.2134,486.9,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pddlstream_loop,7,2,nearby,isolated-left-arm,0.900 0.945 0.859,False,0.0,False,False,1.2134,490.0,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pomdp_loop,7,2,nearby,isolated-left-arm,0.900 0.945 0.859,False,0.0,False,False,1.2134,490.2,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)
+pomdp_once,7,2,nearby,isolated-left-arm,0.900 0.945 0.859,False,0.0,False,False,1.2134,490.9,0.0,0,0,0,0,0.3532,0.3532,no limb motion was attempted (planner ran out of time)

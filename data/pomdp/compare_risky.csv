@@ -1,0 +1,81 @@
+planner,person,goal,variant,theta,goal_beyond_belief,retarget_shift,goal_particle_share,goal_in_true_range,solved,goal_reached,goal_distance,progress,plan_time,execute_time,moves,control_steps,mpc_rollouts,rom_violation_steps,belief_width_before,belief_width_after,failure_reason
+pddlstream,0,0,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.812,True,True,True,0.0497,0.966,33.4,0.1,1,32,1024,0,0.341,0.3185,
+pomcpow_w1,0,0,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.812,True,True,True,0.0498,0.966,34.0,0.1,1,29,928,0,0.341,0.3197,
+pouct_w1,0,0,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.812,True,True,True,0.0498,0.966,35.5,0.2,1,38,1216,0,0.341,0.3187,
+pouct_w4,0,0,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.812,True,True,True,0.0498,0.966,35.6,0.2,1,38,1216,0,0.341,0.3187,
+pddlstream,0,1,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.812,True,True,True,0.0498,0.956,92.2,0.6,1,127,4064,0,0.341,0.3272,
+pomcpow_w1,0,1,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.812,True,True,True,0.0498,0.956,95.0,0.5,1,127,4064,0,0.341,0.3272,
+pouct_w1,0,1,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.812,True,True,True,0.0498,0.956,88.1,1.6,1,127,4064,0,0.341,0.3272,
+pouct_w4,0,1,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.812,True,True,True,0.0499,0.956,44.3,0.2,1,39,1248,0,0.341,0.3263,
+pddlstream,0,2,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.781,True,True,True,0.0499,0.961,44.8,0.2,1,48,1536,0,0.341,0.315,
+pomcpow_w1,0,2,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.781,True,True,True,0.0499,0.961,38.4,0.1,1,31,992,0,0.341,0.3161,
+pouct_w1,0,2,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.781,True,True,True,0.0498,0.961,36.3,0.2,1,43,1376,0,0.341,0.3153,
+pouct_w4,0,2,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.781,True,True,True,0.0499,0.961,35.9,0.1,1,31,992,0,0.341,0.3161,
+pddlstream,0,3,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.719,True,True,True,0.0499,0.936,35.6,0.2,1,36,1152,0,0.341,0.3059,
+pomcpow_w1,0,3,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.719,True,True,True,0.0499,0.936,37.3,0.2,1,36,1152,0,0.341,0.3059,
+pouct_w1,0,3,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.719,True,True,True,0.0496,0.936,30.1,0.2,1,34,1088,0,0.341,0.3045,
+pouct_w4,0,3,isolated-left-arm,0.919 0.880 0.996,False,0.0,0.719,True,True,True,0.05,0.936,29.6,0.1,1,29,928,0,0.341,0.3025,
+pddlstream,1,0,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.531,True,True,True,0.05,0.966,59.6,0.2,1,56,1792,0,0.3401,0.3072,
+pomcpow_w1,1,0,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.531,True,True,True,0.05,0.966,63.1,0.2,1,56,1792,0,0.3401,0.3072,
+pouct_w1,1,0,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.531,True,True,True,0.0495,0.966,66.9,0.4,1,53,1696,0,0.3401,0.3046,
+pouct_w4,1,0,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.531,True,True,True,0.05,0.966,72.9,0.3,1,56,1792,0,0.3401,0.3056,
+pddlstream,1,1,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.75,True,True,True,0.0499,0.941,53.6,0.2,1,45,1440,0,0.3401,0.3164,
+pomcpow_w1,1,1,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.75,True,True,True,0.0498,0.941,50.1,0.2,1,45,1440,0,0.3401,0.3169,
+pouct_w1,1,1,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.75,True,True,True,0.0499,0.941,54.4,0.2,1,45,1440,0,0.3401,0.3164,
+pouct_w4,1,1,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.75,True,True,True,0.0498,0.941,254.0,0.2,1,45,1440,0,0.3401,0.3169,
+pddlstream,1,2,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.531,True,True,True,0.0497,0.94,33.1,0.1,1,30,960,0,0.3401,0.3097,
+pomcpow_w1,1,2,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.531,True,True,True,0.0499,0.94,36.6,0.1,1,30,960,0,0.3401,0.3098,
+pouct_w1,1,2,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.531,True,True,True,0.0499,0.94,32.6,0.1,1,30,960,0,0.3401,0.3098,
+pouct_w4,1,2,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.531,True,True,True,0.0496,0.94,32.2,0.1,1,26,832,0,0.3401,0.3097,
+pddlstream,1,3,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.625,True,True,True,0.0498,0.966,255.1,1.2,1,48,1536,0,0.3401,0.3151,
+pomcpow_w1,1,3,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.625,True,True,True,0.0499,0.966,70.3,1.3,1,50,1600,0,0.3401,0.3151,
+pouct_w1,1,3,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.625,True,True,True,0.0499,0.966,219.7,0.2,1,50,1600,0,0.3401,0.3151,
+pouct_w4,1,3,isolated-left-arm,0.952 1.023 0.950,False,0.0,0.625,True,True,True,0.0499,0.966,69.1,0.2,1,50,1600,0,0.3401,0.3151,
+pddlstream,5,0,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.719,True,True,True,0.0497,0.967,171.3,0.3,1,56,1792,0,0.3532,0.323,
+pomcpow_w1,5,0,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.719,True,True,False,0.1651,0.89,139.1,1.2,1,46,1472,0,0.3532,0.3371,the executed plan missed the goal
+pouct_w1,5,0,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.719,True,True,True,0.0499,0.967,110.4,0.4,1,83,2656,0,0.3532,0.3254,
+pouct_w4,5,0,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.719,True,True,False,0.3615,0.759,63.1,0.6,1,45,1440,0,0.3532,0.35,the executed plan missed the goal
+pddlstream,5,1,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.844,False,True,False,0.0499,0.967,67.9,0.2,1,45,1440,207,0.3532,0.2513,drove the limb 0.043 rad past the person's true anatomical limit
+pomcpow_w1,5,1,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.844,False,True,False,0.0499,0.967,69.4,0.2,1,45,1440,207,0.3532,0.2513,drove the limb 0.043 rad past the person's true anatomical limit
+pouct_w1,5,1,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.844,False,True,False,0.0498,0.967,71.4,0.2,1,47,1504,233,0.3532,0.2513,drove the limb 0.050 rad past the person's true anatomical limit
+pouct_w4,5,1,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.844,False,True,False,0.0498,0.967,71.7,0.2,1,47,1504,233,0.3532,0.2513,drove the limb 0.050 rad past the person's true anatomical limit
+pddlstream,5,2,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.812,False,True,False,0.05,0.967,75.6,0.2,1,51,1632,282,0.3532,0.2513,drove the limb 0.054 rad past the person's true anatomical limit
+pomcpow_w1,5,2,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.812,False,True,False,0.0499,0.967,537.5,0.2,1,43,1376,261,0.3532,0.2513,drove the limb 0.060 rad past the person's true anatomical limit
+pouct_w1,5,2,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.812,False,True,False,0.05,0.967,264.1,0.2,1,51,1632,192,0.3532,0.2513,drove the limb 0.042 rad past the person's true anatomical limit
+pouct_w4,5,2,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.812,False,True,False,0.05,0.967,76.6,0.2,1,51,1632,192,0.3532,0.2513,drove the limb 0.042 rad past the person's true anatomical limit
+pddlstream,5,3,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.812,False,False,False,1.5,0.0,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pomcpow_w1,5,3,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.812,False,False,False,1.5,0.0,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pouct_w1,5,3,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.812,False,False,False,1.5,0.0,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pouct_w4,5,3,isolated-left-arm,0.780 0.701 0.863,False,0.0,0.812,False,False,False,1.5,0.0,600.0,0.0,0,0,0,0,0.3532,0.3532,hit the 600 s hard planning time limit
+pddlstream,10,0,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.688,False,True,False,0.0497,0.963,91.3,0.2,1,39,1248,210,0.3532,0.2544,drove the limb 0.124 rad past the person's true anatomical limit
+pomcpow_w1,10,0,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.688,False,True,False,0.0497,0.963,68.5,0.2,1,39,1248,210,0.3532,0.2544,drove the limb 0.124 rad past the person's true anatomical limit
+pouct_w1,10,0,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.688,False,True,False,0.0497,0.963,66.6,0.2,1,39,1248,210,0.3532,0.2544,drove the limb 0.124 rad past the person's true anatomical limit
+pouct_w4,10,0,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.688,False,True,False,0.0499,0.962,58.7,1.2,1,47,1504,209,0.3532,0.2544,drove the limb 0.136 rad past the person's true anatomical limit
+pddlstream,10,1,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.844,False,True,True,0.05,0.964,101.4,0.2,1,45,1440,0,0.3532,0.3381,
+pomcpow_w1,10,1,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.844,False,True,True,0.05,0.964,94.8,1.2,1,45,1440,0,0.3532,0.3381,
+pouct_w1,10,1,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.844,False,True,True,0.05,0.964,139.0,1.2,1,45,1440,0,0.3532,0.3381,
+pouct_w4,10,1,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.844,False,True,True,0.05,0.964,76.2,1.2,1,45,1440,0,0.3532,0.3381,
+pddlstream,10,2,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.781,False,True,False,0.0496,0.963,58.9,0.1,1,35,1120,204,0.3532,0.2544,drove the limb 0.069 rad past the person's true anatomical limit
+pomcpow_w1,10,2,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.781,False,True,False,0.0496,0.963,63.7,1.2,1,35,1120,204,0.3532,0.2544,drove the limb 0.069 rad past the person's true anatomical limit
+pouct_w1,10,2,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.781,False,True,False,0.0497,0.963,64.8,0.2,1,35,1120,128,0.3532,0.2544,drove the limb 0.046 rad past the person's true anatomical limit
+pouct_w4,10,2,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.781,False,True,False,0.0499,0.963,69.7,0.2,1,43,1376,195,0.3532,0.2544,drove the limb 0.058 rad past the person's true anatomical limit
+pddlstream,10,3,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.844,False,True,False,0.0496,0.967,47.0,0.2,1,51,1632,363,0.3532,0.2507,drove the limb 0.119 rad past the person's true anatomical limit
+pomcpow_w1,10,3,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.844,False,True,False,0.0497,0.967,65.1,0.2,1,35,1120,259,0.3532,0.2507,drove the limb 0.118 rad past the person's true anatomical limit
+pouct_w1,10,3,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.844,False,True,False,0.0497,0.967,67.6,0.2,1,46,1472,320,0.3532,0.2507,drove the limb 0.125 rad past the person's true anatomical limit
+pouct_w4,10,3,isolated-left-arm,0.734 0.791 0.783,False,0.0,0.844,False,True,False,0.0497,0.967,68.0,0.2,1,46,1472,320,0.3532,0.2507,drove the limb 0.125 rad past the person's true anatomical limit
+pddlstream,22,0,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.844,True,True,True,0.0496,0.95,57.9,0.1,1,32,1024,0,0.3532,0.3357,
+pomcpow_w1,22,0,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.844,True,True,True,0.0497,0.95,55.6,0.1,1,30,960,0,0.3532,0.335,
+pouct_w1,22,0,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.844,True,True,True,0.0497,0.95,56.7,0.1,1,30,960,0,0.3532,0.335,
+pouct_w4,22,0,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.844,True,True,True,0.0497,0.95,57.2,0.1,1,30,960,0,0.3532,0.335,
+pddlstream,22,1,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.844,True,True,True,0.0499,0.962,55.9,0.2,1,37,1184,0,0.3532,0.3362,
+pomcpow_w1,22,1,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.844,True,True,True,0.0497,0.962,78.1,0.2,1,49,1568,0,0.3532,0.3354,
+pouct_w1,22,1,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.844,True,True,True,0.0497,0.962,80.8,0.2,1,49,1568,0,0.3532,0.3354,
+pouct_w4,22,1,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.844,True,True,True,0.0499,0.962,87.6,0.2,1,56,1792,0,0.3532,0.3333,
+pddlstream,22,2,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.5,False,True,False,0.0499,0.958,142.5,0.2,1,43,1376,292,0.3532,0.2544,drove the limb 0.255 rad past the person's true anatomical limit
+pomcpow_w1,22,2,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.5,False,True,False,0.2952,0.749,69.0,0.2,1,36,1152,135,0.3532,0.2544,drove the limb 0.069 rad past the person's true anatomical limit
+pouct_w1,22,2,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.5,False,True,False,0.0497,0.958,82.4,0.2,1,57,1824,327,0.3532,0.2544,drove the limb 0.264 rad past the person's true anatomical limit
+pouct_w4,22,2,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.5,False,True,False,0.3435,0.708,67.2,0.2,1,37,1184,92,0.3532,0.2544,drove the limb 0.031 rad past the person's true anatomical limit
+pddlstream,22,3,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.5,False,True,False,0.0498,0.965,63.5,0.2,1,40,1280,269,0.3532,0.2544,drove the limb 0.255 rad past the person's true anatomical limit
+pomcpow_w1,22,3,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.5,False,True,False,0.3287,0.769,62.3,0.2,1,36,1152,156,0.3532,0.2544,drove the limb 0.086 rad past the person's true anatomical limit
+pouct_w1,22,3,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.5,False,True,False,0.0497,0.965,88.8,0.3,1,82,2624,590,0.3532,0.2544,drove the limb 0.277 rad past the person's true anatomical limit
+pouct_w4,22,3,isolated-left-arm,0.719 0.705 0.807,False,0.0,0.5,False,True,False,0.4061,0.715,68.2,0.2,1,54,1728,156,0.3532,0.2544,drove the limb 0.042 rad past the person's true anatomical limit
