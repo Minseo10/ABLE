@@ -107,6 +107,9 @@ class Generative:
                                                        pct_start=max(0.05, 3 / self.steps))
         generator = torch.Generator().manual_seed(self.seed)
         best, state, self.best_step = float("inf"), None, self.steps
+        # Reported only: (step, train loss, held-out loss), and the best weights' held-out nMSE.
+        self.history, self.best_val, self.val_nmse = [], float("nan"), float("nan")
+        watched = train[torch.randperm(len(train), generator=torch.Generator().manual_seed(1))[:2048]]
         for step in range(1, self.steps + 1):
             self.train_mode(True)
             batch = train[torch.randint(len(train), (self.batch_size,), generator=generator)]
@@ -119,13 +122,19 @@ class Generative:
                 self.train_mode(False)
                 with torch.no_grad():
                     val = float(self.loss(xs[held], ys[held], torch.Generator().manual_seed(7)))
+                    fit = float(self.loss(xs[watched], ys[watched], torch.Generator().manual_seed(7)))
+                self.history.append((step, fit, val))
                 if val < best:
-                    best, self.best_step = val, step
+                    best, self.best_step, self.best_val = val, step, val
                     state = [{k: v.clone() for k, v in m.state_dict().items()} for m in self.modules()]
         if state is not None:
             for m, s in zip(self.modules(), state):
                 m.load_state_dict(s)
         self.train_mode(False)
+        if held.any():
+            with torch.random.fork_rng():  # some draws use the global RNG
+                plans = self.predict(np.asarray(features)[held])
+            self.val_nmse = float((((plans - y[held]) / self.y_std) ** 2).mean())
         return self
 
     def modules(self) -> list[nn.Module]:

@@ -687,7 +687,10 @@ class OnlineWarmStart:
             "train_nmse": float((((estimator.predict(x) - y) ** 2) / _variance(y)).mean()),
             "fit_seconds": round(seconds, 3),
         }
-        if hasattr(inner, "history"):
+        if hasattr(inner, "val_nmse"):  # generative: `best_val` is its own loss, not nMSE
+            record.update(val_loss=inner.best_val, val_nmse=inner.val_nmse,
+                          best_step=inner.best_step, curve=[list(h) for h in inner.history])
+        elif hasattr(inner, "history"):
             record.update(val_nmse=inner.best_val, best_step=inner.best_step,
                           val_recent_nmse=getattr(inner, "best_val_recent", float("nan")),
                           curve=[list(h) for h in inner.history])
