@@ -1,0 +1,16 @@
+budget 400: shipping s12000
+budget 80: shipping s4000
+Wrote figures/dream/prior_only/summary.png
+Wrote figures/dream/prior_only/summary_person23.png
+Wrote figures/dream/prior_only/summary_person24.png
+Wrote figures/dream/prior_only/summary_person25.png
+Wrote figures/dream/prior_only/summary_person26.png
+Wrote figures/dream/prior_only/summary_person29.png
+
+                                                                people  episodes  reached  rollouts_mean  rollouts_median  plan_time_mean  plan_time_median  goal_distance_mean  goal_beyond_belief_sum  memo_hits_sum  policy_reached_sum  dream_time_sum  dreams_planned_sum  dreams_reached_sum
+condition model                n_dreams seed_mode prior_dreams                                                                                                                                                                                                                                    
+learned   gen:flow:hist        0        step      0                  5       100     0.97        2888.17           2242.5          109.00             99.38                0.05                       3              0                   0            0.00                   0                   0
+                               4        step      0                  5       100     0.97        2209.54           1656.0           86.27             76.74                0.06                       3              0                   0        47723.28                 424                 392
+plain                          0        plan      0                  5       100     0.95        4661.60           3008.0          168.83            135.95                0.08                       3              0                   0            0.00                   0                   0
+prior     gen:flow:s12000:hist 0        step      400                5       100     0.98        2268.55           2044.5           97.20             94.47                0.06                       3              0                   0            0.00                   0                   0
+          gen:flow:s4000:hist  0        step      80                 5       100     0.98        3038.69           2678.0          124.32            113.87                0.06                       3              0                   0            0.00                   0                   0

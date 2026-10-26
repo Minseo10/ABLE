@@ -43,7 +43,7 @@ TRUE = "#9AA5A3"
 # By (condition, model family).
 COLORS = {"plain": "#8C8C8C", "cache": "#1F77B4", "ridge": "#D62728", "mlp": "#6A3D9A",
           "ridge_step": "#FF7F0E", "mlp_step": "#2CA02C", "net": "#17BECF", "net_step": "#0B5563",
-          "gen_flow_step": "#4a3aa7", "gen_ddpm_step": "#e87ba4"}
+          "gen_flow_step": "#4a3aa7", "gen_ddpm_step": "#e87ba4", "prior": "#C9822B"}
 EFFORT_LABELS = {
     "rollouts": "MPC rollouts used",
     "simulator_steps": "simulator steps used",
@@ -97,16 +97,21 @@ PLANNER_NAMES = {"pddlstream": "PDDLStream", "pouct": "POUCT", "pomcp": "POMCP",
 def _series(frame: pd.DataFrame) -> list[tuple[str, dict, pd.DataFrame]]:
     """One (label, style, rows) per line: plain, then cache, ridge, MLP; no dreams first."""
     out = []
-    frame = frame.assign(seed_rollouts=frame.get("seed_rollouts", 1))
+    frame = frame.assign(seed_rollouts=frame.get("seed_rollouts", 1),
+                         prior_dreams=frame.get("prior_dreams", pd.Series(0, index=frame.index)).fillna(0))
     # Older CSVs have no planner column; they all used PDDLStream.
     planners = frame.get("planner", pd.Series("pddlstream", index=frame.index))
     frame = frame.assign(planner=planners.fillna("pddlstream"))
     several = frame["planner"].nunique() > 1
-    keys = ["planner", "condition", "model", "n_dreams", "seed_mode", "seed_rollouts"]
-    for (planner, condition, model, n_dreams, seed_mode, candidates), rows in frame.groupby(keys):
+    keys = ["planner", "condition", "model", "n_dreams", "seed_mode", "seed_rollouts",
+            "prior_dreams"]
+    for (planner, condition, model, n_dreams, seed_mode, candidates, prior_dreams), rows in \
+            frame.groupby(keys):
         family = _family(condition, model, seed_mode)
         if condition == "plain":
             label = "plain (no memory)"
+        elif condition == "prior":
+            label = f"{_model_name(model)}, prior only ({int(prior_dreams)} factory dreams)"
         else:
             what = "cache" if condition == "cache" else _model_name(model)
             if family.endswith("_step"):
@@ -121,6 +126,8 @@ def _series(frame: pd.DataFrame) -> list[tuple[str, dict, pd.DataFrame]]:
             label = f"{PLANNER_NAMES.get(planner, planner)}: {label}"
             if planner != "pddlstream":
                 style["ls"] = "-."
+        if condition == "prior":  # dashed: the smaller factory budget
+            style["ls"] = "--" if prior_dreams < frame["prior_dreams"].max() else "-"
         order = (list(COLORS).index(family), int(n_dreams), int(candidates), planner, label)
         out.append((order, label, style, rows))
     out.sort(key=lambda s: s[0])
@@ -222,7 +229,8 @@ GROUPS = (
      & f["model"].astype(str).str.startswith("mlp")),
     ("Learned: MLP 256×256 + vel/torque", lambda f: f["condition"].eq("learned")
      & f["model"].astype(str).str.startswith("net")),
-    ("Learned: flow matching", lambda f: f["condition"].eq("learned")
+    # Prior-only shares the row with the per-home flow model it is compared against.
+    ("Learned: flow matching", lambda f: f["condition"].isin(["learned", "prior"])
      & f["model"].astype(str).str.startswith("gen:flow")),
     ("Learned: diffusion", lambda f: f["condition"].eq("learned")
      & f["model"].astype(str).str.startswith("gen:ddpm")),
@@ -312,6 +320,9 @@ def summarize(frame: pd.DataFrame) -> pd.DataFrame:
         if column in frame:
             agg[f"{column}_{how}"] = (column, how)
     keys = ["condition", "model", "n_dreams", "seed_mode"]
+    if "prior_dreams" in frame:
+        frame = frame.assign(prior_dreams=frame["prior_dreams"].fillna(0).astype(int))
+        keys.append("prior_dreams")
     return frame.groupby(keys).agg(**agg).round(2)
 
 
