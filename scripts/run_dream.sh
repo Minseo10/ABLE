@@ -28,6 +28,12 @@
 #       `plan_cpu_time` (not inflated by core contention) as well as `plan_time`.
 #       FAIR=1: runs rotate one pinned core every ROTATE s (default 60), and filler runs
 #       ($OUT/filler) keep MAX_JOBS busy until the last real run ends.
+#   scripts/run_dream.sh prior [N=20] [D=4]
+#       Prior-only baseline: dream HOMES (default 100) hypothetical people from the prior, D
+#       dreams each, sharded over MAX_JOBS cores (limb_baseline.prior_factory); fit one flow
+#       model per dream budget in BUDGETS (default "400 80"), at 4000 and 12000 steps, and
+#       ship the one with the lower held-out loss; then deploy it frozen on PEOPLE with
+#       pddlstream_full's settings (FAIR=1 by default) -> data/dream/prior_only
 #
 # PEOPLE, OUT, FIG, VARIANT (scene and limb, default isolated-left-arm) and EXTRA (more
 # dream_pipeline flags for every run, e.g. --random-goals) apply to every mode.
@@ -42,6 +48,7 @@ case "$MODE" in
     fresh) NAME=fresh_goals ;;
     generative) NAME=generative_models ;;
     planners) NAME=planners; MAX_JOBS="${MAX_JOBS:-12}" ;;
+    prior) NAME=prior_only; FAIR="${FAIR:-1}"; EXTRA="${EXTRA:---no-feedback}" ;;
     *) echo "unknown mode: $MODE" >&2; exit 1 ;;
 esac
 PEOPLE="${PEOPLE:-23 24 25 26 29}"
@@ -222,6 +229,54 @@ planners() {
     done
     finish
     python scripts/dream_figures.py summary --csv "$OUT"/*_p*[0-9].csv --out "$FIG/summary.png" --per-person
+}
+
+prior() {
+    local homes="${HOMES:-100}" budgets="${BUDGETS:-400 80}" factory="$OUT/factory"
+    local shard b steps best pin pids=()
+    mkdir -p "$factory"
+    # 1. Factory dreams, one shard per core; a rerun resumes each shard's finished homes.
+    for ((shard = 0; shard < MAX_JOBS; shard++)); do
+        pin=()
+        [ "${#CORES[@]}" -gt 0 ] && pin=(taskset -c "${CORES[$shard]}")
+        "${pin[@]}" python -m limb_baseline.prior_factory dream --homes "$homes" \
+            --dreams-per-home "$D" --shard "$shard" --num-shards "$MAX_JOBS" \
+            --variant "$VARIANT" --out-dir "$factory" > "$LOGS/factory_$shard.log" 2>&1 &
+        pids+=("$!")
+    done
+    wait "${pids[@]}"
+    # 2. One model per budget; the step count with the lower held-out loss is shipped.
+    for b in $budgets; do
+        for steps in 4000 12000; do
+            python -m limb_baseline.prior_factory fit --factory "$factory" --dreams "$b" \
+                --model "gen:flow:s$steps:hist" --out "$factory/g_${b}_s$steps.pkl" \
+                > "$LOGS/fit_${b}_s$steps.log" 2>&1 &
+        done
+    done
+    wait
+    for b in $budgets; do
+        best=$(python - "$factory" "$b" <<'PY'
+import json, sys
+loss = {s: json.loads(open(f"{sys.argv[1]}/g_{sys.argv[2]}_s{s}.jsonl").readline())["val_loss"]
+        for s in (4000, 12000)}
+loss = {s: v if v == v else float("inf") for s, v in loss.items()}  # no held-out rows: 4000
+print(min(loss, key=loss.get))
+PY
+)
+        echo "budget $b: shipping s$best"
+        ln -sf "g_${b}_s$best.pkl" "$factory/g_$b.pkl"
+    done
+    # 3. Deploy each budget's model, frozen, on every person.
+    if [ "$FAIR" = 1 ] && [ "${#CORES[@]}" -gt 0 ]; then rotate & ROTATOR=$!; fi
+    for p in $PEOPLE; do
+        for b in $budgets; do
+            run "$p" prior 0 "pddlstream_prior_${b}_step_k8" step gen:flow:hist \
+                --prior-model "$factory/g_$b.pkl" --fresh-goals --vary-geometry --seed-rollouts 8
+        done
+    done
+    finish
+    python scripts/dream_figures.py summary --csv data/dream/pddlstream_full/*_p*[0-9].csv \
+        "$OUT"/*_p*[0-9].csv --out "$FIG/summary.png" --per-person
 }
 
 "$MODE"

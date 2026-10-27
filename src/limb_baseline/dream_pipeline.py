@@ -84,7 +84,9 @@ from limb_baseline.worker import isolate_worker, task_sampler
 # Stages 1-2, switched off; see `run_sequence`.
 # from limb_baseline.planner import QueryPolicy, gather_information
 
-CONDITIONS = ("plain", "cache", "learned")
+# `prior`: the learned model trained once on dreams from the prior (prior_factory.py),
+# loaded with `--prior-model` and never refit; the belief still updates from execution.
+CONDITIONS = ("plain", "cache", "learned", "prior")
 # The least a floor must rise, in scale units, to count as new information.
 FLOOR_STEP = 1e-3
 # How far inside the believed edge a retargeted goal sits, in radians. Small, so reaching
@@ -345,6 +347,9 @@ class Memory:
     stream: SeededStream
     memo: LimbMotionMemo | None
     learner: OnlineWarmStart
+    # `collect`: keep rows without refitting (the prior factory fits once at the end).
+    # `frozen`: neither keep rows nor refit (the prior condition's shipped model).
+    training: str = "online"
 
     @classmethod
     def build(cls, condition: str, model_name: str) -> "Memory":
@@ -355,11 +360,12 @@ class Memory:
         else:
             install(stream)
         install_mpc()
-        return cls(condition, stream, memo, OnlineWarmStart(model_name))
+        training = "frozen" if condition == "prior" else "online"
+        return cls(condition, stream, memo, OnlineWarmStart(model_name), training)
 
     @property
     def warm_start(self):
-        return self.learner.model if self.condition == "learned" else None
+        return self.learner.model if self.condition in ("learned", "prior") else None
 
     def snapshot(self) -> dict | None:
         """The cache before an episode, restored if the episode fails."""
@@ -373,9 +379,11 @@ class Memory:
             if self.memo is not None and snapshot is not None:
                 self.memo.plans = snapshot
             return 0.0
-        if self.condition != "learned":
+        if self.condition != "learned" or self.training == "frozen":
             return 0.0
         self.learner.add(result.segments)
+        if self.training == "collect":
+            return 0.0
         started = time.perf_counter()
         self.learner.refit(mpc)
         return time.perf_counter() - started
@@ -603,7 +611,7 @@ def refile(task: Task, believed: Believed, imagined: Believed, memory: Memory) -
 IDENTITY = ("condition", "model", "n_dreams", "all_goals", "num_goals", "variation",
             "particles", "confidence", "dream_max_time", "seed_mode", "seed_rollouts",
             "variant", "person", "task_seed", "planner", "seed_reuse", "num_rollouts",
-            "feedback")
+            "feedback", "prior_model")
 
 
 def checkpoint_path(out: Path) -> Path:
@@ -647,6 +655,7 @@ def run_sequence(
     out: Path,
     tag: str,
     resume: bool = False,
+    prior_model: Path | None = None,
 ) -> list[dict]:
     """Run the episodes in this process, one CSV row each; dreams go to `<out>_dreams.csv`.
 
@@ -687,14 +696,21 @@ def run_sequence(
     believed = Believed.build(belief, config, particle_rng)
     goal_sequence = (np.arange(config.num_episodes) if config.fresh_goals
                      else task_rng.integers(len(task_set), size=config.num_episodes))
-    n_dreams = config.n_dreams if condition != "plain" else 0
+    n_dreams = config.n_dreams if condition in ("cache", "learned") else 0
     memory = Memory.build(condition, model_name)
+    if condition == "prior":
+        with open(prior_model, "rb") as handle:
+            memory.learner = pickle.load(handle)
+        model_name = memory.learner.name
     dreams_out = out.with_name(out.stem + "_dreams.csv")
     dream_settings = dataclasses.replace(settings, max_time=config.dream_max_time)
     common = {
         "tag": tag,
         "condition": condition,
-        "model": model_name if condition == "learned" else "",
+        "model": model_name if condition in ("learned", "prior") else "",
+        "prior_model": str(prior_model) if condition == "prior" else "",
+        # Factory dreams the prior model was trained on.
+        "prior_dreams": getattr(memory.learner, "prior_dreams", 0) if condition == "prior" else 0,
         "n_dreams": n_dreams,
         "all_goals": config.all_goals,
         "fresh_goals": config.fresh_goals,
@@ -727,7 +743,7 @@ def run_sequence(
             state = pickle.load(handle)
         # Defaults for checkpoints that predate these fields.
         saved = {"planner": "pddlstream", "seed_reuse": False,
-                 "num_rollouts": MPCConfig.num_rollouts, "feedback": True,
+                 "num_rollouts": MPCConfig.num_rollouts, "feedback": True, "prior_model": "",
                  **state["common"]}
         mismatch = {k: (saved[k], common[k]) for k in IDENTITY if saved[k] != common[k]}
         if mismatch:
@@ -920,6 +936,9 @@ def main() -> None:
                         help="Drop the MPC's feedback-controller candidates, leaving it "
                              "the sampled rollouts alone.")
     parser.add_argument("--max-control-steps", type=int, default=MPCConfig.max_control_steps)
+    parser.add_argument("--prior-model", type=Path, default=None,
+                        help="With --condition prior: the pickled model from "
+                             "limb_baseline.prior_factory fit.")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--tag", type=str, default="")
     parser.add_argument("--resume", action="store_true",
@@ -959,12 +978,15 @@ def main() -> None:
         confidence=args.confidence,
         dream_max_time=args.dream_max_time,
     )
+    if (args.condition == "prior") != (args.prior_model is not None):
+        parser.error("--prior-model goes with --condition prior, and only with it")
+    prior_model = args.prior_model.resolve() if args.prior_model else None
     out = args.out.resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
     tag = args.tag or f"{args.condition}_{args.n_dreams}"
     records = run_sequence(
         args.condition, config, args.person, args.task_seed, args.model, settings,
-        out, tag, resume=args.resume,
+        out, tag, resume=args.resume, prior_model=prior_model,
     )
     times = [r["plan_time"] for r in records if r.get("goal_reached")]
     print(
