@@ -7,7 +7,7 @@ from kinder_pddlstream_planning.limbrepositioning3d.run import create_env, build
 from kinder_pddlstream_planning.limbrepositioning3d.stream import LimbConf, sample_grasp, plan_grasp_motion
 from kinder_pddlstream_planning.limbrepositioning3d import utils as u
 
-out=Path('/home/minseo/research/learning-forceful-manipulation/data/leg_failure_diagnosis')
+out=Path('/home/minseo/research/learning-forceful-manipulation/data/archive/leg_failure_diagnosis')
 out.mkdir(exist_ok=True)
 rows=[]
 for scene in ('isolated','human','bed','wheelchair'):

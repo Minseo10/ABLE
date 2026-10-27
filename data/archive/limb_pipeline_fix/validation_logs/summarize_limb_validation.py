@@ -7,7 +7,7 @@ import statistics
 from PIL import Image
 
 ROOT = Path('/home/minseo/research/learning-forceful-manipulation')
-OUT = ROOT / 'data/limb_pipeline_fix'
+OUT = ROOT / 'data/archive/limb_pipeline_fix'
 rows = []
 for directory in ('final_seed0', 'seeds1_2'):
     rows.extend(json.loads(line) for line in
