@@ -10,7 +10,7 @@ import subprocess
 from kinder_pddlstream_planning.limbrepositioning3d.stream import MPCConfig
 
 ROOT = pathlib.Path('/home/minseo/research/learning-forceful-manipulation')
-OUT = ROOT / 'data/limb_pipeline_fix'
+OUT = ROOT / 'data/archive/limb_pipeline_fix'
 repos = {
     'kinder-baselines': ROOT.parent / 'kinder-baselines',
     'kindergarden': ROOT.parent / 'kindergarden',
