@@ -15,6 +15,7 @@ dist/
 
 # Environments
 .venv/
+/.venv
 venv/
 
 # Generated outputs
@@ -44,3 +45,8 @@ patches/
 research_notes/
 reports/
 output/
+
+# Local real-world calibration, credentials and proprietary models
+.local/
+private_sprout/
+.rpc_authkey

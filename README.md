@@ -177,3 +177,9 @@ Mean over episodes 10-19:
 | `doc/` | Poster, abstract, slides, [earlier experiments](doc/earlier-experiments.md) |
 | `notebooks/dreaming_rom_planner.ipynb` | The toy version of the loop this pipeline follows |
 | `tests/` | `pytest -m "not slow"` skips tests that build a simulation |
+
+## Real-world Sprout experiment
+
+- Experiment source, scripts, configuration examples, tests and docs: [real_world/](real_world/README.md).
+- Ordered laptop commands: [real_world/docs/real-to-sim-to-real.md](real_world/docs/real-to-sim-to-real.md).
+- Robot-side code remains in the companion `prpl-tidybot/src/prpl_tidybot/sprout/` package.

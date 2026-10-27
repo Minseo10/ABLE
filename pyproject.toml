@@ -32,4 +32,4 @@ develop = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["src", "real_world/src"]

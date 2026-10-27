@@ -1,0 +1,134 @@
+{
+  "schema": "sprout_live_v1",
+  "execution_enabled": false,
+  "confirmation_mode": "operator",
+  "perception_host": "192.168.0.131",
+  "arm_host": "192.168.1.10",
+  "robot_id": 0,
+  "verified": {
+    "model_mount_and_tool": false,
+    "camera_calibration": false,
+    "finger_floor_clearance": false,
+    "forearm_contact_and_passive_mobility": false,
+    "obstacle_and_held_limb_bounds": false,
+    "physical_stop": false
+  },
+  "geometry": {
+    "floor_z_arm_m": -0.3948,
+    "pad_drop_m": 0.0294,
+    "minimum_clearance_m": 0.01,
+    "downward_error_budget_m": 0.01
+  },
+  "hardware": {
+    "joint_min_rad": [
+      -3.141592653589793,
+      -2.24,
+      -3.141592653589793,
+      -2.57,
+      -3.141592653589793,
+      -2.09,
+      -3.141592653589793
+    ],
+    "joint_max_rad": [
+      3.141592653589793,
+      2.24,
+      3.141592653589793,
+      2.57,
+      3.141592653589793,
+      2.09,
+      3.141592653589793
+    ],
+    "velocity_rad_s": [
+      0.17453292519943295,
+      0.17453292519943295,
+      0.17453292519943295,
+      0.17453292519943295,
+      0.17453292519943295,
+      0.17453292519943295,
+      0.17453292519943295
+    ],
+    "acceleration_rad_s2": [
+      0.3490658503988659,
+      0.3490658503988659,
+      0.3490658503988659,
+      0.3490658503988659,
+      0.3490658503988659,
+      0.3490658503988659,
+      0.3490658503988659
+    ],
+    "measured_torque_limit_nm": null,
+    "gripper_force_percent": 10.0,
+    "gripper_speed_percent": 10.0,
+    "command_timeout_s": 0.5,
+    "feedback_timeout_s": 0.1,
+    "startup_timeout_s": 5.0
+  },
+  "motion": {
+    "period_s": 0.05,
+    "timeout_s": 120.0,
+    "feedback_max_age_s": 0.1,
+    "translation_speed_m_s": 0.02,
+    "max_command_lead_m": 0.01,
+    "position_tolerance_m": 0.005,
+    "yaw_tolerance_rad": 0.05,
+    "settled_speed_rad_s": 0.02,
+    "stable_samples": 3,
+    "open_position": 0.0,
+    "close_position": 1.0,
+    "gripper_position_rate_s": 0.1,
+    "gripper_tolerance": 0.02
+  },
+  "servo": {
+    "tolerance_m": 0.005,
+    "max_step_m": 0.005,
+    "max_travel_m": 0.03,
+    "timeout_s": 30.0,
+    "stable_frames": 3,
+    "max_updates": 20,
+    "camera_max_age_s": 0.25,
+    "base_tolerance_m": 0.01,
+    "base_tolerance_rad": 0.02,
+    "path_resolution_rad": 0.02,
+    "max_joint_step_rad": 0.1,
+    "orientation_speed_rad_s": 0.1,
+    "orientation_tolerance_rad": 0.05,
+    "confirmation_timeout_s": 120.0,
+    "gripper_stall_samples": 5,
+    "gripper_stall_epsilon": 0.002,
+    "grasp_reading_min": 0.1,
+    "grasp_reading_max": 0.9,
+    "collision_margin_m": 0.005,
+    "startup_timeout_s": 5.0
+  },
+  "revalidation_tolerances": {
+    "grasp_xyz": 0.01,
+    "base_xyyaw": 0.01,
+    "arm_joints_rad": 0.03
+  },
+  "obstacles": [
+    {
+      "name": "torso_and_non_target_limbs",
+      "center": null,
+      "half_size": null
+    }
+  ],
+  "held_forearm": {
+    "center": null,
+    "half_size": null
+  },
+  "navigation": {
+    "verified": false,
+    "speed_m_s": 0.04,
+    "yaw_speed_rad_s": 0.1,
+    "acceleration_m_s2": 0.08,
+    "yaw_acceleration_rad_s2": 0.15,
+    "position_tolerance_m": 0.005,
+    "yaw_tolerance_rad": 0.01,
+    "path_tolerance_m": 0.015,
+    "timeout_s": 120.0,
+    "period_s": 0.02,
+    "arm_tolerance_rad": 0.01,
+    "note": "Proposed commissioning values, not measured safety limits. Verify operating area, all obstacles, transit posture and stopping clearance.",
+    "camera_max_age_s": 0.25
+  }
+}

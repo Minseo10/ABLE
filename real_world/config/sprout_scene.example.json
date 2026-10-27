@@ -1,0 +1,36 @@
+{
+  "synthetic_demo": false,
+  "tidybot_model": null,
+  "sprout_model": "private_sprout/v0.1.4/sprout.xml",
+  "scene": {
+    "body_pose_source": "automatic forearm box; full Sprout model optional",
+    "sprout_root_xyz_wxyz": null,
+    "sprout_joints_rad": {},
+    "forearm_point_local_m": null,
+    "tidybot_base_xyyaw": null,
+    "tidybot_arm_joints_rad": null,
+    "representation": "forearm_box"
+  },
+  "recipe": {
+    "pregrasp_height_m": 0.1,
+    "retreat_height_m": 0.1,
+    "lift_height_m": 0.15
+  },
+  "note": "Default forearm_box mode derives the target box from camera detection. Sprout model, root pose and joints are unused. Opt in to representation=sprout_model to include the full body. Pregrasp/retreat are 10 cm above grasp; lift request is 15 cm, subject to IK and physical commissioning.",
+  "base_planning": {
+    "enabled": true,
+    "clearance_m": 0.05,
+    "bounds_xy": [
+      [
+        -2.0,
+        -1.3
+      ],
+      [
+        1.5,
+        2.0
+      ]
+    ],
+    "obstacles": [],
+    "note": "Local search window, NOT a surveyed free-space claim. Verify bounds and surroundings before real base motion."
+  }
+}
