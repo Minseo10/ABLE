@@ -1,0 +1,4 @@
+# Post-merge check (scripts/check.sh): no holes, enough search to reach the goal most episodes.
+task: friction
+options: {env: 2d, level: L1, num_sims: 300, max_pushes: 8}
+pipeline: {episodes: 2, dreams: 1, queries: 1, model: flow, model_options: {width: 64, depth: 2, steps: 300}}

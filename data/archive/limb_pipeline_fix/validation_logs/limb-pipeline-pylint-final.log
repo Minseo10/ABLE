@@ -1,6 +1,0 @@
-pylint: Command line or configuration file:1: UserWarning: 'Exception' is not a proper value for the 'overgeneral-exceptions' option. Use fully qualified name (maybe 'builtins.Exception' ?) instead. This will cease to be checked at runtime when the configuration upgrader is released.
-pybullet build time: Mar 13 2026 19:11:15
-
--------------------------------------------------------------------
-Your code has been rated at 10.00/10 (previous run: 9.98/10, +0.02)
-

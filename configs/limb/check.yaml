@@ -1,0 +1,4 @@
+# Post-merge check (scripts/check.sh): tiny but end to end.
+task: limb
+options: {variant: human-left-arm, max_time: 300}
+pipeline: {episodes: 2, dreams: 1, queries: 1, model: flow}

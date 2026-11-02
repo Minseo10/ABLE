@@ -1,5 +1,0 @@
-input-free K-means K= 1: oracle best-of-K val nMSE=0.961
-input-free K-means K= 2: oracle best-of-K val nMSE=0.832
-input-free K-means K= 4: oracle best-of-K val nMSE=0.687
-input-free K-means K= 8: oracle best-of-K val nMSE=0.565
-input-free K-means K=16: oracle best-of-K val nMSE=0.485

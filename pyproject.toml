@@ -3,25 +3,28 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "limb_baseline"
+name = "able"
 version = "0.1.0"
-description = "Simplest baseline for limb manipulation: query a person, then learn to plan faster."
+description = "ABLE: learn to plan faster from dreamed belief updates (limb MPC, friction POMCPOW, human reach PDDLStream)."
 requires-python = ">=3.10,<3.13"
 dependencies = [
     "numpy",
     "pandas",
-    "scikit-learn",
     "scipy",
     "torch",
     "matplotlib",
     "pillow",
-    "pomdp-py",
     "imageio",
     "imageio-ffmpeg",
+    "pyyaml",
+    "wandb",
     "pybullet_helpers>=0.1.0",
-    "kindergarden @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden.git@main",
-    "kinder_models @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kinder-baselines.git@main#subdirectory=kinder-models",
-    "kinder_pddlstream_planning @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kinder-baselines.git@main#subdirectory=kinder-pddlstream-planning",
+    "psutil",
+    "gymnasium",
+    # Pinned so every machine runs the same envs and planner.
+    "kindergarden @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden.git@3f57bb6e07f89f8701e6b86410c773860ea9db2d",
+    "kinder_models @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kinder-baselines.git@0c13d8bb70d7edbb605db166dbfc82d1c2a432fd#subdirectory=kinder-models",
+    "pddlstream @ git+https://github.com/Princeton-Robot-Planning-and-Learning/pddlstream.git@5919a844b8c947acdb49bedb6e8b2b93e6a70c0c",
 ]
 
 [project.optional-dependencies]
@@ -33,3 +36,6 @@ develop = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+able = ["**/*.pddl", "**/*.json"]

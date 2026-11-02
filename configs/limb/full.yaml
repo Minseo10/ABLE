@@ -1,0 +1,3 @@
+task: limb
+options: {variant: human-left-arm, max_time: 600}
+pipeline: {episodes: 20, dreams: 4, queries: 1, model: flow}

@@ -24,21 +24,13 @@ temp/
 # Interrupted writes
 *.partial
 
-# Experiment process logs
-data/dream/*/logs/
-data/archive/memo/logs/
-data/archive/memo/*/logs/
-data/archive/dream/*/logs/
+# Results live on W&B (scripts/log_to_wandb.py), not in git
+/data/
+/figures/
+/videos/
 wandb/
 
 # Local work kept out of the repo
-paper/
-figures/variant_sweep*/
-videos/variant_sweep*/
-data/dream/variants/
-data/variant_sweep*/
-figures/dream/variants/
-scripts/variant_sweep.py
 tmp/
 patches/
 research_notes/

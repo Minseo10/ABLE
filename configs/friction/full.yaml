@@ -1,0 +1,3 @@
+task: friction
+options: {env: 3d, level: L3, num_sims: 3000, max_pushes: 15}
+pipeline: {episodes: 20, dreams: 4, queries: 1, model: flow, model_options: {width: 128, depth: 3, steps: 2000}}
