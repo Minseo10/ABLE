@@ -13,14 +13,14 @@ Each run lives in `data/<method>/<tag>/` and holds `demos.csv`, `attempts.csv`, 
 ```bash
 # 1-2. Collect demonstrations. --method is pddlstream (plan to a goal) or babble
 #      (random torques, relabelled). Queries and belief updates happen per episode.
-python -m limb_baseline.collect --method babble --variant isolated-left-arm \
+python -m able.tasks.limb.collect --method babble --variant isolated-left-arm \
     --tag isolated_left_arm --num-people 50 --tasks-per-person 5
 
 # 3. Fit psi, the MPC warm start, held out by person.
-python -m limb_baseline.fit --run-dir data/babble/isolated_left_arm
+python -m able.tasks.limb.fit --run-dir data/babble/isolated_left_arm
 
 # 4. Evaluate on freshly drawn people.
-python -m limb_baseline.evaluate --run-dir data/babble/isolated_left_arm \
+python -m able.tasks.limb.evaluate --run-dir data/babble/isolated_left_arm \
     --variant isolated-left-arm --num-tasks 50
 ```
 
@@ -38,17 +38,17 @@ weights start.
 
 ```bash
 # Factory learning: one MLP over an existing collect run.
-python -m limb_baseline.personalize pretrain --run-dir data/archive/pddlstream/isolated_left_arm
+python -m able.tasks.limb.personalize pretrain --run-dir data/archive/pddlstream/isolated_left_arm
 
 # Version 1: personalize from the factory model.
-python -m limb_baseline.personalize run --version v1 --variant isolated-left-arm \
+python -m able.tasks.limb.personalize run --version v1 --variant isolated-left-arm \
     --pretrained data/archive/pddlstream/isolated_left_arm/pretrained.pkl \
     --out-dir data/personalize/compare --num-people 5 --rounds 5 --tasks-per-round 5
 
 # Version 2, matched and larger. Both write into the same rounds.csv.
-python -m limb_baseline.personalize run --version v2_matched \
+python -m able.tasks.limb.personalize run --version v2_matched \
     --variant isolated-left-arm --out-dir data/personalize/compare --num-people 5 --rounds 5 --tasks-per-round 5
-python -m limb_baseline.personalize run --version v2_large \
+python -m able.tasks.limb.personalize run --version v2_large \
     --variant isolated-left-arm --out-dir data/personalize/compare --num-people 5 --rounds 5 --tasks-per-round 15
 ```
 
@@ -90,16 +90,16 @@ runs under `data/archive/memo/directed_bar/`, `nominal_bar/` and `batch8/` are e
 per-step variants, and `data/archive/memo/replay/` replayed the stored plan open-loop.
 
 ```bash
-python -m limb_baseline.memo --condition learned --model ridge --variation 0.3 \
+python -m able.tasks.limb.memo --condition learned --model ridge --variation 0.3 \
     --num-tasks 20 --variant isolated-left-arm --out data/memo/varied_task.csv
 ```
 
-The package runs against kinder-baselines `main`; `src/limb_baseline/utils.py` supplies
+The package runs against kinder-baselines `main`; `src/able.tasks.limb/utils.py` supplies
 the few planner names it was written against that `main` renamed or dropped.
 
 ## Dream pipeline: design notes
 
-`limb_baseline.dream_pipeline` runs the notebook's loop on the arm: one episode is (1) information
+`able.tasks.limb.dream_pipeline` runs the notebook's loop on the arm: one episode is (1) information
 gathering, (2) human model learning, (3) `n_dreams` dreams, (4) one planned and executed
 task. Stages 1-2, the queries, are commented out for now; the belief starts at the
 population prior and, as in the notebook, learns only from execution: a limb that stayed

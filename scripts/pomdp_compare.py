@@ -25,9 +25,9 @@ PLANNERS = ("pddlstream", "pouct", "pomcp", "pomcpow")
 
 def starting_belief(person: int, nominal_init):
     """The person, and the belief and particles every planner starts with."""
-    from limb_baseline.belief import Belief
-    from limb_baseline.dream_pipeline import Believed, DreamConfig, observe
-    from limb_baseline.human import DEFAULT_PRIOR
+    from able.tasks.limb.belief import Belief
+    from able.tasks.limb.dream_pipeline import Believed, DreamConfig, observe
+    from able.tasks.limb.human import DEFAULT_PRIOR
 
     config = DreamConfig()
     theta = DEFAULT_PRIOR.sample(np.random.default_rng(person))
@@ -40,8 +40,8 @@ def draw_tasks(person: int, num_goals: int) -> tuple[list, tuple]:
 
     The sampler's reachability checks did not always agree across worker processes.
     """
-    from limb_baseline.dream_pipeline import DreamConfig, make_task_set
-    from limb_baseline.human import DEFAULT_PRIOR
+    from able.tasks.limb.dream_pipeline import DreamConfig, make_task_set
+    from able.tasks.limb.human import DEFAULT_PRIOR
 
     theta = DEFAULT_PRIOR.sample(np.random.default_rng(person))
     rng = np.random.default_rng(person)
@@ -59,10 +59,10 @@ def particle_share(limits, goal) -> float:
 
 def draw_risky_tasks(person: int, num_goals: int, band: tuple[float, float]) -> tuple[list, tuple]:
     """Goals from the nominal start whose particle share lies in `band`."""
-    from limb_baseline.human import theta_to_joint_limits
-    from limb_baseline.tasks import DEFAULT_TASK_DISTRIBUTION
-    from limb_baseline.dream_pipeline import distance
-    from limb_baseline.worker import task_sampler
+    from able.tasks.limb.dream_pipeline import distance
+    from able.tasks.limb.human import theta_to_joint_limits
+    from able.tasks.limb.tasks import DEFAULT_TASK_DISTRIBUTION
+    from able.tasks.limb.worker import task_sampler
 
     tasks, nominal_init = draw_tasks(person, 1)
     nominal = tasks[0]
@@ -98,7 +98,7 @@ def draw_risky_tasks(person: int, num_goals: int, band: tuple[float, float]) -> 
 
 def draw_risky_fresh(variant: str, person: int, num_goals: int, band) -> tuple[list, tuple]:
     """`draw_risky_tasks` in a fresh process: sampling depends on the simulator's history."""
-    from limb_baseline.variant import select
+    from able.tasks.limb.variant import select
 
     select(variant)
     return draw_risky_tasks(person, num_goals, band)
@@ -106,18 +106,17 @@ def draw_risky_fresh(variant: str, person: int, num_goals: int, band) -> tuple[l
 
 def run_one(job: dict, on_search=None) -> dict:
     """Run one planner's episode; return its CSV row."""
-    from limb_baseline.variant import select
+    from able.tasks.limb.variant import select
 
     select(job["variant"])
     # Select before imports that build variant-dependent defaults.
-    from kinder_pddlstream_planning.limbrepositioning3d.stream import MPCConfig
-
-    from limb_baseline.dream_pipeline import distance, goal_distance, observe
-    from limb_baseline.human import theta_to_joint_limits
-    from limb_baseline.planner import PlannerSettings, run_episode
-    from limb_baseline.pomdp_model import PLAN_ONCE
-    from limb_baseline.pomdp_planner import run_episode_plan_once
-    from limb_baseline.worker import isolate_worker
+    from able.tasks.limb.dream_pipeline import distance, goal_distance, observe
+    from able.tasks.limb.human import theta_to_joint_limits
+    from able.tasks.limb.planner import PlannerSettings, run_episode
+    from able.tasks.limb.planning.stream import MPCConfig
+    from able.tasks.limb.pomdp_model import PLAN_ONCE
+    from able.tasks.limb.pomdp_planner import run_episode_plan_once
+    from able.tasks.limb.worker import isolate_worker
 
     row = {k: job[k] for k in ("planner", "person", "goal", "variant")}
     log = Path(job["log"])
@@ -195,7 +194,7 @@ def main() -> None:
         os.environ.setdefault(variable, "1")
 
     out = args.out.resolve()
-    from limb_baseline.variant import select
+    from able.tasks.limb.variant import select
 
     select(args.variant)
     configurations = [

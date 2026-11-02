@@ -19,8 +19,8 @@ from numpy.typing import NDArray
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from limb_baseline import variant as variant_module
-from limb_baseline.human import (
+from able.tasks.limb import variant as variant_module
+from able.tasks.limb.human import (
     DEFAULT_PRIOR,
     active_joints,
     active_motions,

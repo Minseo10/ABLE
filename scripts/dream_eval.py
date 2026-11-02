@@ -50,7 +50,7 @@ def numbers(text) -> np.ndarray:
 
 def load_run(directory, stem: str):
     """A learned run's rows: inputs, labels, (episode, role) per row, belief floors and keys."""
-    from limb_baseline import dream_pipeline
+    from able.tasks.limb import dream_pipeline
 
     class Unpickler(pickle.Unpickler):
         def find_class(self, module, name):
@@ -126,7 +126,7 @@ def gaussian_nll(mean, scale, y, std):
 def belief_job(job):
     directory, stem, features, seed = job
     one_thread()
-    from limb_baseline.warmstart import make_regressor
+    from able.tasks.limb.warmstart import make_regressor
 
     x, y, meta, floors, keys = load_run(directory, stem)
     if features == "floor":
@@ -189,7 +189,7 @@ def belief_features(args):
 def backfill_job(job):
     directory, stem, i = job
     one_thread()
-    from limb_baseline.warmstart import DropoutMLP
+    from able.tasks.limb.warmstart import DropoutMLP
 
     x, y, _, _, _ = load_run(directory, stem)
     log = [json.loads(line) for line in open(Path(directory) / f"{stem}_learning.jsonl")]
@@ -234,7 +234,7 @@ def backfill(args):
 def screen_job(job):
     directory, stem, label = job
     one_thread()
-    from limb_baseline.warmstart import make_regressor
+    from able.tasks.limb.warmstart import make_regressor
 
     xt, yt, xs, ys, var, std = split(directory, stem)
     started = time.perf_counter()
@@ -330,7 +330,7 @@ def screen(args):
 def steps_job(job):
     directory, stem, label, seed = job
     one_thread()
-    from limb_baseline.generative import KINDS
+    from able.tasks.limb.generative import KINDS
 
     xt, yt, xs, ys, var, std = split(directory, stem)
     kind, attribute = SAMPLERS[label]

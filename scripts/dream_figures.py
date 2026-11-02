@@ -632,7 +632,7 @@ def samples(args):
     sys.path.insert(0, str(Path(__file__).parent))
     from dream_eval import load_run
 
-    from limb_baseline.warmstart import make_regressor
+    from able.tasks.limb.warmstart import make_regressor
 
     x, y, meta, _, _ = load_run(args.data, f"net_4_step_p{args.person}")
     train = (meta.episode < CUT).to_numpy()

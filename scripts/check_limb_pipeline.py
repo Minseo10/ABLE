@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
-from limb_baseline.variant import scene_config, select
+from able.tasks.limb.variant import scene_config, select
 
 
 def main():
@@ -22,14 +22,14 @@ def main():
     select(args.variant)
 
     # Selection precedes imports that construct variant-dependent defaults.
-    from limb_baseline import planner
-    from limb_baseline.human import default_magnitudes
-    from limb_baseline.planner import (
+    from able.tasks.limb import planner
+    from able.tasks.limb.human import default_magnitudes
+    from able.tasks.limb.planner import (
         ParticleLimits,
         PlannerSettings,
         run_episode,
     )
-    from limb_baseline.tasks import Task
+    from able.tasks.limb.tasks import Task
 
     config = scene_config()
     task = Task(

@@ -18,8 +18,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from limb_baseline.human import DEFAULT_PRIOR
-from limb_baseline.pomdp_model import (
+from able.tasks.limb.human import DEFAULT_PRIOR
+from able.tasks.limb.pomdp_model import (
     Clear,
     Facts,
     Grasp,
@@ -31,7 +31,7 @@ from limb_baseline.pomdp_model import (
     Transition,
     example_facts,
 )
-from limb_baseline.pomdp_planner import make_agent, make_solver
+from able.tasks.limb.pomdp_planner import make_agent, make_solver
 
 
 def make_facts(goal_scale: float, num_waypoints: int, thetas: np.ndarray) -> Facts:
@@ -216,7 +216,9 @@ def episode(args) -> None:
     sys.path.insert(0, str(FilePath(__file__).parent))
     import pomdp_compare  # pylint: disable=import-outside-toplevel
 
-    from limb_baseline.variant import select  # pylint: disable=import-outside-toplevel
+    from able.tasks.limb.variant import (
+        select,  # pylint: disable=import-outside-toplevel
+    )
 
     select(args.variant)
     person, goal = args.episode

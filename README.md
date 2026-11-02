@@ -81,14 +81,14 @@ goal and belief. A good seed lets the MPC find a plan with fewer rollouts.0
 
 
 Each **episode** runs these following steps, all driven by
-[`dream_pipeline.py`](src/limb_baseline/dream_pipeline.py):
+[`dream_pipeline.py`](src/able.tasks.limb/dream_pipeline.py):
 
 | Step | What happens | Code |
 | --- | --- | --- |
-| 1. Information gathering | The robot queries human and collect responses (Query: The robot asks the person to push a joint to the believed limit. Response: Human's final limb configuration.) | [`queries.py`](src/limb_baseline/queries.py) |
-| 2. Human model learning | Keep a belief over `theta`. It starts at a population prior and the belief is updated after information gathering using human responses. | [`belief.py`](src/limb_baseline/belief.py), `observe()` |
+| 1. Information gathering | The robot queries human and collect responses (Query: The robot asks the person to push a joint to the believed limit. Response: Human's final limb configuration.) | [`queries.py`](src/able.tasks.limb/queries.py) |
+| 2. Human model learning | Keep a belief over `theta`. It starts at a population prior and the belief is updated after information gathering using human responses. | [`belief.py`](src/able.tasks.limb/belief.py), `observe()` |
 | 3. Dreaming | Repeat `n_dreams` times: draw a random person from the belief, plan a task for them, imagine executing it, and get the belief that would follow. Store the plan in the memory under that imagined belief. | `dream_once()` |
-| 4. Planning and execution | Run PDDLStream planner, with using $g$ that predicts the warm start for MPC. If its plan does not work, search with the normal planner (PDDLStream without $g$). Execute on the real person, then update the belief. | `plan_and_execute()`, [`planner.py`](src/limb_baseline/planner.py), [`memo.py`](src/limb_baseline/memo.py) |
+| 4. Planning and execution | Run PDDLStream planner, with using $g$ that predicts the warm start for MPC. If its plan does not work, search with the normal planner (PDDLStream without $g$). Execute on the real person, then update the belief. | `plan_and_execute()`, [`planner.py`](src/able.tasks.limb/planner.py), [`memo.py`](src/able.tasks.limb/memo.py) |
 
 `--condition` represents what the memory selects:
 
@@ -97,15 +97,15 @@ Each **episode** runs these following steps, all driven by
 - `learned`: a model that predicts torques from the current state and goal, retrained
   after every solved dream or episode. 
     - `--model` picks it: an MLP
-  ([`warmstart.py`](src/limb_baseline/warmstart.py)) or a generative model such as flow
-  matching or diffusion ([`generative.py`](src/limb_baseline/generative.py)).
+  ([`warmstart.py`](src/able.tasks.limb/warmstart.py)) or a generative model such as flow
+  matching or diffusion ([`generative.py`](src/able.tasks.limb/generative.py)).
 
 
 ## Run
 
 
 ```bash
-python -m limb_baseline.dream_pipeline --condition learned --model gen:flow:hist \
+python -m able.tasks.limb.dream_pipeline --condition learned --model gen:flow:hist \
     --n-dreams 4 --num-episodes 20 --person 24 --fresh-goals --vary-geometry \
     --seed-mode step --seed-rollouts 8 --out data/dream/my_run/flow_p24.csv
 ```
@@ -164,10 +164,10 @@ Mean over episodes 10-19:
 
 | Path | What |
 | --- | --- |
-| `src/limb_baseline/dream_pipeline.py` | The episode loop: belief update, dreams, memory, planning |
-| `src/limb_baseline/belief.py`, `human.py` | Belief over the range of motion; the person model `theta` |
-| `src/limb_baseline/planner.py`, `memo.py` | Planner wrapper; plan cache, online model and MPC seeding |
-| `src/limb_baseline/warmstart.py`, `generative.py` | The learned models (MLP; flow matching, diffusion and others) |
+| `src/able.tasks.limb/dream_pipeline.py` | The episode loop: belief update, dreams, memory, planning |
+| `src/able.tasks.limb/belief.py`, `human.py` | Belief over the range of motion; the person model `theta` |
+| `src/able.tasks.limb/planner.py`, `memo.py` | Planner wrapper; plan cache, online model and MPC seeding |
+| `src/able.tasks.limb/warmstart.py`, `generative.py` | The learned models (MLP; flow matching, diffusion and others) |
 | `scripts/run_dream.sh` | Runs a full experiment |
 | `scripts/dream_figures.py` | Result figures: `summary`, `curves`, `step`, `samples` |
 | `scripts/dream_eval.py` | Offline studies of the models on recorded runs |

@@ -30,7 +30,7 @@
 #       ($OUT/filler) keep MAX_JOBS busy until the last real run ends.
 #   scripts/run_dream.sh prior [N=20] [D=4]
 #       Prior-only baseline: dream HOMES (default 100) hypothetical people from the prior, D
-#       dreams each, sharded over MAX_JOBS cores (limb_baseline.prior_factory); fit one flow
+#       dreams each, sharded over MAX_JOBS cores (able.tasks.limb.prior_factory); fit one flow
 #       model per dream budget in BUDGETS (default "400 80"), at 4000 and 12000 steps, and
 #       ship the one with the lower held-out loss; then deploy it frozen on PEOPLE with
 #       pddlstream_full's settings (FAIR=1 by default) -> data/dream/prior_only
@@ -103,7 +103,7 @@ run() { # person condition n_dreams tag seed_mode model [more dream_pipeline fla
         wait -n || true
     done
     [ "${#CORES[@]}" -gt 0 ] && pin=(taskset -c "${CORES[$slot]}")
-    "${pin[@]}" python -m limb_baseline.dream_pipeline --condition "$condition" --n-dreams "$dreams" \
+    "${pin[@]}" python -m able.tasks.limb.dream_pipeline --condition "$condition" --n-dreams "$dreams" \
         --num-episodes "$N" --variation 0.3 --variant "$VARIANT" \
         --person "$person" --model "$model" --particles 32 --confidence 0.5 \
         --seed-mode "$seed_mode" --out "$OUT/${tag}_p$person.csv" --tag "$tag" "$@" $EXTRA \
@@ -117,7 +117,7 @@ rotate() { # shift the runs under $OUT one core every ROTATE seconds
     [ "$MAX_JOBS" -lt "$n" ] && n="$MAX_JOBS"
     while :; do
         mapfile -t pids < <(ps -eo pid=,args= | awk -v out="--out $OUT/" \
-            '$2 ~ /python/ && index($0, "limb_baseline.dream_pipeline") && index($0, out) {print $1}' | sort -n)
+            '$2 ~ /python/ && index($0, "able.tasks.limb.dream_pipeline") && index($0, out) {print $1}' | sort -n)
         for ((i = 0; i < ${#pids[@]} && i < n; i++)); do
             for pid in "${pids[$i]}" $(pgrep -P "${pids[$i]}" || true); do
                 taskset -a -cp "${CORES[$(((i + offset) % n))]}" "$pid" > /dev/null 2>&1 || true
@@ -140,7 +140,7 @@ finish() { # wait for the real runs; with FAIR=1, fill freed cores with filler r
         for pid in "${fillers[@]}"; do kill -0 "$pid" 2> /dev/null && busy=$((busy + 1)); done
         while [ "$busy" -lt "$MAX_JOBS" ]; do
             planner=pddlstream; [ $((k % 2)) = 1 ] && planner=pouct
-            python -m limb_baseline.dream_pipeline --condition plain --n-dreams 0 \
+            python -m able.tasks.limb.dream_pipeline --condition plain --n-dreams 0 \
                 --num-episodes 100 --variation 0.3 --variant "$VARIANT" --person $((100 + k)) \
                 --model ridge --particles 32 --confidence 0.5 --seed-mode plan \
                 --planner "$planner" --fresh-goals --vary-geometry --tag filler $EXTRA \
@@ -239,7 +239,7 @@ prior() {
     for ((shard = 0; shard < MAX_JOBS; shard++)); do
         pin=()
         [ "${#CORES[@]}" -gt 0 ] && pin=(taskset -c "${CORES[$shard]}")
-        "${pin[@]}" python -m limb_baseline.prior_factory dream --homes "$homes" \
+        "${pin[@]}" python -m able.tasks.limb.prior_factory dream --homes "$homes" \
             --dreams-per-home "$D" --shard "$shard" --num-shards "$MAX_JOBS" \
             --variant "$VARIANT" --out-dir "$factory" > "$LOGS/factory_$shard.log" 2>&1 &
         pids+=("$!")
@@ -248,7 +248,7 @@ prior() {
     # 2. One model per budget; the step count with the lower held-out loss is shipped.
     for b in $budgets; do
         for steps in 4000 12000; do
-            python -m limb_baseline.prior_factory fit --factory "$factory" --dreams "$b" \
+            python -m able.tasks.limb.prior_factory fit --factory "$factory" --dreams "$b" \
                 --model "gen:flow:s$steps:hist" --out "$factory/g_${b}_s$steps.pkl" \
                 > "$LOGS/fit_${b}_s$steps.log" 2>&1 &
         done
