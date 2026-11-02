@@ -6,12 +6,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import shutil
-import sys
-import tempfile
 import time
-from contextlib import contextmanager
 from functools import partial
 from pathlib import Path
 
@@ -20,9 +15,7 @@ from kinder.envs.kinematic3d.utils import (
     Kinematic3DRobotActionSpace,
     remove_fingers_from_extended_joints,
 )
-from pddlstream.algorithms.meta import solve
-from pddlstream.language.constants import AND, PDDLProblem, print_solution
-from pddlstream.language.generator import from_gen_fn, from_test
+from pddlstream.language.constants import AND, PDDLProblem
 from pddlstream.utils import read
 from pybullet_helpers.geometry import SE2Pose, get_pose
 from pybullet_helpers.inverse_kinematics import InverseKinematicsError
@@ -34,6 +27,7 @@ from pybullet_helpers.motion_planning import (
     smoothly_follow_end_effector_path,
 )
 
+from able.planners.pddlstream import solve_problem, stream_map
 from able.tasks.bedside.env import (
     BedsideStocking3DEnvConfig,
     BedsideStocking3DObjectCentricState,
@@ -93,26 +87,6 @@ def build_stream_context(
     )
 
 
-def _counted(ctx: BedsideStreamContext, name: str, fn, generator: bool):
-    """Count each evaluation of stream `name` in `ctx.calls`."""
-
-    def test(*args):
-        ctx.calls[name] += 1
-        return fn(*args)
-
-    def gen(*args):
-        outputs = fn(*args)
-        while True:
-            ctx.calls[name] += 1
-            try:
-                out = next(outputs)
-            except StopIteration:
-                return
-            yield out
-
-    return gen if generator else test
-
-
 def create_problem(
     sim: ObjectCentricBedsideStocking3DEnv,
     state: BedsideStocking3DObjectCentricState,
@@ -142,9 +116,9 @@ def create_problem(
         "test-cfree-pose-pose": test_cfree_pose_pose,
         "test-cfree-traj-pose": test_cfree_traj_pose,
     }
-    stream_map = {n: from_gen_fn(_counted(ctx, n, partial(f, ctx), True)) for n, f in gens.items()}
-    stream_map |= {n: from_test(_counted(ctx, n, partial(f, ctx), False)) for n, f in tests.items()}
-    return PDDLProblem(DOMAIN_PDDL, {}, STREAM_PDDL, stream_map, init, (AND, *goal))
+    streams = stream_map({n: partial(f, ctx) for n, f in gens.items()},
+                         {n: partial(f, ctx) for n, f in tests.items()}, ctx.calls)
+    return PDDLProblem(DOMAIN_PDDL, {}, STREAM_PDDL, streams, init, (AND, *goal))
 
 
 def plan_bedside(
@@ -160,34 +134,8 @@ def plan_bedside(
 ):
     """Plan under `ctx` (built from `ctx_kwargs` if None); None if no plan is found."""
     problem = create_problem(sim, state, ctx=ctx, **ctx_kwargs)
-    # pddlstream walks its binding tree recursively; long plans exceed the default limit.
-    sys.setrecursionlimit(max(sys.getrecursionlimit(), 20000))
-    with private_cwd():
-        solution = solve(
-            problem,
-            algorithm=algorithm,
-            unit_costs=True,
-            max_time=max_time,
-            search_sample_ratio=search_sample_ratio,
-            max_complexity=max_complexity,
-            verbose=verbose,
-        )
-    if verbose:
-        print_solution(solution)
-    plan, _, _ = solution
-    return plan
+    return solve_problem(problem, max_time, algorithm, search_sample_ratio, max_complexity, verbose)
 
-
-@contextmanager
-def private_cwd():
-    """Run in a fresh temp dir; Fast Downward writes ./temp in the cwd."""
-    old, tmp = os.getcwd(), tempfile.mkdtemp(prefix="bedside_pddl_")
-    os.chdir(tmp)
-    try:
-        yield
-    finally:
-        os.chdir(old)
-        shutil.rmtree(tmp, ignore_errors=True)
 
 
 def _clip(sim, action):

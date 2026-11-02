@@ -8,6 +8,7 @@ import numpy as np
 from kinder.envs.dynamic3d.limb_utils import NUM_ROBOT_JOINTS
 from numpy.typing import NDArray
 
+from able.planners.mpc import control_basis as _control_basis
 from able.tasks.limb.planning.stream import (
     MPCConfig,
     TorqueTrajectory,
@@ -20,11 +21,7 @@ BASE_FEATURES = 26
 
 def control_basis(mpc: MPCConfig) -> NDArray[np.float64]:
     """The `(horizon, num_control_points)` map the MPC's `_expand` applies."""
-    source = np.linspace(0.0, 1.0, mpc.num_control_points)
-    target = np.linspace(0.0, 1.0, mpc.horizon)
-    return np.stack(
-        [np.interp(target, source, e) for e in np.eye(mpc.num_control_points)], axis=1
-    )
+    return _control_basis(mpc.horizon, mpc.num_control_points)
 
 
 def horizon_window(

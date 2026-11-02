@@ -7,7 +7,7 @@ _EXPORTS = {
     "ReachBelief": "belief", "reach_distance": "belief",
     "BedsidePsi": "psi", "PlaceProposal": "psi",
     "ReachGatherer": "query", "bedside_directions": "query",
-    "PDDLStreamPlanner": "solver",
+    "BedsidePlanner": "solver",
     "BedsideProblem": "task", "BedsideState": "task", "BedsideTask": "task", "ReachPrior": "task",
 }
 

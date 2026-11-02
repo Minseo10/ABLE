@@ -19,7 +19,7 @@ from able.tasks.bedside.env import (
 from able.tasks.bedside.planner.run import execute_plan
 from able.tasks.bedside.psi import BedsidePsi
 from able.tasks.bedside.query import ReachGatherer, bedside_directions
-from able.tasks.bedside.solver import PDDLStreamPlanner
+from able.tasks.bedside.solver import BedsidePlanner
 
 
 @dataclass(frozen=True)
@@ -76,8 +76,8 @@ class BedsideTask:
         self.gatherer = ReachGatherer(bedside_directions(cfg, self.sim.shoulder))
         self.psi = BedsidePsi(cfg)
 
-    def make_planner(self) -> PDDLStreamPlanner:
-        return PDDLStreamPlanner(self.sim, delta=self.delta, max_time=self.max_time)
+    def make_planner(self) -> BedsidePlanner:
+        return BedsidePlanner(max_time=self.max_time, sim=self.sim, delta=self.delta)
 
     def sample_problem(self, rng: np.random.Generator) -> BedsideProblem:
         return BedsideProblem(int(rng.integers(2**31 - 1)))

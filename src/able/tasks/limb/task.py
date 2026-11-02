@@ -12,6 +12,7 @@ from kinder.envs.dynamic3d.limb_utils import LIMB_JOINT_INFOS, joint_position_di
 from numpy.typing import NDArray
 
 from able.api import Examples, Observation, PlanResult, Step
+from able.planners.mpc import SeedConfig, SeedStats
 from able.tasks.limb.belief import LimbBelief, LimbPrior, execution_evidence
 from able.tasks.limb.episode import (
     DEFAULT_PLANNER_SETTINGS,
@@ -32,7 +33,6 @@ from able.tasks.limb.features import (
     state_features,
 )
 from able.tasks.limb.human import DEFAULT_PRIOR, active_joints
-from able.tasks.limb.mpc import SeedConfig, SeededMPC, SeedStats
 from able.tasks.limb.planning.run import reset_to_start
 from able.tasks.limb.planning.stream import (
     LimbConf,
@@ -117,7 +117,7 @@ class MPCPlanner:
         task, retargeted = retarget(state.task, limits)
         sim, ctx = open_episode(task, state.theta, limits.quantile_theta(), state.seed, self.settings, limits)
         stats = SeedStats()
-        ctx.mpc_class, ctx.seed_config, ctx.seed_stats = SeededMPC, self.seed_config, stats
+        ctx.seed_config, ctx.seed_stats = self.seed_config, stats
         ctx.mpc_noise_seed, ctx.warm_start = state.seed, proposal
         limit = budget.seconds if budget is not None and budget.seconds else self.settings.max_time
         started, actions, reason = time.time(), None, ""
@@ -177,6 +177,7 @@ class LimbPsi:
     def proposal(self, learner, state, belief: LimbBelief):
         """`ctx.warm_start` hook: predicted horizon, plus learner draws as `samples`."""
         features, horizon = belief.features(), self.mpc.horizon
+        draws = np.random.default_rng(getattr(state, "seed", None))  # reproducible learner draws
 
         def hook(s, goal, step=0.0):
             if step == 0:
@@ -186,7 +187,7 @@ class LimbPsi:
 
         def samples(s, goal, step, k):
             x = state_features(s, goal, features, step, hook.previous).reshape(1, -1)
-            return learner.sample(x, k)[0].reshape(k, horizon, -1)
+            return learner.sample(x, k, seed=int(draws.integers(2**31)))[0].reshape(k, horizon, -1)
 
         hook.previous, hook.samples = None, samples
         return hook

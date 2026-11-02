@@ -108,7 +108,7 @@ Experiments before this layout are there too (tag `archive`, index run `archive/
 | `src/able/api/` | The shared API (`Task`, `Belief`, `InfoGatherer`, `Planner`, `PsiSpec`), `run_episode`, the flow learner |
 | `src/able/pipeline.py`, `src/able/run.py` | The ABLE loop and its command line |
 | `src/able/tasks/{limb,friction,bedside}/` | Each task: env, belief, query, planner, psi |
-| `src/able/planners/pomcpow.py` | Domain-free POMCPOW |
+| `src/able/planners/` | Task-free planners: `mpc.py` (predictive sampling + psi seeding), `pomcpow.py`, `pddlstream.py` (wrapper); tasks subclass or configure them |
 | `configs/` | Smoke and full configs per task |
 | `scripts/run.sh`, `figures.py`, `log_to_wandb.py` | Shared launcher, figures, upload |
 | `scripts/limb/`, `scripts/friction/`, `scripts/bedside/` | Task-specific sweeps and renders |

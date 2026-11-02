@@ -26,6 +26,12 @@ from pybullet_helpers.motion_planning import (
     run_single_arm_mobile_base_motion_planning,
 )
 
+from able.planners.mpc import (
+    NoFeasibleMotion,
+    PredictiveSampling,
+    SeedConfig,
+    SeedStats,
+)
 from able.tasks.limb.planning.utils import (
     BestAttempt,
     CoupledState,
@@ -172,8 +178,10 @@ class LimbStreamContext:
     warm_start: Callable[[CoupledState, np.ndarray, int], np.ndarray] | None = None
     # Known-good base pose, tried before sampling.
     base_pose_hint: SE2Pose | None = None
-    # MPC class plan_limb_motion builds (default PredictiveSamplingMPC).
-    mpc_class: Callable[..., PredictiveSamplingMPC] | None = None
+    # psi seeding (see able.planners.mpc); mpc_noise_seed overrides motion_seed for MPC noise.
+    seed_config: SeedConfig | None = None
+    seed_stats: SeedStats | None = None
+    mpc_noise_seed: int | None = None
     true_joint_limits: tuple[JointPositions, JointPositions] = field(
         init=False, repr=False
     )
@@ -461,7 +469,7 @@ def plan_limb_motion(
     goal = np.asarray(q2.positions, dtype=np.float64)
     cfg = ctx.mpc
     threshold = max(ctx.goal_atol - cfg.replay_slack, ctx.goal_atol / 2)
-    with saved_sim_state(sim), (ctx.mpc_class or PredictiveSamplingMPC)(ctx, goal, s1) as mpc:
+    with saved_sim_state(sim), PredictiveSamplingMPC(ctx, goal, s1) as mpc:
         restore_state(sim, s1)
         motion_start = time.monotonic()
         robot_torques: list[JointTorques] = []
@@ -712,12 +720,8 @@ def check_robot_torque_limits(
     return True
 
 
-class NoFeasibleMotion(RuntimeError):
-    """Every sampled trajectory violates a hard constraint."""
-
-
-class PredictiveSamplingMPC:
-    """Predictive-sampling MPC over robot torques, ported from limb-manipulation."""
+class PredictiveSamplingMPC(PredictiveSampling):
+    """Predictive-sampling MPC over robot torques (ported from limb-manipulation), seeded by `ctx.warm_start`."""
 
     def __init__(
         self,
@@ -727,21 +731,7 @@ class PredictiveSamplingMPC:
     ) -> None:
         self._ctx = ctx
         self._sim = ctx.sim
-        self._cfg = ctx.mpc
         self._obstacles = ctx.obstacle_ids
-        self._goal = goal
-        self._rng = np.random.default_rng(ctx.motion_seed)
-        self._lower, self._upper = ctx.robot_torque_limits
-        self._nominal = np.zeros((self._cfg.num_control_points, NUM_ROBOT_JOINTS))
-        if ctx.warm_start is not None and start is not None:
-            seeded = np.asarray(ctx.warm_start(start, goal, 0), dtype=np.float64)
-            assert seeded.shape == self._nominal.shape
-            self._nominal = np.clip(seeded, self._lower, self._upper)
-        self._control_indices = np.round(
-            np.linspace(0, self._cfg.horizon - 1, self._cfg.num_control_points)
-        ).astype(int)
-        self._commit = int(np.clip(self._cfg.commit_steps, 1, self._cfg.horizon))
-        self._step_index = 0
         self._rollout_sim: ObjectCentricLimbRepositioning3DEnv | None = None
         self._rollout_ctx: LimbStreamContext | None = None
         self._rollout_start = start
@@ -749,6 +739,10 @@ class PredictiveSamplingMPC:
             (start or capture_state(self._sim)).robot_positions[:NUM_ROBOT_JOINTS]
         )
         self._rollout_finalizer: weakref.finalize | None = None
+        lower, upper = ctx.robot_torque_limits
+        noise_seed = ctx.motion_seed if ctx.mpc_noise_seed is None else ctx.mpc_noise_seed
+        super().__init__(ctx.mpc, NUM_ROBOT_JOINTS, lower, upper, goal, np.random.default_rng(noise_seed),
+                         ctx.warm_start, ctx.seed_config, ctx.seed_stats, start)
 
     def close(self) -> None:
         """Release the private rollout world."""
@@ -777,32 +771,18 @@ class PredictiveSamplingMPC:
         # Same bodies in both clients, so the start baseline carries over.
         self._rollout_ctx.resting_penetration = dict(self._ctx.resting_penetration)
 
-    def step(self) -> list[JointTorques]:
-        """Choose the torque to apply in the simulator's current state."""
-        error = limb_error(self._ctx, self._sim.limb.get_joint_positions(), self._goal)
-        with self._ctx.profile.timed("mpc_state_capture"):
-            start = capture_state(self._sim)
-        candidates = self._sample_candidates(error, start)
-        scores = [self._score(start, self._expand(cp)) for cp in candidates]
-        index = min(range(len(scores)), key=scores.__getitem__)
-        if scores[index][0]:
-            raise NoFeasibleMotion("all MPC candidates violate constraints")
-        best = candidates[index]
-        self._nominal = best
-        self._step_index += self._commit
-        return [list(torque) for torque in self._expand(best)[: self._commit]]
+    def _error(self) -> float:
+        return limb_error(self._ctx, self._sim.limb.get_joint_positions(), self._goal)
 
-    def _expand(self, control_points: np.ndarray) -> np.ndarray:
-        """Linearly interpolate control points into one torque per control step."""
-        source = np.linspace(0.0, 1.0, len(control_points))
-        target = np.linspace(0.0, 1.0, self._cfg.horizon)
-        return np.stack(
-            [
-                np.interp(target, source, control_points[:, j])
-                for j in range(NUM_ROBOT_JOINTS)
-            ],
-            axis=1,
-        )
+    def _capture(self) -> CoupledState:
+        with self._ctx.profile.timed("mpc_state_capture"):
+            return capture_state(self._sim)
+
+    def _rollout_error(self) -> float:
+        return limb_error(self._rollout_ctx, self._rollout_sim.limb.get_joint_positions(), self._goal)
+
+    def _reach(self) -> float:
+        return max(self._ctx.goal_atol - self._cfg.replay_slack, self._ctx.goal_atol / 2)
 
     def _directed_candidates(self, scale: float) -> list[np.ndarray]:
         """One goal-directed candidate per gain, each with a noisy twin."""
@@ -812,38 +792,6 @@ class PredictiveSamplingMPC:
             points = np.tile(torque, (self._cfg.num_control_points, 1))
             noise = self._rng.normal(scale=scale, size=points.shape)
             candidates.extend([self._clip(points), self._clip(points + noise)])
-        return candidates
-
-    def _sample_candidates(self, error: float, state=None) -> list[np.ndarray]:
-        """Control-point candidates: nominal, warm start, zero, goal-directed, noisy."""
-        cfg = self._cfg
-        scale = cfg.noise_scale * float(
-            np.clip(error / cfg.noise_reference_error, cfg.min_noise_ratio, 1.0)
-        )
-        expanded = self._expand(self._nominal)
-        tail = self._rng.normal(expanded[-1], scale)
-        ramp = np.linspace(expanded[-1], tail, self._commit + 1)[1:]
-        shifted = np.vstack([expanded[self._commit :], ramp])
-        nominal = shifted[self._control_indices]
-        candidates = [self._clip(nominal), np.zeros_like(nominal)]
-        if self._ctx.warm_start is not None and state is not None:
-            candidates.append(
-                self._clip(
-                    np.asarray(
-                        self._ctx.warm_start(state, self._goal, self._step_index),
-                        dtype=np.float64,
-                    )
-                )
-            )
-        candidates.extend(self._directed_candidates(scale))
-        if state is not None and self._cfg.feedback_gains:
-            candidates.extend(self._feedback_candidates(state))
-        num_samples = max(cfg.num_rollouts - len(candidates), 0)
-        noise = self._rng.normal(
-            scale=scale,
-            size=(num_samples, cfg.num_control_points, NUM_ROBOT_JOINTS),
-        )
-        candidates.extend(self._clip(nominal + sample) for sample in noise)
         return candidates
 
     def _feedback_candidates(self, start: CoupledState) -> list[np.ndarray]:
@@ -873,10 +821,7 @@ class PredictiveSamplingMPC:
                 candidates.append(np.asarray(controls)[self._control_indices])
         return candidates
 
-    def _clip(self, robot_torques: np.ndarray) -> np.ndarray:
-        return np.clip(robot_torques, self._lower, self._upper)
-
-    def _score(
+    def _rollout(
         self, start: CoupledState, robot_torques: np.ndarray
     ) -> tuple[int, float]:
         """Roll `robot_torques` out from `start`, rejected flag first, then its cost."""
