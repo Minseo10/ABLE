@@ -10,8 +10,7 @@ from numpy.typing import NDArray
 from able.api import Observation, ParticleBelief, Prior
 from able.tasks.bedside.env.bedside_stocking3d import reach_margin
 
-QUERY_NOISE = 0.02  # m, std of the reported reach distance
-EXECUTION_SCALE = 0.03  # margin scale of P(reached | theta)
+EXECUTION_SCALE = 0.03  # margin scale of P(reached | theta), shared by queries and deliveries
 
 
 def reach_distance(direction: NDArray, theta: NDArray) -> NDArray[np.float64]:
@@ -19,23 +18,31 @@ def reach_distance(direction: NDArray, theta: NDArray) -> NDArray[np.float64]:
     return 1.0 / np.linalg.norm(np.asarray(direction, float) / np.asarray(theta, float), axis=-1)
 
 
+def reached_log_likelihood(points: NDArray, reached: NDArray, particles: NDArray, shoulder: NDArray,
+                           scale: float = EXECUTION_SCALE) -> NDArray[np.float64]:
+    """sum_i log sigmoid(+-m(x_i, theta) / scale) per particle; points (k, 3), reached (k,)."""
+    m = reach_margin(np.asarray(points, float)[:, None], particles[None], np.asarray(shoulder, float))
+    z = np.where(np.asarray(reached, bool)[:, None], m, -m) / scale
+    return -np.logaddexp(0.0, -z).sum(0)
+
+
 @dataclass(frozen=True)
 class BedsideBelief(ParticleBelief):
-    """Queries report r(d, theta) + noise; executions report whether an item was reached."""
+    """One person model: P(reached x | theta) = sigmoid(m(x, theta) / scale), for queries and deliveries."""
 
     shoulder: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    query_noise: float = QUERY_NOISE
     execution_scale: float = EXECUTION_SCALE
 
     def log_likelihood(self, observation: Observation, particles: NDArray[np.float64]) -> NDArray[np.float64]:
-        if observation.kind == "query":
-            r = reach_distance(observation.query, particles)
-            return -0.5 * ((observation.value - r) / self.query_noise) ** 2
-        if observation.kind == "execution":
-            m = reach_margin(np.asarray(observation.query, float), particles, np.asarray(self.shoulder))
-            z = m / self.execution_scale if observation.value else -m / self.execution_scale
-            return -np.logaddexp(0.0, -z)
-        raise ValueError(f"Unknown observation kind: {observation.kind}")
+        if observation.kind == "query":  # value: [(point, reached), ...]
+            if not observation.value:
+                return np.zeros(len(particles))
+            points, reached = zip(*observation.value)
+        elif observation.kind == "execution":
+            points, reached = [observation.query], [observation.value]
+        else:
+            raise ValueError(f"Unknown observation kind: {observation.kind}")
+        return reached_log_likelihood(points, reached, particles, self.shoulder, self.execution_scale)
 
 
 @dataclass(frozen=True)

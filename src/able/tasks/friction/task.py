@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 import math
 from dataclasses import dataclass, field
 from typing import Any
@@ -18,7 +19,7 @@ from able.tasks.friction.env.push_recorder import Recorder
 from able.tasks.friction.planner import FrictionPlanner
 from able.tasks.friction.planning.model import PuckPushingModel, PuckRewards
 from able.tasks.friction.psi import FrictionPsi
-from able.tasks.friction.query import FrictionGatherer
+from able.tasks.friction.query import FrictionGatherer, push_record
 
 
 @dataclass(frozen=True)
@@ -55,7 +56,9 @@ class FrictionTask(Task):
         self.model = PuckPushingModel(self.world, rewards=self.rewards, max_pushes=self.max_pushes,
                                       stance_mode=self.stance_mode)
         self.prior = FrictionPrior(self.world, self.model.friction_prior, self.num_particles)
-        self.gatherer = FrictionGatherer(self.world.physics)
+        # Probes run in their own simulator, never `environment`.
+        self.gatherer = FrictionGatherer(self.world, functools.partial(make_level_env, self.env, self.level),
+                                         self.prior.dist.bounds[0], self.env, f"{self.env.upper()} {self.level}")
         self.psi = FrictionPsi(self.model)
         from able.tasks.friction.distribution import (
             FrictionDistribution,  # it imports FrictionProblem from here
@@ -96,14 +99,8 @@ class FrictionTask(Task):
             _, _, terminated, _, info = self.environment.step(action)
         else:
             _, _, terminated, _, info = self.recorder.record(frames, action, state.pushes + 1)
-        stop = np.asarray(info["stop_position"], np.float64)
-        feasible = bool(info["push_feasible"])
-        record = {
-            "puck": state.puck.tolist(), "angle": plan.angle, "speed": plan.speed, "stance": plan.stance,
-            "feasible": feasible, "release_speed": float(info["release_speed"]), "stop": stop.tolist(),
-            "fell_in_hole": bool(info["fell_in_hole"]), "goal_reached": bool(info["goal_reached"]),
-            "drive_distance": float(info["drive_distance"]),
-        }
+        record = push_record(info, state.puck, plan)
+        stop, feasible = np.asarray(record["stop"]), record["feasible"]
         robot = state.robot
         if feasible:
             robot = self.world.push_station(state.puck, plan.angle, plan.stance) + (

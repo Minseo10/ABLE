@@ -12,7 +12,6 @@ from numpy.typing import NDArray
 from able.api import Observation, ParticleBelief, Prior
 from able.tasks.friction.env import puckpushing_utils as pu
 from able.tasks.friction.env.puckpushing_utils import SURFACE_NAMES, PuckWorld
-from able.tasks.friction.query import probe_log_likelihood
 
 # Likelihood factor when a particle's predicted hole outcome disagrees.
 _HOLE_MISMATCH = 0.05
@@ -43,10 +42,8 @@ class FrictionBelief(ParticleBelief):
 
     def log_likelihood(self, observation: Observation, particles: NDArray[np.float64]) -> NDArray[np.float64]:
         assert self.world is not None
-        if observation.kind == "query":
-            probe = observation.query
-            return probe_log_likelihood(self.world.physics, probe, observation.value, particles[:, probe.floor])
-        assert observation.kind == "execution", observation.kind
+        # A probe is a real push too, so both kinds share the push model.
+        assert observation.kind in ("query", "execution"), observation.kind
         v = observation.value
         return push_log_likelihood(self.world, particles, np.asarray(v["puck"]), v["angle"], v["release_speed"],
                                    np.asarray(v["stop"]), v["fell_in_hole"], v["stance"])

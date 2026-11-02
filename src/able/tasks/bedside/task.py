@@ -68,7 +68,7 @@ class BedsideTask(Task):
         shoulder = tuple(float(v) for v in self.sim.shoulder)
         self.prior = BedsidePrior(np.array(cfg.reach_theta_lb), np.array(cfg.reach_theta_ub), shoulder,
                                   self.num_particles)
-        self.gatherer = BedsideGatherer(bedside_directions(cfg, self.sim.shoulder))
+        self.gatherer = BedsideGatherer(bedside_directions(cfg, self.sim.shoulder), cfg)  # owns its own query sim
         self.psi = BedsidePsi(cfg)
         self.distribution = BedsideDistribution()
 

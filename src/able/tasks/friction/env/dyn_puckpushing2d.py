@@ -125,6 +125,8 @@ class ObjectCentricDynPuckPushing2DEnv(
             world_max_y=puck_map.height,
         )
         self.world = PuckWorld(puck_map, config.physics)
+        # Puck (x, y) and robot (x, y, heading) at reset.
+        self._start = (puck_map.puck_start, (*puck_map.robot_start, 0.0))
         super().__init__(config, **kwargs)
         self._frictions: tuple[float, ...] = tuple(
             float(f) for f in config.friction_prior.mean
@@ -170,9 +172,8 @@ class ObjectCentricDynPuckPushing2DEnv(
         return state
 
     def _sample_initial_state(self) -> ObjectCentricState:
-        puck_map = self.world.puck_map
-        robot = np.array([*puck_map.robot_start, 0.0])
-        return self._create_state(robot, np.asarray(puck_map.puck_start))
+        puck, robot = self._start
+        return self._create_state(np.asarray(robot, np.float64), np.asarray(puck, np.float64))
 
     def _create_state(
         self, robot_pose: NDArray[np.float64], puck: NDArray[np.float64]
@@ -381,7 +382,9 @@ class ObjectCentricDynPuckPushing2DEnv(
     def reset(
         self, *, seed: int | None = None, options: dict | None = None
     ) -> tuple[ObjectCentricState, dict]:
-        """Reset; `options["frictions"]` may fix the hidden frictions."""
+        """Reset; `options` may fix "frictions", and the "puck" (x, y) and "robot" (x, y, heading) start."""
+        opts, puck_map = options or {}, self.world.puck_map
+        self._start = (opts.get("puck", puck_map.puck_start), opts.get("robot", (*puck_map.robot_start, 0.0)))
         obs, info = super().reset(seed=seed, options=options)
         if options is not None and "frictions" in options:
             frictions = tuple(float(f) for f in options["frictions"])

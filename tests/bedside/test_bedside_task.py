@@ -35,6 +35,7 @@ from able.tasks.bedside import (
 )
 from able.tasks.bedside.env.execute import _base_path
 from able.tasks.bedside.planning.problem import build_stream_context
+from able.tasks.bedside.query import PRESENT_TOL, present_conf
 from able.video import render
 
 THETA = np.array([0.7, 0.6, 0.65])
@@ -69,17 +70,70 @@ def test_role_classes_inherit_the_api_bases(task):
     assert problem == BedsideProblem(int(np.random.default_rng(3).integers(2**31 - 1)))
 
 
-def test_query_narrows_the_belief_along_its_direction(task):
+@pytest.fixture(scope="module")
+def exact(task):
+    """A gatherer whose person answers m >= 0 at every presented point."""
+    return BedsideGatherer(task.gatherer.directions, task.config, noisy=False, stop_at_miss=False)
+
+
+def test_query_reached_near_not_far_and_skips_unreachable_points(exact):
+    d = exact.directions[0]  # r(d, THETA) = 0.655; the robot cannot present 0.3 m (arm hits the person)
+    obs = exact.respond(THETA, BedsideQuery(d, (0.3, 0.6, 0.8)), np.random.default_rng(0))
+    sim = exact.sim
+    assert obs.kind == "query" and [reached for _, reached in obs.value] == [True, False]
+    for (point, _), s in zip(obs.value, (0.6, 0.8)):
+        assert np.linalg.norm(np.array(point) - (sim.shoulder + s * d)) < PRESENT_TOL
+        assert present_conf(sim, np.array(point)) is not None
+    assert present_conf(sim, sim.shoulder + 0.3 * d) is None
+    assert not sim._robot_or_held_object_collision_exists()  # pylint: disable=protected-access
+
+
+def test_query_leaves_the_task_sim_and_episode_start_unchanged(task, exact):
+    rng = np.random.default_rng(0)
+    problem = task.sample_problem(rng)
+    before = task.reset(problem, THETA, rng)
+    base, joints = task.sim.robot.get_base(), task.sim.robot.arm.get_joint_positions()
+    exact.respond(THETA, BedsideQuery(exact.directions[0], (0.6, 0.8)), rng)
+    assert exact.sim is not task.sim and exact.sim.physics_client_id != task.sim.physics_client_id
+    assert task.sim.robot.get_base() == base and task.sim.robot.arm.get_joint_positions() == joints
+    after = task.reset(problem, THETA, rng)
+    assert after.obs.allclose(before.obs, atol=1e-9)
+
+
+def test_query_likelihood_matches_execution(task):
+    belief = task.prior.belief(np.random.default_rng(0))
+    points = [tuple(np.asarray(belief.shoulder) + [0.5, 0.0, 0.0]), tuple(np.asarray(belief.shoulder) + [0.8, 0.0, 0.0])]
+    query = Observation("query", list(zip(points, (True, False))))
+    executions = [Observation("execution", r, x) for x, r in zip(points, (True, False))]
+    total = sum(belief.log_likelihood(o, belief.particles) for o in executions)
+    assert np.allclose(belief.log_likelihood(query, belief.particles), total)
+    assert np.allclose(belief.log_likelihood(Observation("query", []), belief.particles), 0.0)
+
+
+@pytest.mark.slow
+def test_queries_narrow_the_belief_toward_theta(task):
+    theta = np.array([0.5, 0.75, 0.85])  # away from the prior mean
     rng = np.random.default_rng(0)
     belief = task.prior.belief(rng)
-    query = task.gatherer.choose(belief, rng)
-    d = query.direction
-    before = reach_distance(d, belief.particles).std()
-    for _ in range(3):
-        belief = belief.update(task.gatherer.respond(THETA, query, rng))
+    dirs = task.gatherer.directions
+    d = task.gatherer.choose(belief, rng).direction
+
+    def reach_error(b):  # mean |r(d, particle) - r(d, theta)| over every direction
+        return np.abs(reach_distance(dirs[:, None], b.particles[None]) - reach_distance(dirs, theta)[:, None]).mean()
+
+    before, error, spread = reach_distance(d, belief.particles).std(), np.abs(belief.mean - theta), reach_error(belief)
+    frames: list = []
+    for i in range(5):
+        query = task.gatherer.choose(belief, rng)
+        assert len(query.distances) and np.all(np.diff(query.distances) > 0)
+        obs = task.gatherer.respond(theta, query, rng, frames=frames if i == 0 else None)
+        assert obs.value and (i == 0 or task.gatherer.last_seconds < 5.0)  # rendering dominates query 0
+        belief = belief.update(obs)
     r = reach_distance(d, belief.particles)
-    assert r.std() < before / 3
-    assert abs(r.mean() - reach_distance(d, THETA)) < 0.02
+    assert r.std() < before / 3 and abs(r.mean() - reach_distance(d, theta)) < 0.03
+    assert reach_error(belief) < spread / 2
+    assert (np.abs(belief.mean - theta)[:2] < error[:2] / 2).all()
+    assert len(frames) > 5 and all(f.ndim == 3 and f.dtype == np.uint8 for f in frames)
 
 
 def test_execution_likelihood_sign(task):

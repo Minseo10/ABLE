@@ -135,66 +135,74 @@ def _caption(plan, i: int) -> str:
     return ""
 
 
+class Driver:
+    """Steps the sim toward base/joint targets, recording frames."""
+
+    def __init__(self, sim, recorder: FrameRecorder, seed: int = 0) -> None:
+        self.sim, self.recorder, self.seed = sim, recorder, seed
+
+    def step(self, action) -> None:
+        self.sim.step(_clip(self.sim, action))
+        self.recorder.tick()
+
+    def joints(self, target, tol=1e-3, attempts=40) -> None:
+        arm = self.sim.robot.arm
+        for _ in range(attempts):
+            cur = remove_fingers_from_extended_joints(arm.get_joint_positions())
+            d = get_jointwise_difference(arm.get_arm_joint_infos()[:7], list(target[:7]), cur)
+            self.step([0.0, 0.0, 0.0] + d + [0.0])
+            if max(abs(x) for x in d) < tol:
+                return
+
+    def arm(self, target, exclude: set[int] = frozenset()) -> None:
+        """BiRRT to `target`, then follow it."""
+        for q in _arm_path(self.sim, target, set(exclude), self.seed)[1:]:
+            self.joints(q)
+
+    def base(self, target, attempts=200) -> None:
+        sim = self.sim
+        for q in _base_path(sim, target):
+            d = q - sim.robot.get_base()
+            self.step([d.x, d.y, d.rot] + [0.0] * 8)
+        for _ in range(attempts):
+            d = target - sim.robot.get_base()
+            if max(abs(d.x), abs(d.y), abs(d.rot)) < 1e-3:
+                return
+            self.step([d.x, d.y, d.rot] + [0.0] * 8)
+
+    def gripper(self, close: bool) -> None:
+        for _ in range(5):
+            self.step([0.0] * 10 + [-1.0 if close else 1.0])
+            held = self.sim._grasped_object  # pylint: disable=protected-access
+            if (held is not None) == close:
+                return
+
+
 def execute_plan(sim: ObjectCentricBedsideStocking3DEnv, plan, seed: int = 0,
                  frames: list | None = None, stride: int = 8) -> bool:
     """Execute a move_base/pick/place plan; arm paths are refined with BiRRT.
 
     If `frames` is a list, append a rendered frame every `stride` sim steps and after each gripper action."""
     recorder = FrameRecorder(sim, frames, every=stride)
-    capture = recorder.snap
-
-    def step(action) -> None:
-        sim.step(action)
-        recorder.tick()
-
-    def to_joints(target, tol=1e-3, attempts=40):
-        for _ in range(attempts):
-            cur = remove_fingers_from_extended_joints(sim.robot.arm.get_joint_positions())
-            d = get_jointwise_difference(
-                sim.robot.arm.get_arm_joint_infos()[:7], list(target[:7]), cur
-            )
-            step(_clip(sim, [0.0, 0.0, 0.0] + d + [0.0]))
-            if max(abs(x) for x in d) < tol:
-                return
-
-    def to_base(target, attempts=200):
-        for q in _base_path(sim, target):
-            d = q - sim.robot.get_base()
-            step(_clip(sim, [d.x, d.y, d.rot] + [0.0] * 8))
-        for _ in range(attempts):
-            d = target - sim.robot.get_base()
-            if max(abs(d.x), abs(d.y), abs(d.rot)) < 1e-3:
-                return
-            step(_clip(sim, [d.x, d.y, d.rot] + [0.0] * 8))
-
-    def gripper(close: bool):
-        for _ in range(5):
-            step(_clip(sim, [0.0] * 10 + [-1.0 if close else 1.0]))
-            held = sim._grasped_object  # pylint: disable=protected-access
-            if (held is not None) == close:
-                return
-
-    capture()
-    for q in _arm_path(sim, CARRY_JOINTS, set(), seed)[1:]:
-        to_joints(q)
+    drive = Driver(sim, recorder, seed)
+    recorder.snap()
+    drive.arm(CARRY_JOINTS)
     for i, (name, args) in enumerate(plan):
         recorder.text = _caption(plan, i) if recorder.on else ""
         if name == "move_base":
-            to_base(args[1].pose)
+            drive.base(args[1].pose)
         elif name in ("pick", "place"):
             traj = args[4]
             target = sim._object_name_to_pybullet_id(args[0])  # pylint: disable=protected-access
             _, hover, grasp = traj.joint_plan
             approach = _arm_path(sim, hover, {target}, seed)
             for q in approach[1:] + _descent(sim, hover, grasp, target, seed):
-                to_joints(q)
-            gripper(close=name == "pick")
-            capture()
-            to_joints(hover)
-            retreat = _arm_path(sim, traj.joint_plan[0], set(), seed)
-            for q in retreat[1:]:
-                to_joints(q)
+                drive.joints(q)
+            drive.gripper(close=name == "pick")
+            recorder.snap()
+            drive.joints(hover)
+            drive.arm(traj.joint_plan[0])
         else:
             raise ValueError(f"Unknown action: {name}")
-    capture()
+    recorder.snap()
     return sim.goal_reached()

@@ -127,6 +127,8 @@ class ObjectCentricPuckPushing3DEnv(
             y_ub=puck_map.height,
         )
         self.world = PuckWorld(puck_map, config.physics)
+        # Puck (x, y) and robot (x, y, heading; None: home) at reset.
+        self._start: tuple[Any, Any] = (puck_map.puck_start, None)
         super().__init__(config=config, **kwargs)
         client = self.physics_client_id
         phys = config.physics
@@ -347,7 +349,9 @@ class ObjectCentricPuckPushing3DEnv(
         return self._outcome == "goal"
 
     def _reset_objects(self) -> None:
-        start = self.world.puck_map.puck_start
+        start, robot = self._start
+        if robot is not None:
+            self.robot.set_base(SE2Pose(*robot))
         set_pose(self.puck_id, Pose((*start, self.puck_z)), self.physics_client_id)
         self._stop_puck()
         self._place_paddle()
@@ -519,7 +523,9 @@ class ObjectCentricPuckPushing3DEnv(
         seed: int | None = None,
         options: dict | None = None,
     ) -> tuple[PuckPushing3DObjectCentricState, dict]:
-        """Reset; `options["frictions"]` may fix the hidden frictions."""
+        """Reset; `options` may fix "frictions", and the "puck" (x, y) and "robot" (x, y, heading) start."""
+        opts = options or {}
+        self._start = (opts.get("puck", self.world.puck_map.puck_start), opts.get("robot"))
         obs, info = super().reset(seed=seed, options=options)
         if options is not None and "frictions" in options:
             frictions = tuple(float(f) for f in options["frictions"])

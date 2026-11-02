@@ -33,7 +33,6 @@ from able.tasks.friction import (
 )
 from able.tasks.friction.env.puckpushing_utils import GRAVITY, Push
 from able.tasks.friction.psi import X_DIM, Y_DIM, encode
-from able.tasks.friction.query import probe_distance, probe_log_likelihood
 
 
 @pytest.fixture(scope="module")
@@ -72,35 +71,58 @@ def test_role_classes_inherit_the_bases(task):
     assert task.sample_problem(rng_a) == FrictionProblem(int(rng_b.integers(2**31)))
 
 
-def test_probe_matches_the_slide_model(task):
-    """Probe distances are PuckWorld.slide's on open floor, and the likelihood is a density."""
-    world = task.world
-    frictions = (0.1, 0.08, 0.03)
-    slide = world.slide(np.array([0.8, 3.4]), 0.8, 0.0, frictions)  # along the blue corridor
-    assert slide.distance == pytest.approx(float(probe_distance(0.8, 0.1)), rel=1e-6)
-    assert float(probe_distance(0.8, 0.1)) == pytest.approx(0.64 / (2 * 0.1 * GRAVITY))
-    probe, mu = FrictionQuery(0, 0.8), np.array([0.1])
-    grid = np.linspace(0.0, 1.0, 4001)
-    density = np.exp([probe_log_likelihood(world.physics, probe, d, mu)[0] for d in grid])
-    assert np.trapz(density, grid) == pytest.approx(1.0, abs=1e-3)
+def test_probe_poses_fit_their_floor(task):
+    """Each floor's probe, at either extreme friction, stops on that floor and clear of holes."""
+    world, (low, high) = task.world, task.prior.dist.bounds
     rng = np.random.default_rng(0)
-    draws = [task.gatherer.respond(np.array([0.1, 0.0, 0.0]), probe, rng).value for _ in range(3000)]
-    assert np.mean(draws) == pytest.approx(np.trapz(grid * density, grid), abs=0.003)
+    for floor, query in enumerate(task.gatherer.queries):
+        assert query.floor == floor == world.surface_at(np.array(query.puck))
+        assert world.push_feasible(np.array(query.puck), query.angle)
+        for mu in (low[floor], high[floor]):
+            theta = np.full(3, 0.08)
+            theta[floor] = mu
+            obs = task.gatherer.respond(theta, query, rng)
+            v = obs.value
+            assert obs.kind == "query" and obs.query == query
+            assert v["feasible"] and not v["fell_in_hole"] and v["release_speed"] > 0
+            assert world.surface_at(np.array(v["stop"])) == floor
+            assert np.linalg.norm(np.array(v["stop"]) - query.puck) > world.physics.accel_distance
 
 
-def test_probe_narrows_the_probed_floor(task):
+def test_three_probes_narrow_each_floor(task):
     rng = np.random.default_rng(1)
     theta = np.array([0.15, 0.03, 0.08])
-    belief = task.prior.belief(rng)
-    query = task.gatherer.choose(belief, rng)
-    assert isinstance(query, FrictionQuery)
-    before = belief
-    for _ in range(2):
+    before = belief = task.prior.belief(rng)
+    for query in task.gatherer.queries:
         belief = belief.update(task.gatherer.respond(theta, query, rng))
-    f = query.floor
-    assert belief.std[f] < 0.3 * before.std[f]
-    assert abs(belief.mean[f] - theta[f]) < abs(before.mean[f] - theta[f])
-    assert abs(belief.mean[f] - theta[f]) < 0.2 * theta[f]
+    assert np.all(belief.std < 0.3 * before.std)
+    assert np.all(np.abs(belief.mean - theta) < np.abs(before.mean - theta))
+    assert np.all(np.abs(belief.mean - theta) < 0.2 * theta)
+
+
+def test_queries_run_in_their_own_env(task):
+    """A probe leaves the task's simulator untouched; the episode starts at the problem's start."""
+    rng = np.random.default_rng(2)
+    theta = np.array([0.12, 0.08, 0.03])
+    problem = task.sample_problem(rng)
+    state = task.reset(problem, theta, rng)
+    env = task.environment
+
+    def snapshot():
+        return (env._puck_position().tolist(), env._robot_pose.tolist(), env.frictions,
+                str(env.np_random.bit_generator.state))
+
+    held = snapshot()
+    probe = task.gatherer.respond(np.array([0.05, 0.1, 0.15]), task.gatherer.queries[1], rng)
+    assert task.gatherer.environment is not env and snapshot() == held
+    assert np.allclose(state.puck, task.world.puck_map.puck_start)
+    assert np.allclose(env._puck_position(), task.world.puck_map.puck_start)
+    assert np.allclose(env._robot_pose[:2], task.world.puck_map.robot_start)
+    step = task.execute(state, Push(0.0, 0.3), rng)
+    assert set(step.observations[0].value) == set(probe.value)
+    # The probe env returns to the map's start when reset without a placement.
+    task.gatherer.environment.reset(seed=0)
+    assert np.allclose(task.gatherer.environment._puck_position(), task.world.puck_map.puck_start)
 
 
 def test_push_likelihood_matches_the_old_math(task):
@@ -177,3 +199,15 @@ def test_3d_episode_smoke():
                           task.prior.belief(rng), rng, max_steps=1)
     assert len(episode.steps) == 1 and episode.effort == 50
     assert episode.steps[0].step is not None and episode.steps[0].step.done
+
+
+@pytest.mark.slow
+def test_3d_probe():
+    task = FrictionTask(env="3d", num_particles=50)
+    rng = np.random.default_rng(0)
+    theta = np.array([0.03, 0.15, 0.08])
+    for query in task.gatherer.queries:
+        v = task.gatherer.respond(theta, query, rng).value
+        assert v["feasible"] and not v["fell_in_hole"]
+        assert task.world.surface_at(np.array(v["stop"])) == query.floor
+    assert task._env is None  # the task's own simulator is never built by queries
