@@ -36,7 +36,7 @@ The project builds on three other repos:
 
 
 ```bash
-git clone https://github.com/Minseo10/learning-forceful-manipulation
+git clone https://github.com/Minseo10/ABLE
 cd learning-forceful-manipulation
 
 conda create -n kinder python=3.11 && conda activate kinder
@@ -84,14 +84,14 @@ goal and belief. A good seed lets the MPC find a plan with fewer rollouts.0
 
 
 Each **episode** runs these following steps, all driven by
-[`dream_pipeline.py`](https://github.com/Minseo10/learning-forceful-manipulation/blob/8b385ea/src/limb_baseline/dream_pipeline.py):
+[`dream_pipeline.py`](https://github.com/Minseo10/ABLE/blob/8b385ea/src/limb_baseline/dream_pipeline.py):
 
 | Step | What happens | Code |
 | --- | --- | --- |
-| 1. Information gathering | The robot queries human and collect responses (Query: The robot asks the person to push a joint to the believed limit. Response: Human's final limb configuration.) | [`queries.py`](https://github.com/Minseo10/learning-forceful-manipulation/blob/8b385ea/src/limb_baseline/queries.py) |
-| 2. Human model learning | Keep a belief over `theta`. It starts at a population prior and the belief is updated after information gathering using human responses. | [`belief.py`](https://github.com/Minseo10/learning-forceful-manipulation/blob/8b385ea/src/limb_baseline/belief.py), `observe()` |
+| 1. Information gathering | The robot queries human and collect responses (Query: The robot asks the person to push a joint to the believed limit. Response: Human's final limb configuration.) | [`queries.py`](https://github.com/Minseo10/ABLE/blob/8b385ea/src/limb_baseline/queries.py) |
+| 2. Human model learning | Keep a belief over `theta`. It starts at a population prior and the belief is updated after information gathering using human responses. | [`belief.py`](https://github.com/Minseo10/ABLE/blob/8b385ea/src/limb_baseline/belief.py), `observe()` |
 | 3. Dreaming | Repeat `n_dreams` times: draw a random person from the belief, plan a task for them, imagine executing it, and get the belief that would follow. Store the plan in the memory under that imagined belief. | `dream_once()` |
-| 4. Planning and execution | Run PDDLStream planner, with using $g$ that predicts the warm start for MPC. If its plan does not work, search with the normal planner (PDDLStream without $g$). Execute on the real person, then update the belief. | `plan_and_execute()`, [`planner.py`](https://github.com/Minseo10/learning-forceful-manipulation/blob/8b385ea/src/limb_baseline/planner.py), [`memo.py`](https://github.com/Minseo10/learning-forceful-manipulation/blob/8b385ea/src/limb_baseline/memo.py) |
+| 4. Planning and execution | Run PDDLStream planner, with using $g$ that predicts the warm start for MPC. If its plan does not work, search with the normal planner (PDDLStream without $g$). Execute on the real person, then update the belief. | `plan_and_execute()`, [`planner.py`](https://github.com/Minseo10/ABLE/blob/8b385ea/src/limb_baseline/planner.py), [`memo.py`](https://github.com/Minseo10/ABLE/blob/8b385ea/src/limb_baseline/memo.py) |
 
 `--condition` represents what the memory selects:
 
@@ -100,8 +100,8 @@ Each **episode** runs these following steps, all driven by
 - `learned`: a model that predicts torques from the current state and goal, retrained
   after every solved dream or episode. 
     - `--model` picks it: an MLP
-  ([`warmstart.py`](https://github.com/Minseo10/learning-forceful-manipulation/blob/8b385ea/src/limb_baseline/warmstart.py)) or a generative model such as flow
-  matching or diffusion ([`generative.py`](https://github.com/Minseo10/learning-forceful-manipulation/blob/8b385ea/src/limb_baseline/generative.py)).
+  ([`warmstart.py`](https://github.com/Minseo10/ABLE/blob/8b385ea/src/limb_baseline/warmstart.py)) or a generative model such as flow
+  matching or diffusion ([`generative.py`](https://github.com/Minseo10/ABLE/blob/8b385ea/src/limb_baseline/generative.py)).
 
 
 ## Run
@@ -132,7 +132,7 @@ MODELS="gen:flow:hist gen:ddpm:hist" scripts/run_dream.sh generative 20 4
 ```
 
 The arguments are episodes and dreams per episode; the header of
-[`run_dream.sh`](https://github.com/Minseo10/learning-forceful-manipulation/blob/8b385ea/scripts/run_dream.sh) lists the other options. To redraw figures from
+[`run_dream.sh`](https://github.com/Minseo10/ABLE/blob/8b385ea/scripts/run_dream.sh) lists the other options. To redraw figures from
 existing runs:
 
 ```bash

@@ -34,8 +34,8 @@ chosen by `scripts/limb/select_setup.py` (reach over prior tasks, then plain-MPC
 ## Install
 
 ```bash
-git clone https://github.com/Minseo10/learning-forceful-manipulation
-cd learning-forceful-manipulation
+git clone https://github.com/Minseo10/ABLE
+cd ABLE
 conda create -n kinder python=3.11 && conda activate kinder
 # FastDownward (pddlstream) and IKFast are compiled locally.
 conda install -c conda-forge cmake make cxx-compiler openblas libgfortran5
