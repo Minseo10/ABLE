@@ -57,6 +57,14 @@
     bash real_world/scripts/sprout_sim.sh setup
     ```
 
+- Setup now checks the PRPL URDF assets and builds Kinova IKFast if needed. On a Linux workstation missing its build dependencies, install them once and rerun setup:
+
+    ```bash
+    sudo apt-get install build-essential liblapack-dev libblas-dev libgfortran5
+    bash real_world/scripts/sprout_sim.sh setup
+    ```
+
+
 
 ### 1.3 Laptop: save settings and download the helper
 
@@ -126,6 +134,14 @@ python3 ~/sprout.py --execute
 
 
 ## 6. Stop or shut down
+- After a code update, refresh the laptop helper and deployed code once:
+
+    ```bash
+    source ~/.sprout-env
+    scp "$SPROUT_WORKSTATION:$SPROUT_REPO/real_world/scripts/sprout_laptop.py" ~/sprout.py
+    python3 ~/sprout.py deploy
+    ```
+
 - For normal shutdown, use a **separate laptop terminal outside tmux**, with Sprout supported/released and the entire retract sweep clear:
 
     ```bash
@@ -133,8 +149,9 @@ python3 ~/sprout.py --execute
     python3 ~/sprout.py shutdown
     ```
 
-- Type `shutdown`: reject active Sprout sessions → run Josh's `stop_servers.sh` → execute Kinova's Retract action → verify completion.
-- Verify stable retraction, then type `poweroff` and enter the NUC `sudo` password if requested. Poweroff follows in one minute. Server/retract failure aborts shutdown. Ctrl-C during retract requests Kinova Stop.
+- Type `shutdown`: run `hardware_tests/test_arm_retract.py --shutdown` on the NUC and verify retraction → run Josh's `stop_servers.sh` from the laptop, outside tmux.
+- Retract uses the running arm server, or the stored Kinova Retract action when no arm server is running. An active Sprout/teleop session or retract failure stops the sequence before server teardown.
+- Verify stable retraction, then type `poweroff`. The helper runs `sudo poweroff` on the NUC. Enter its password if requested. Server teardown failure prevents poweroff. Battery and arm power switches remain manual.
 - After the NUC is off manually power off TidyBot. Follow [Josh's onboarding](https://github.com/Princeton-Robot-Planning-and-Learning/prpl-tidybot/blob/b72db08443771160a845f1f816e7847cf214bba6/docs/onboarding/onboarding.md).
 
 ## Optional private Sprout model setup
@@ -155,6 +172,7 @@ python3 ~/sprout.py --execute
 - **`live.json`:** arm/base speeds, gripper force/speed, floor clearance, collision bounds and stop thresholds. Initial settings: arm **2 cm/s**, joints **10°/s**, base **4 cm/s**, gripper force/speed **10%** (driver commands, not measured contact force).
 - **`detection.json`:** camera calibration, tape tracking and forearm height. Grasp position/orientation update automatically.
 - **`scene.json`:** lift/pregrasp distances, base planning and optional Sprout model paths.
+- Planning uses PRPL’s `TidyBotKinova` URDF collision geometry, base BiRRT and arm IK/path planners. Sprout stays as boxes. Preview and live base transit share the same geometry checks. Regenerate old previews after updating.
 - Templates are in `real_world/config/`. The helper fills missing initial control/model settings and preserves existing values.
 - **Currently blocked:** torque thresholds, collision bounds and physical verification remain incomplete. Changing `execution_enabled` alone does not enable motion.
 
@@ -168,4 +186,5 @@ python3 ~/sprout.py --execute
 
 - **Current:** detects the taped forearm grasp region for predefined pick-and-place. The coarse body keep-out box is not whole-body pose estimation.
 - **Goal:** estimate Sprout's whole-body pose from its model and camera views → reconstruct it in simulation → plan with ABLE → execute the reviewed plan on the real robot.
+- During base transit, the whole-body box is checked against the robot. During arm manipulation, that box protects the base, while `live.json` obstacle boxes protect the arm from non-target body parts. The whole-body box alone does not establish a collision-free grasp.
 - Offline kinematic checks do not validate contact forces or guarantee safe hardware motion.

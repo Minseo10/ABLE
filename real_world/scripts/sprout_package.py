@@ -11,7 +11,7 @@ def package(repo: Path, output: Path) -> None:
     sys.path.insert(0, str(tidybot / "src"))
     from prpl_tidybot.sprout.live_config import model_files
 
-    files = []
+    files = [tidybot / "hardware_tests/test_arm_retract.py"]
     for folder in ("sprout", "marker_detector"):
         files.extend((tidybot / "src/prpl_tidybot" / folder).glob("*.py"))
     files.extend(

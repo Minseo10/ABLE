@@ -86,6 +86,12 @@ def prepare_live_bundle(
         live["detection"]["reference_image"] = "reference.jpg"
         model = Path(scene["tidybot_model"])
         live["model_sha256"] = model_digest(model)
+        if report.get("collision_model_sha256") is not None:
+            from prpl_tidybot.sprout.urdf_collision import urdf_digest
+
+            if report["collision_model_sha256"] != urdf_digest():
+                raise ValueError("Preview/runtime URDF models differ")
+            live["collision_model_sha256"] = report["collision_model_sha256"]
         live["base_plan"] = report.get("base_plan")
         (output / "live.json").write_text(json.dumps(live, indent=2) + "\n")
         if not report.get("completed"):
@@ -109,6 +115,15 @@ def prepare_live_bundle(
             raise ValueError("Base camera acquisition is stale; recapture")
         base_plan = report.get("base_plan")
         final_base = report["observed"]["base_xyyaw"]
+        if base_plan and base_plan.get("transit_geometry"):
+            from prpl_tidybot.sprout.transit_geometry import validate_model_geometry
+
+            validate_model_geometry(
+                base_plan["transit_geometry"],
+                model,
+                report["observed"]["arm_joints_rad"],
+                live.get("navigation", {}),
+            )
         if base_plan and base_plan["required"]:
             from prpl_tidybot.sprout.base_motion import validate_navigation
             from prpl_tidybot.sprout.base_planning import validate_base_plan

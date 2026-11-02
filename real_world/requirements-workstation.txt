@@ -1,4 +1,4 @@
-# Workstation camera processing and MuJoCo preview only.
+# Workstation perception, shared PRPL URDF planning and MuJoCo rendering.
 # Robot/perception machines use their existing prpl-tidybot environments.
 numpy>=1.26,<2
 mujoco==3.3.7
@@ -6,3 +6,7 @@ opencv-contrib-python==4.9.0.80
 PyYAML>=6,<7
 imageio>=2.37,<3
 imageio-ffmpeg==0.6.0
+
+# Match prpl-tidybot uv.lock for URDF models, IK and BiRRT.
+pybullet-helpers==0.1.2
+setuptools<81

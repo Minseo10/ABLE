@@ -311,3 +311,78 @@ def test_reference_initialization_never_reads_or_moves_robot(laptop, monkeypatch
     )
     laptop.workflow(args)
     assert events == ["capture", "scp", "scp", sys.executable, "scp", "init"]
+
+
+@pytest.mark.parametrize("failure", [None, "retract", "servers", "poweroff"])
+def test_shutdown_retracts_before_servers_and_poweroff(laptop, monkeypatch, failure):
+    monkeypatch.delenv("TMUX", raising=False)
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    answers = iter(["shutdown", "poweroff"])
+    monkeypatch.setattr("builtins.input", lambda _: next(answers))
+    events = []
+
+    def run(*args, **kwargs):
+        command = args[-1]
+        if "hardware_tests/test_arm_retract.py --shutdown" in command:
+            events.append("retract")
+            assert args[:2] == ("ssh", "-tt")
+            assert "sprout-live" in command
+            if failure == "retract":
+                raise subprocess.CalledProcessError(1, args)
+        elif command == "sudo poweroff":
+            events.append("poweroff")
+            if failure == "poweroff":
+                raise subprocess.CalledProcessError(1, args)
+        return ""
+
+    def stop(args, **kwargs):
+        assert args[0] == "bash" and args[1].endswith("stop_servers.sh")
+        assert kwargs["env"]["PRPL_NUC_HOST"] == "nuc"
+        assert kwargs["env"]["PRPL_PERCEPTION_HOST"] == "perception"
+        events.append("servers")
+        if failure == "servers":
+            raise subprocess.CalledProcessError(1, args)
+
+    monkeypatch.setattr(laptop, "run", run)
+    monkeypatch.setattr(laptop.subprocess, "run", stop)
+    args = SimpleNamespace(
+        nuc="nuc",
+        perception_ssh="perception",
+        workstation="ws",
+        repo="/repo/real-world",
+    )
+    if failure:
+        with pytest.raises(subprocess.CalledProcessError):
+            laptop.shutdown(args)
+    else:
+        laptop.shutdown(args)
+    expected = ["retract", "servers", "poweroff"]
+    if failure:
+        expected = expected[: expected.index(failure) + 1]
+    assert events == expected
+
+
+def test_shutdown_disconnection_does_not_claim_poweroff_success(
+    laptop, monkeypatch, capsys
+):
+    monkeypatch.delenv("TMUX", raising=False)
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    answers = iter(["shutdown", "poweroff"])
+    monkeypatch.setattr("builtins.input", lambda _: next(answers))
+
+    def run(*args, **kwargs):
+        if args[-1] == "sudo poweroff":
+            raise subprocess.CalledProcessError(255, args)
+        return ""
+
+    monkeypatch.setattr(laptop, "run", run)
+    monkeypatch.setattr(laptop.subprocess, "run", lambda *args, **kwargs: None)
+    laptop.shutdown(
+        SimpleNamespace(
+            nuc="nuc",
+            perception_ssh="perception",
+            workstation="ws",
+            repo="/repo/real-world",
+        )
+    )
+    assert "Shutdown is unconfirmed" in capsys.readouterr().out

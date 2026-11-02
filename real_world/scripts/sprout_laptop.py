@@ -55,6 +55,7 @@ cp "$HOME/prpl-tidybot/conf/lab/prpl.yaml" "$build/conf/lab/prpl.yaml"
 ln -s "$HOME/prpl-tidybot/.venv" "$build/.venv"
 cd "$build"
 PYTHONPATH="$build/src" .venv/bin/python -c 'import mujoco, cv2, numpy; import prpl_tidybot.sprout.live_runtime; print("Live runtime imports OK")'
+PYTHONPATH="$build/src" .venv/bin/python -m prpl_tidybot.sprout.planner_check
 ln -sfn "$build" "$HOME/sprout-live"
 rm "$1/deploy.tar.gz"
 rmdir "$1"
@@ -86,7 +87,7 @@ def perception(args: argparse.Namespace) -> None:
 
 
 def shutdown(args: argparse.Namespace) -> None:
-    """Run repo server teardown from the laptop, then verified retract + poweroff."""
+    """Verify retraction, stop servers outside tmux, then request NUC poweroff."""
     if os.environ.get("TMUX"):
         raise ValueError(
             "Run shutdown from a separate laptop terminal outside tmux, as Josh's guide requires"
@@ -94,7 +95,7 @@ def shutdown(args: argparse.Namespace) -> None:
     if not sys.stdin.isatty():
         raise ValueError("Shutdown requires an interactive laptop terminal")
     print(
-        "Shutdown will stop servers, RETRACT THE ARM, then power off the NUC.\n"
+        "Shutdown will RETRACT THE ARM, stop servers, then power off the NUC.\n"
         "Finish/cancel the experiment first; Sprout must be supported and released.\n"
         "The complete retract sweep must be clear. Physical switches remain manual.",
         flush=True,
@@ -108,59 +109,27 @@ def shutdown(args: argparse.Namespace) -> None:
     with tempfile.TemporaryDirectory(prefix="sprout-shutdown-") as temporary:
         tidy_repo = str(PurePosixPath(args.repo).parent / "prpl-tidybot")
         stop_script = str(Path(temporary) / "stop_servers.sh")
-        retract_script = str(Path(temporary) / "shutdown_arm.py")
         run(
             "scp",
             args.workstation + ":" + tidy_repo + "/scripts/stop_servers.sh",
             stop_script,
         )
+        print("1/3 Retract and verify completion on the NUC", flush=True)
         run(
-            "scp",
-            args.workstation
-            + ":"
-            + tidy_repo
-            + "/src/prpl_tidybot/sprout/shutdown_arm.py",
-            retract_script,
+            "ssh",
+            "-tt",
+            args.nuc,
+            LIVE_PREFIX
+            + "test -f hardware_tests/test_arm_retract.py && "
+            + ".venv/bin/python -u hardware_tests/test_arm_retract.py --shutdown",
         )
+        # The laptop owns this process, outside the tmux session being removed.
+        # A failed/aborted retract raises above and never reaches server teardown.
+        print("2/3 Stop arm/base/perception servers from the laptop", flush=True)
         env = dict(
             os.environ, PRPL_NUC_HOST=args.nuc, PRPL_PERCEPTION_HOST=args.perception_ssh
         )
-        # The custom runtime owns the arm directly. Stop legacy owners first,
-        # then use the same Kinova Retract action without launching a second server.
-        print(
-            "Stopping legacy arm/base/perception servers using Josh's stop_servers.sh",
-            flush=True,
-        )
         subprocess.run(["bash", stop_script], env=env, check=True)
-        remote_path = run(
-            "ssh", args.nuc, "mktemp /tmp/sprout-shutdown.XXXXXX", capture=True
-        )
-        if (
-            not remote_path.startswith("/tmp/sprout-shutdown.")
-            or "/" in remote_path[len("/tmp/") :]
-            or "\n" in remote_path
-        ):
-            raise ValueError("Unexpected shutdown script path")
-        try:
-            run("scp", retract_script, args.nuc + ":" + remote_path)
-            run(
-                "ssh",
-                "-tt",
-                args.nuc,
-                "cd ~/prpl-tidybot && "
-                + shlex.join([".venv/bin/python", "-u", remote_path]),
-            )
-        finally:
-            subprocess.run(
-                [
-                    "ssh",
-                    "-o",
-                    "ConnectTimeout=5",
-                    args.nuc,
-                    shlex.join(["rm", "-f", remote_path]),
-                ],
-                check=False,
-            )
     if (
         input(
             "Verify the arm is stably retracted. Type poweroff to shut down the NUC: "
@@ -169,10 +138,20 @@ def shutdown(args: argparse.Namespace) -> None:
     ):
         print("NUC left on; servers are stopped.", flush=True)
         return
-    # Schedule rather than interpreting an abrupt SSH disconnect as success.
-    run("ssh", "-tt", args.nuc, "sudo shutdown -h +1")
+    print("3/3 Request NUC poweroff (sudo may ask for its password)", flush=True)
+    try:
+        run("ssh", "-tt", args.nuc, "sudo poweroff")
+    except subprocess.CalledProcessError as error:
+        if error.returncode != 255:
+            raise
+        print(
+            "SSH disconnected during poweroff. Shutdown is unconfirmed. "
+            "Check that the NUC is off before switching batteries off.",
+            flush=True,
+        )
+        return
     print(
-        "NUC shutdown scheduled in one minute. Wait until it is off.\n"
+        "NUC poweroff requested. Wait until it is off.\n"
         "Then: press arm power button → camping battery AC to DC → camping battery off → SLA switch off.\n"
         "These physical steps cannot be performed by this script.",
         flush=True,

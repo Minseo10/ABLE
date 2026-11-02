@@ -314,6 +314,9 @@ def setup(check: bool = False) -> None:
     """Create worksheets once; preserve existing calibration on every rerun."""
     import shutil
 
+    from prpl_tidybot.sprout.planner_check import check as check_planner
+
+    check_planner(build_ikfast=True)
     directory = Path(".local/sprout")
     directory.mkdir(parents=True, exist_ok=True)
     for name in ("detection", "scene", "live"):
@@ -450,6 +453,19 @@ def preview(args: argparse.Namespace) -> None:
         if scene.get("representation") == "forearm_box"
         else Path(config["sprout_model"])
     )
+    live_path = getattr(args, "live_config", None)
+    if live_path and live_path.exists():
+        configured = read_json(live_path).get("obstacles", [])
+        scene["arm_obstacles"] = [
+            box
+            for box in configured
+            if box.get("center") is not None and box.get("half_size") is not None
+        ]
+        scene["unconfigured_arm_obstacles"] = [
+            box.get("name", "unnamed")
+            for box in configured
+            if box.get("center") is None or box.get("half_size") is None
+        ]
     sim = Rehearsal(Path(config["tidybot_model"]), sprout_model, scene)
     if observation is None:
         if not config.get("synthetic_demo", False):
@@ -464,6 +480,7 @@ def preview(args: argparse.Namespace) -> None:
         grasp = GraspPose(**observation["grasp"])
     recipe = Recipe(**config["recipe"])
     base_error = None
+    scene.pop("base_plan", None)
     if config.get("base_planning", {}).get("enabled"):
         from prpl_tidybot.sprout.base_planning import plan_base
 
@@ -481,27 +498,53 @@ def preview(args: argparse.Namespace) -> None:
                 recipe,
                 obstacles,
                 config["base_planning"],
+                navigation=(
+                    read_json(args.live_config).get("navigation", {})
+                    if getattr(args, "live_config", None) and args.live_config.exists()
+                    else None
+                ),
             )
             print("SIM BASE: " + json.dumps(scene["base_plan"]), flush=True)
         except ValueError as error:
             base_error = str(error)
             print("SIM BASE BLOCKED: " + base_error, flush=True)
-    report = sim.render_plan(grasp, recipe, args.output, fps=args.fps, steps=args.steps)
+    report = sim.render_plan(
+        grasp,
+        recipe,
+        args.output,
+        fps=args.fps,
+        steps=args.steps,
+        blocked_reason=("base planning: " + base_error) if base_error else None,
+    )
     if base_error:
         report["completed"], report["failure"] = False, "base planning: " + base_error
+    from prpl_tidybot.sprout.urdf_collision import urdf_digest
+
+    report["planner_backend"] = "prpl_urdf"
+    report["collision_coverage"] = {
+        "robot": "PRPL TidyBotKinova URDF collision meshes/primitives",
+        "body_box": "whole robot during base transit, base only during manipulation",
+        "arm_obstacles": scene.get("arm_obstacles", []),
+        "unconfigured_arm_obstacles": scene.get("unconfigured_arm_obstacles", []),
+        "contact_dynamics_validated": False,
+    }
+    report["collision_model_sha256"] = urdf_digest()
     report["base_plan"] = scene.get("base_plan")
     trajectory = read_json(args.output / "trajectory.json")
     pregrasp_frames = [frame for frame in trajectory if frame["phase"] == "pregrasp"]
     if pregrasp_frames:
+        report["pregrasp_path_rad"] = [
+            frame["arm_joints_rad"] for frame in pregrasp_frames
+        ]
         report["pregrasp_joints_rad"] = pregrasp_frames[-1]["arm_joints_rad"]
     write_json(args.output / "scene.json", config)
     if observation is not None:
         write_json(args.output / "observation.json", observation)
     report.update(
         {
-            "source": "synthetic_demo"
-            if observation is None
-            else observation["source"],
+            "source": (
+                "synthetic_demo" if observation is None else observation["source"]
+            ),
             "execution_ready": False,
             "created_at_unix": time.time(),
             "observed": {
