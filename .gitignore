@@ -31,7 +31,6 @@ temp/
 wandb/
 
 # Local work kept out of the repo
-paper/
 tmp/
 patches/
 research_notes/
