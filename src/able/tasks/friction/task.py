@@ -14,12 +14,13 @@ from able.api import Observation, Step, Task
 from able.planners.pomcpow import POMCPOWConfig
 from able.tasks.friction.belief import FrictionPrior
 from able.tasks.friction.env import puckpushing_utils as pu
+from able.tasks.friction.env.execute import execute_push, push_record
 from able.tasks.friction.env.levels import level_world, make_level_env
 from able.tasks.friction.env.push_recorder import Recorder
 from able.tasks.friction.planner import FrictionPlanner
 from able.tasks.friction.planning.model import PuckPushingModel, PuckRewards
 from able.tasks.friction.psi import FrictionPsi
-from able.tasks.friction.query import FrictionGatherer, push_record
+from able.tasks.friction.query import FrictionGatherer
 
 
 @dataclass(frozen=True)
@@ -95,10 +96,8 @@ class FrictionTask(Task):
                 frames: list | None = None) -> Step:
         del rng
         action = np.array([plan.angle, plan.speed] + ([] if plan.stance is None else [plan.stance]))
-        if frames is None:
-            _, _, terminated, _, info = self.environment.step(action)
-        else:
-            _, _, terminated, _, info = self.recorder.record(frames, action, state.pushes + 1)
+        recorder = self.recorder if frames is not None else None
+        terminated, info = execute_push(self.environment, action, recorder, frames, state.pushes + 1)
         record = push_record(info, state.puck, plan)
         stop, feasible = np.asarray(record["stop"]), record["feasible"]
         robot = state.robot

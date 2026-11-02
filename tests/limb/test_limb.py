@@ -220,15 +220,15 @@ def test_training_rows_match_what_the_hook_sees():
 @pytest.mark.slow
 def test_a_query_stops_short_of_the_passive_bound():
     """The whole observation model: the person stops inside their own range."""
-    from able.tasks.limb.env.query import QuerySimulator
+    from able.tasks.limb.env.query import LimbQuerySimulator
 
     theta = np.array([0.9, 1.0, 0.8])
     bounds = np.abs(theta_to_bounds(theta))
-    simulator = QuerySimulator(theta)
+    simulator = LimbQuerySimulator()
     try:
         rng = np.random.default_rng(0)
         for i in range(3):
-            outcome = simulator.ask(i, bounds[i] + 0.5, rng)
+            outcome = simulator.ask(theta, i, bounds[i] + 0.5, rng)
             shortfall = bounds[i] - outcome.answer
             assert not outcome.reached_target
             assert 0.0 < shortfall < 2 * DEFAULT_QUERY_MODEL.zone_width

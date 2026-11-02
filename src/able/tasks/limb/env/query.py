@@ -93,8 +93,8 @@ class QueryOutcome:
     peak_velocity: float = 0.0
 
 
-class QuerySimulator:
-    """Standalone query limb, kept alive across a person's rounds."""
+class QueryLimb:
+    """One person's standalone query limb."""
 
     def __init__(
         self, theta: NDArray[np.float64], model: QueryModel = DEFAULT_QUERY_MODEL
@@ -236,3 +236,26 @@ class QuerySimulator:
         if p.isConnected(physicsClientId=self.physics_client_id):
             p.disconnect(physicsClientId=self.physics_client_id)
 
+
+class LimbQuerySimulator:
+    """Runs queries in its own PyBullet limb (one person at a time), never the task's sim."""
+
+    def __init__(self, model: QueryModel = DEFAULT_QUERY_MODEL) -> None:
+        self.model = model
+        self._key: bytes | None = None
+        self._limb: QueryLimb | None = None
+
+    def ask(self, theta: NDArray[np.float64], motion_index: int, target: float, rng: np.random.Generator,
+            frames: list | None = None) -> QueryOutcome:
+        """Where the person stops pushing `motion_index` toward `target` (no camera: `frames` is unused)."""
+        del frames
+        key = np.asarray(theta, np.float64).tobytes()
+        if key != self._key:
+            self.close()
+            self._limb, self._key = QueryLimb(theta, self.model), key
+        return self._limb.ask(motion_index, target, rng)
+
+    def close(self) -> None:
+        if self._limb is not None:
+            self._limb.close()
+        self._limb, self._key = None, None

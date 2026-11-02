@@ -1,39 +1,22 @@
-"""Physical reach queries: in its own sim, the robot holds its gripper at points along a direction from the
-shoulder and the person answers whether they can reach each one."""
+"""Info gathering: which direction and distances to ask about; the robot presents them in env/query.py."""
 
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass, field
 
 import numpy as np
-from kinder.envs.kinematic3d.utils import remove_fingers_from_extended_joints
 from numpy.typing import NDArray
-from pybullet_helpers.geometry import Pose, SE2Pose
-from pybullet_helpers.inverse_kinematics import (
-    InverseKinematicsError,
-    check_body_collisions,
-    inverse_kinematics,
-)
 
 from able.api import Belief, InfoGatherer, Observation
 from able.tasks.bedside.belief import EXECUTION_SCALE, reach_distance
 from able.tasks.bedside.env.bedside_stocking3d import (
     BedsideStocking3DEnvConfig,
     ObjectCentricBedsideStocking3DEnv,
-    reach_margin,
 )
-from able.tasks.bedside.env.execute import Driver
+from able.tasks.bedside.env.query import BedsideQuerySimulator
 from able.tasks.bedside.planning.stream import (
-    CARRY_JOINTS,
-    GRASP_ORIENTATIONS,
-    HOME_JOINTS,
     NOMINAL_HALF_HEIGHT,
-    _base_candidates,
 )
-from able.video import FrameRecorder
-
-PRESENT_TOL = 0.01  # m, the gripper must end this close to the planned point
 
 
 def bedside_directions(config: BedsideStocking3DEnvConfig, shoulder: NDArray) -> NDArray[np.float64]:
@@ -49,32 +32,6 @@ class BedsideQuery:
 
     direction: NDArray[np.float64]  # unit vector from the shoulder
     distances: tuple[float, ...]  # m
-
-
-def present_conf(sim: ObjectCentricBedsideStocking3DEnv, point: NDArray) -> tuple[SE2Pose, list] | None:
-    """A collision-free base pose and arm conf with the gripper at `point`, else None. Restores the robot."""
-    # pylint: disable=protected-access
-    arm, static, cid = sim.robot.arm, sim.static_collision_ids, sim.physics_client_id
-    base0, joints0 = sim.robot.get_base(), list(arm.get_joint_positions())
-    finger = arm.get_finger_state()
-    found = None
-    for base in _base_candidates(point[0], point[1]):
-        sim.robot.set_base(base)
-        if any(check_body_collisions(sim.robot.base.robot_id, b, cid) for b in static):
-            continue
-        for quat in GRASP_ORIENTATIONS:
-            arm.set_joints(HOME_JOINTS)
-            try:
-                q = inverse_kinematics(arm, Pose(tuple(point), quat), validate=True, set_joints=True)
-            except InverseKinematicsError:
-                continue
-            if not any(check_body_collisions(arm.robot_id, b, cid) for b in static):
-                found = (base, list(q))
-                break
-        if found:
-            break
-    sim._set_robot_and_held_object(base0, remove_fingers_from_extended_joints(joints0), finger)
-    return found
 
 
 @dataclass
@@ -94,16 +51,21 @@ class BedsideGatherer(InfoGatherer):
     num_particles: int = 1000
     frame_stride: int = 8
     seed: int = 0
-    last_seconds: float = field(default=0.0, init=False)
-    _sim: ObjectCentricBedsideStocking3DEnv | None = field(default=None, init=False, repr=False, compare=False)
+    simulator: BedsideQuerySimulator = field(init=False, repr=False, compare=False)
     _known: dict[tuple[int, int], bool] = field(default_factory=dict, init=False, repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        self.simulator = BedsideQuerySimulator(self.config, self.scale, self.noisy, self.stop_at_miss,
+                                               self.frame_stride, self.seed)
 
     @property
     def sim(self) -> ObjectCentricBedsideStocking3DEnv:
-        if self._sim is None:
-            self._sim = ObjectCentricBedsideStocking3DEnv(0, 0, config=self.config, allow_state_access=True)
-            self._sim.reset(seed=self.seed)
-        return self._sim
+        """The query simulator's sim (never the planner's)."""
+        return self.simulator.sim
+
+    @property
+    def last_seconds(self) -> float:
+        return self.simulator.last_seconds
 
     @property
     def distances(self) -> NDArray[np.float64]:
@@ -115,8 +77,8 @@ class BedsideGatherer(InfoGatherer):
     def presentable(self, k: int, j: int) -> bool:
         """Static collision-free IK for distance j along direction k (memoized)."""
         if (k, j) not in self._known:
-            sim = self.sim
-            self._known[k, j] = present_conf(sim, sim.shoulder + self.distances[j] * self.directions[k]) is not None
+            point = self.sim.shoulder + self.distances[j] * self.directions[k]
+            self._known[k, j] = self.simulator.can_present(point)
         return self._known[k, j]
 
     def choose(self, belief: Belief, rng: np.random.Generator) -> BedsideQuery | None:
@@ -152,35 +114,5 @@ class BedsideGatherer(InfoGatherer):
     def respond(self, theta: NDArray[np.float64], query: BedsideQuery, rng: np.random.Generator,
                 frames: list | None = None) -> Observation:
         """Observation value: [(gripper point, reached), ...] at the points the robot could present."""
-        started = time.time()
-        sim = self.sim
-        sim.reset(seed=self.seed)
-        sim.reach_theta = np.array(theta, float)
-        recorder = FrameRecorder(sim, frames, every=self.frame_stride)
-        drive = Driver(sim, recorder, self.seed)
-        recorder.snap()
-        outcomes, base = [], None
-        for s in query.distances:
-            target = sim.shoulder + s * np.asarray(query.direction, float)
-            conf = present_conf(sim, target)
-            if conf is None:
-                continue
-            recorder.text = f"query: reach {s:.2f} m?" if recorder.on else ""
-            if conf[0] != base:
-                drive.arm(CARRY_JOINTS)
-                drive.base(conf[0])
-                base = conf[0]
-            drive.arm(conf[1])
-            point = np.array(sim.robot.arm.get_end_effector_pose().position)
-            if np.linalg.norm(point - target) > PRESENT_TOL:
-                continue  # blocked on the way
-            m = float(reach_margin(point, sim.reach_theta, sim.shoulder))
-            reached = bool(rng.random() < 1 / (1 + np.exp(-m / self.scale))) if self.noisy else m >= 0
-            outcomes.append((tuple(float(v) for v in point), reached))
-            if recorder.on:
-                recorder.text = f"query: reach {s:.2f} m? {'yes' if reached else 'no'}"
-                recorder.snap()
-            if self.stop_at_miss and not reached:
-                break
-        self.last_seconds = time.time() - started
+        outcomes = self.simulator.ask(theta, query.direction, query.distances, rng, frames)
         return Observation("query", outcomes, np.asarray(query.direction, float))

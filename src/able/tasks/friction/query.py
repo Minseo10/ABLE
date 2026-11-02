@@ -1,4 +1,4 @@
-"""Info gathering: a real probe push on one floor colour, in the gatherer's own simulator.
+"""Info gathering: which floor to probe and from where; the push itself runs in env/query.py.
 
 Probe poses are searched per map (`probe_queries`): a puck start and heading whose straight run
 (3-sigma heading cone, clear of walls, holes by 0.1 m and other floors) fits the paddle's
@@ -27,10 +27,9 @@ from able.tasks.friction.env.puckpushing_utils import (
     PuckWorld,
     Push,
 )
-from able.tasks.friction.env.push_recorder import Recorder
+from able.tasks.friction.env.query import FrictionQuerySimulator
 
 _SIGMAS = 3.0  # strike noise a probe's run must cover
-_BACKOFF = 0.05  # robot start behind its push station (m)
 
 
 @dataclass(frozen=True)
@@ -45,16 +44,6 @@ class FrictionQuery:
     @property
     def push(self) -> Push:
         return Push(self.angle, self.speed)
-
-
-def push_record(info: dict, puck, push: Push) -> dict:
-    """An env step's info as the record the belief explains."""
-    return {
-        "puck": [float(v) for v in puck], "angle": push.angle, "speed": push.speed, "stance": push.stance,
-        "feasible": bool(info["push_feasible"]), "release_speed": float(info["release_speed"]),
-        "stop": np.asarray(info["stop_position"], np.float64).tolist(), "fell_in_hole": bool(info["fell_in_hole"]),
-        "goal_reached": bool(info["goal_reached"]), "drive_distance": float(info["drive_distance"]),
-    }
 
 
 def probe_queries(world: PuckWorld, low, speed: float = 0.8, margin: float = 0.1) -> tuple[FrictionQuery, ...]:
@@ -122,21 +111,14 @@ class FrictionGatherer(InfoGatherer):
 
     def __init__(self, world: PuckWorld, make_env: Callable[[], Any], low, env_name: str = "2d",
                  header: str = "", speed: float = 0.8, min_std: float = 0.005) -> None:
-        self.world = world
-        self.make_env = make_env  # builds the probe's own env, never the task's
-        self.env_name = env_name
-        self.header = header
         self.min_std = min_std  # about the resampling jitter
         self.queries = probe_queries(world, low, speed)
-        self._env: Any = None
-        self._recorder: Any = None
+        self.simulator = FrictionQuerySimulator(world, make_env, env_name, header)
 
     @property
     def environment(self) -> Any:
-        """Probe simulator, built lazily."""
-        if self._env is None:
-            self._env = self.make_env()
-        return self._env
+        """The probe simulator's env (never the task's)."""
+        return self.simulator.environment
 
     def choose(self, belief, rng: np.random.Generator) -> FrictionQuery | None:
         del rng
@@ -146,19 +128,5 @@ class FrictionGatherer(InfoGatherer):
 
     def respond(self, theta: NDArray[np.float64], query: FrictionQuery, rng: np.random.Generator,
                 frames: list | None = None) -> Observation:
-        env, puck = self.environment, np.array(query.puck, np.float64)
-        pose = self.world.push_pose(puck, query.angle)
-        assert pose is not None, query
-        base, heading = pose
-        robot = base - _BACKOFF * query.push.direction
-        env.reset(seed=int(rng.integers(2**31)), options={
-            "frictions": tuple(float(f) for f in theta), "puck": query.puck,
-            "robot": (float(robot[0]), float(robot[1]), float(heading))})
-        action = np.array([query.angle, query.speed])
-        if frames is None:
-            info = env.step(action)[4]
-        else:
-            if self._recorder is None:
-                self._recorder = Recorder(env, self.env_name, header=f"{self.header} probe".strip())
-            info = self._recorder.record(frames, action, 0)[4]
-        return Observation("query", push_record(info, puck, query.push), query)
+        record = self.simulator.ask(theta, query.puck, query.angle, query.speed, rng, frames)
+        return Observation("query", record, query)

@@ -34,8 +34,8 @@ from able.tasks.bedside import (
     reach_distance,
 )
 from able.tasks.bedside.env.execute import _base_path
+from able.tasks.bedside.env.query import PRESENT_TOL, present_conf
 from able.tasks.bedside.planning.problem import build_stream_context
-from able.tasks.bedside.query import PRESENT_TOL, present_conf
 from able.video import render
 
 THETA = np.array([0.7, 0.6, 0.65])
