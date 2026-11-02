@@ -2,15 +2,19 @@
 
 The planner takes a particle belief over the user's reach ellipsoid; a requested item's
 pose is usable if P_b(reachable) >= 1 - delta. Motion is IK-only: arm trajectories are
-home -> hover -> grasp waypoints and base moves are unchecked straight lines.
+carry -> hover -> grasp waypoints and base moves are unchecked; execution refines both.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
+import shutil
 import sys
+import tempfile
 import time
+from contextlib import contextmanager
 from functools import partial
 from pathlib import Path
 
@@ -23,7 +27,7 @@ from pddlstream.algorithms.meta import solve
 from pddlstream.language.constants import AND, PDDLProblem, print_solution
 from pddlstream.language.generator import from_gen_fn, from_test
 from pddlstream.utils import read
-from pybullet_helpers.geometry import get_pose
+from pybullet_helpers.geometry import SE2Pose, get_pose
 from pybullet_helpers.inverse_kinematics import InverseKinematicsError
 from pybullet_helpers.joint import get_jointwise_difference
 from pybullet_helpers.motion_planning import (
@@ -39,6 +43,7 @@ from able.tasks.bedside.env import (
     ObjectCentricBedsideStocking3DEnv,
 )
 from able.tasks.bedside.planner.stream import (
+    CARRY_JOINTS,
     BaseConf,
     BedsideStreamContext,
     Placement,
@@ -71,6 +76,7 @@ def build_stream_context(
     theta_particles: np.ndarray | None = None,
     delta: float = 0.1,
     seed: int = 0,
+    proposal=None,
 ) -> BedsideStreamContext:
     if theta_particles is None:
         theta_particles = sim.reach_theta[None]
@@ -86,15 +92,38 @@ def build_stream_context(
         all_surfaces=surfaces,
         slots={s: cfg.region_slots(s) for s in surfaces},
         requested_slots=requested_candidate_slots(sim),
+        proposal=proposal,
     )
+
+
+def _counted(ctx: BedsideStreamContext, name: str, fn, generator: bool):
+    """Count each evaluation of stream `name` in `ctx.calls`."""
+
+    def test(*args):
+        ctx.calls[name] += 1
+        return fn(*args)
+
+    def gen(*args):
+        outputs = fn(*args)
+        while True:
+            ctx.calls[name] += 1
+            try:
+                out = next(outputs)
+            except StopIteration:
+                return
+            yield out
+
+    return gen if generator else test
 
 
 def create_problem(
     sim: ObjectCentricBedsideStocking3DEnv,
     state: BedsideStocking3DObjectCentricState,
+    ctx: BedsideStreamContext | None = None,
     **ctx_kwargs,
 ) -> PDDLProblem:
-    ctx = build_stream_context(sim, state, **ctx_kwargs)
+    if ctx is None:
+        ctx = build_stream_context(sim, state, **ctx_kwargs)
     q0 = BaseConf(sim.robot.get_base())
     init: list[tuple] = [("BConf", q0), ("AtBConf", q0), ("HandEmpty",), ("CanMove",)]
     goal: list[tuple] = [("HandEmpty",)]
@@ -105,15 +134,19 @@ def create_problem(
         if name in ctx.requested:
             init.append(("Requested", name))
             goal.append(("Delivered", name))
-    stream_map = {
-        "sample-place-pose": from_gen_fn(partial(sample_place_pose, ctx)),
-        "sample-grasp": from_gen_fn(partial(sample_grasp, ctx)),
-        "inverse-kinematics": from_gen_fn(partial(inverse_kinematics_stream, ctx)),
-        "test-usable": from_test(partial(test_usable, ctx)),
-        "test-clear": from_test(partial(test_clear, ctx)),
-        "test-cfree-pose-pose": from_test(partial(test_cfree_pose_pose, ctx)),
-        "test-cfree-traj-pose": from_test(partial(test_cfree_traj_pose, ctx)),
+    gens = {
+        "sample-place-pose": sample_place_pose,
+        "sample-grasp": sample_grasp,
+        "inverse-kinematics": inverse_kinematics_stream,
     }
+    tests = {
+        "test-usable": test_usable,
+        "test-clear": test_clear,
+        "test-cfree-pose-pose": test_cfree_pose_pose,
+        "test-cfree-traj-pose": test_cfree_traj_pose,
+    }
+    stream_map = {n: from_gen_fn(_counted(ctx, n, partial(f, ctx), True)) for n, f in gens.items()}
+    stream_map |= {n: from_test(_counted(ctx, n, partial(f, ctx), False)) for n, f in tests.items()}
     return PDDLProblem(DOMAIN_PDDL, {}, STREAM_PDDL, stream_map, init, (AND, *goal))
 
 
@@ -125,24 +158,39 @@ def plan_bedside(
     search_sample_ratio: float = 1.0,
     max_complexity: float = float("inf"),
     verbose: bool = False,
+    ctx: BedsideStreamContext | None = None,
     **ctx_kwargs,
 ):
-    problem = create_problem(sim, state, **ctx_kwargs)
+    """Plan under `ctx` (built from `ctx_kwargs` if None); None if no plan is found."""
+    problem = create_problem(sim, state, ctx=ctx, **ctx_kwargs)
     # pddlstream walks its binding tree recursively; long plans exceed the default limit.
     sys.setrecursionlimit(max(sys.getrecursionlimit(), 20000))
-    solution = solve(
-        problem,
-        algorithm=algorithm,
-        unit_costs=True,
-        max_time=max_time,
-        search_sample_ratio=search_sample_ratio,
-        max_complexity=max_complexity,
-        verbose=verbose,
-    )
+    with private_cwd():
+        solution = solve(
+            problem,
+            algorithm=algorithm,
+            unit_costs=True,
+            max_time=max_time,
+            search_sample_ratio=search_sample_ratio,
+            max_complexity=max_complexity,
+            verbose=verbose,
+        )
     if verbose:
         print_solution(solution)
     plan, _, _ = solution
     return plan
+
+
+@contextmanager
+def private_cwd():
+    """Run in a fresh temp dir; Fast Downward writes ./temp in the cwd."""
+    old, tmp = os.getcwd(), tempfile.mkdtemp(prefix="bedside_pddl_")
+    os.chdir(tmp)
+    try:
+        yield
+    finally:
+        os.chdir(old)
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 def _clip(sim, action):
@@ -156,6 +204,8 @@ def _arm_path(sim, target, exclude: set[int], seed: int) -> list:
     # pylint: disable=protected-access
     arm = sim.robot.arm
     base, cur = sim.robot.get_base(), list(arm.get_joint_positions())
+    if np.abs(get_jointwise_difference(arm.get_arm_joint_infos()[:7], list(target[:7]), cur[:7])).max() < 1e-6:
+        return [cur]
     finger = arm.get_finger_state()
     held = sim._grasped_object_id
     bodies = sim._get_collision_object_ids() - exclude - ({held} if held is not None else set())
@@ -206,6 +256,47 @@ def _descent(sim, hover, grasp, target: int, seed: int) -> list:
     )[1:]
 
 
+BASE_RESOLUTION = 0.05
+
+
+def _base_path(sim, goal: SE2Pose) -> list[SE2Pose]:
+    """Dense collision-free base waypoints to `goal`: a straight move, or turning first or last,
+    either way round. A turn of ~pi otherwise picks its direction by float noise."""
+    # pylint: disable=protected-access
+    start = sim.robot.get_base()
+    joints = remove_fingers_from_extended_joints(sim.robot.arm.get_joint_positions())
+    finger = sim.robot.arm.get_finger_state()
+    d = goal - start
+    turns = [d.rot] if abs(d.rot) < 1e-6 else [d.rot, d.rot - np.sign(d.rot) * 2 * np.pi]
+    shift = np.array([d.x, d.y, 0.0])
+    candidates = []
+    for t in turns:
+        turn = np.array([0.0, 0.0, t])
+        candidates += [[shift + turn], [turn, shift], [shift, turn]]
+    paths = []
+    for segments in candidates:
+        path, at = [], np.zeros(3)
+        for seg in segments:
+            n = max(1, int(np.ceil(np.abs(seg).max() / BASE_RESOLUTION)))
+            path += [at + seg * (i / n) for i in range(1, n + 1)]
+            at = at + seg
+        paths.append([SE2Pose(start.x + x, start.y + y, (start.rot + r + np.pi) % (2 * np.pi) - np.pi)
+                      for x, y, r in path])
+    found = paths[0]
+    for path in paths:
+        ok = True
+        for q in path:
+            sim._set_robot_and_held_object(q, joints, finger)
+            if sim._robot_or_held_object_collision_exists():
+                ok = False
+                break
+        if ok:
+            found = path
+            break
+    sim._set_robot_and_held_object(start, joints, finger)
+    return found
+
+
 def execute_plan(sim: ObjectCentricBedsideStocking3DEnv, plan, seed: int = 0) -> bool:
     """Execute a move_base/pick/place plan; arm paths are refined with BiRRT."""
 
@@ -220,6 +311,9 @@ def execute_plan(sim: ObjectCentricBedsideStocking3DEnv, plan, seed: int = 0) ->
                 return
 
     def to_base(target, attempts=200):
+        for q in _base_path(sim, target):
+            d = q - sim.robot.get_base()
+            sim.step(_clip(sim, [d.x, d.y, d.rot] + [0.0] * 8))
         for _ in range(attempts):
             d = target - sim.robot.get_base()
             if max(abs(d.x), abs(d.y), abs(d.rot)) < 1e-3:
@@ -233,6 +327,8 @@ def execute_plan(sim: ObjectCentricBedsideStocking3DEnv, plan, seed: int = 0) ->
             if (held is not None) == close:
                 return
 
+    for q in _arm_path(sim, CARRY_JOINTS, set(), seed)[1:]:
+        to_joints(q)
     for name, args in plan:
         if name == "move_base":
             to_base(args[1].pose)
@@ -264,7 +360,10 @@ def solve_and_execute(
     execute: bool = False,
     use_gui: bool = False,
     verbose: bool = False,
+    true_theta: bool = False,
+    num_particles: int = 256,
 ) -> dict:
+    """Plan under prior particles (or the true theta), optionally execute."""
     sim = ObjectCentricBedsideStocking3DEnv(
         num_requested=num_requested,
         num_clutter=num_clutter,
@@ -273,6 +372,10 @@ def solve_and_execute(
         allow_state_access=True,
     )
     state, _ = sim.reset(seed=seed)
+    cfg = sim.config
+    particles = None if true_theta else np.random.default_rng(seed).uniform(
+        cfg.reach_theta_lb, cfg.reach_theta_ub, (num_particles, 3))
+    ctx = build_stream_context(sim, state, theta_particles=particles, delta=delta, seed=seed)
     t0 = time.perf_counter()
     plan = plan_bedside(
         sim,
@@ -281,8 +384,7 @@ def solve_and_execute(
         search_sample_ratio=search_sample_ratio,
         max_complexity=max_complexity,
         verbose=verbose,
-        delta=delta,
-        seed=seed,
+        ctx=ctx,
     )
     plan_time = time.perf_counter() - t0
     result = {
@@ -292,7 +394,9 @@ def solve_and_execute(
         "search_sample_ratio": search_sample_ratio,
         "max_complexity": max_complexity,
         "plan_found": plan is not None,
+        "true_theta": true_theta,
         "plan_time": plan_time,
+        "stream_calls": sum(ctx.calls.values()),
         "plan_length": None if plan is None else len(plan),
         "num_moves": None if plan is None else sum(a[0] == "place" for a in plan),
         "executed": None,
@@ -316,6 +420,8 @@ def main() -> None:
     parser.add_argument("--use-gui", action="store_true")
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--json-out", type=Path, default=None)
+    parser.add_argument("--true-theta", action="store_true", help="plan with the true theta")
+    parser.add_argument("--num-particles", type=int, default=256, help="prior particles")
     args = parser.parse_args()
     result = solve_and_execute(
         num_requested=args.num_requested,
@@ -328,6 +434,8 @@ def main() -> None:
         execute=args.execute,
         use_gui=args.use_gui,
         verbose=args.verbose,
+        true_theta=args.true_theta,
+        num_particles=args.num_particles,
     )
     print(json.dumps(result))
     if args.json_out is not None:

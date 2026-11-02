@@ -21,23 +21,16 @@ import collections
 import glob
 import json
 import math
-import sys
 from pathlib import Path
 
 import imageio.v2 as imageio
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-sys.path.insert(0, str(Path(__file__).parent))
-
-from levels import make_level_env  # noqa: E402
-
-from able.planners.pomcpow import POMCPOWConfig  # noqa: E402
-from able.tasks.friction.env.puckpushing_utils import (  # noqa: E402
-    SURFACE_NAMES,
-    SURFACE_RGB,
-)
-from able.tasks.friction.run import run_episode  # noqa: E402
+from able.planners.pomcpow import POMCPOWConfig
+from able.tasks.friction import FrictionTask
+from able.tasks.friction.env.puckpushing_utils import SURFACE_NAMES, SURFACE_RGB
+from able.tasks.friction.run import run
 
 DATA = Path("data/friction/complexity")
 OUT = Path("videos/friction/complexity")
@@ -311,13 +304,14 @@ def _puck_position(recorder: Recorder) -> np.ndarray:
 
 def record(env_name: str, level: str, sims: int, seed: int, out: Path) -> str:
     """Replay one episode while recording; returns its outcome."""
-    env = make_level_env(env_name, level)
+    task = FrictionTask(env=env_name, level=level, config=POMCPOWConfig(num_sims=sims, max_depth=8))
+    env = task.environment
     if env_name == "2d":
         env.render_mode = "rgb_array"
     header = f"{env_name.upper()} {level} | POMCPOW {sims} sims | seed {seed}"
     recorder = Recorder(env, env_name, header)
     install_hooks(recorder)
-    log = run_episode(env, env_name, seed, POMCPOWConfig(num_sims=sims, max_depth=8))
+    log = run(task, seed)
     recorder.status = f"- {log.outcome.upper()} after {len(log.steps)} pushes"
     recorder.snap()
     frames = recorder.frames + [recorder.frames[-1]] * FPS * 2

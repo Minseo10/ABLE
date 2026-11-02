@@ -31,7 +31,8 @@ from able.tasks.friction.env.puckpushing_utils import (
     Push,
 )
 
-ONGOING, GOAL, HOLE, STUCK = 0, 1, 2, 3
+# No STUCK outcome: a puck with no feasible push is valued by `value` (-stuck_penalty).
+ONGOING, GOAL, HOLE = 0, 1, 2
 
 
 @dataclass(frozen=True)
@@ -121,7 +122,7 @@ class PuckPushingModel:
         )
 
     def is_terminal(self, state: PuckState) -> bool:
-        """Goal, hole, stuck, or out of pushes."""
+        """Goal, hole, or out of pushes."""
         return state.outcome != ONGOING or state.pushes >= self.max_pushes
 
     # ------------------------------------------------------------------ dynamics
@@ -411,8 +412,6 @@ class PuckPushingModel:
         rewards = self.rewards
         if state.outcome in (GOAL, HOLE):
             return 0.0
-        if state.outcome == STUCK:
-            return -rewards.stuck_penalty
         frictions = self.rollout_frictions or tuple(
             float(f) for f in self.friction_prior.mean
         )

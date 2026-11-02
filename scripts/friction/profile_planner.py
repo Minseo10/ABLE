@@ -13,17 +13,14 @@ import argparse
 import cProfile
 import json
 import pstats
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent))
-
-from levels import LEVELS, make_level_env  # noqa: E402
-
-from able.planners import pomcpow  # noqa: E402
-from able.planners.pomcpow import POMCPOWConfig  # noqa: E402
-from able.tasks.friction import model as puck_model  # noqa: E402
-from able.tasks.friction.run import run_episode  # noqa: E402
+from able.planners import pomcpow
+from able.planners.pomcpow import POMCPOWConfig
+from able.tasks.friction import FrictionTask
+from able.tasks.friction import model as puck_model
+from able.tasks.friction.levels import LEVELS
+from able.tasks.friction.run import run
 
 # Planner parts, by the function whose cumulative time they are measured with.
 PARTS = {
@@ -108,9 +105,9 @@ def main() -> None:
         counts["propose_calls"] += 1
         check = self.world.push_feasible
 
-        def counted(puck, angle):
+        def counted(*args):
             counts["feasibility_checks"] += 1
-            return check(puck, angle)
+            return check(*args)
 
         self.world.push_feasible = counted
         try:
@@ -127,10 +124,11 @@ def main() -> None:
         trees.clear()
         for key in counts:
             counts[key] = 0
-        env = make_level_env(args.env, level)
+        task = FrictionTask(env=args.env, level=level, config=POMCPOWConfig(num_sims=args.sims))
+        task.environment  # built outside the profile
         profiler = cProfile.Profile()
         profiler.enable()
-        log = run_episode(env, args.env, args.seed, POMCPOWConfig(num_sims=args.sims))
+        log = run(task, args.seed)
         profiler.disable()
         stats = pstats.Stats(profiler)
         total = sum(v[2] for v in stats.stats.values())  # type: ignore[attr-defined]

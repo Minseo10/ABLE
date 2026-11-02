@@ -37,14 +37,11 @@ import numpy as np
 from kinder.envs.dynamic3d.limb_utils import LIMB_JOINT_INFOS, joint_position_distance
 
 from able.tasks.limb import memo as memo_module
-from able.tasks.limb.belief import Belief
+from able.tasks.limb.belief import Belief, apply_evidence, execution_evidence
 from able.tasks.limb.dataset import append_row
 from able.tasks.limb.human import (
     DEFAULT_PRIOR,
     active_joints,
-    active_signs,
-    default_magnitudes,
-    theta_to_bounds,
 )
 from able.tasks.limb.memo import (
     KEEP_PER_KEY,
@@ -86,8 +83,6 @@ from able.tasks.limb.worker import isolate_worker, task_sampler
 # `prior`: the learned model trained once on dreams from the prior (prior_factory.py),
 # loaded with `--prior-model` and never refit; the belief still updates from execution.
 CONDITIONS = ("plain", "cache", "learned", "prior")
-# The least a floor must rise, in scale units, to count as new information.
-FLOOR_STEP = 1e-3
 # How far inside the believed edge a retargeted goal sits, in radians. Small, so reaching
 # it raises the floor past what the belief already allowed and the edge moves toward the
 # goal each episode; at 0.2 the floor landed below the edge and the belief never grew.
@@ -147,32 +142,8 @@ def belief_key(belief: Belief, resolution: float = KEY_RESOLUTION) -> tuple[int,
 def observe(
     belief: Belief, limb_path, person: np.ndarray, tau: float = DEFAULT_QUERY_MODEL.tau
 ) -> tuple[Belief, list[str]]:
-    """Update the belief from one execution on `person` (real or hypothetical).
-
-    Per active motion: crossed the limit -> the crossing angle is the limit (a query
-    answer); stayed inside -> the farthest angle reached is a floor. Returns the belief
-    and a note per motion changed.
-    """
-    if not limb_path:
-        return belief, []
-    path = np.asarray(limb_path, dtype=np.float64)
-    bounds = theta_to_bounds(person)
-    magnitudes = default_magnitudes()
-    notes = []
-    for i, (joint, sign) in enumerate(zip(active_joints(), active_signs())):
-        reach = sign * path[:, joint]
-        crossed = np.flatnonzero(reach > sign * bounds[i])
-        if len(crossed):
-            angle = float(reach[crossed[0]])
-            belief = belief.updated(i, angle, tau, 0.0)
-            notes.append(f"crossed:{i}@{angle / magnitudes[i]:.3f}")
-            continue
-        scale = float(reach.max()) / magnitudes[i]
-        # Repeating a task reaches the same angle within numerical noise: not a revision.
-        if scale > belief.lower[i] + FLOOR_STEP:
-            belief = belief.raised(i, scale)
-            notes.append(f"floor:{i}@{scale:.3f}")
-    return belief, notes
+    """Update the belief from one execution on `person` (real or hypothetical)."""
+    return apply_evidence(belief, execution_evidence(limb_path, person), tau)
 
 
 @dataclass

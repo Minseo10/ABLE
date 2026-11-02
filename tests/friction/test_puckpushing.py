@@ -4,8 +4,9 @@ import math
 
 import numpy as np
 
+from able.api import Observation
 from able.planners.pomcpow import POMCPOWConfig
-from able.tasks.friction.belief import FrictionBelief
+from able.tasks.friction import FrictionTask
 from able.tasks.friction.env.puckpushing_utils import THREE_ROUTES, PuckWorld, Push
 from able.tasks.friction.model import (
     GOAL,
@@ -13,7 +14,7 @@ from able.tasks.friction.model import (
     ONGOING,
     PuckPushingModel,
 )
-from able.tasks.friction.run import make_env, run_episode
+from able.tasks.friction.run import run
 
 FRICTIONS = (0.03, 0.07, 0.15)
 
@@ -107,18 +108,17 @@ def test_greedy_rollout_reaches_the_goal_with_known_frictions():
 
 def test_belief_concentrates_on_the_true_frictions():
     """Pushes on blue and tan narrow those two coefficients."""
-    model = _model()
-    world = model.world
-    rng = np.random.default_rng(0)
-    belief = FrictionBelief.from_prior(rng, 400)
+    task = FrictionTask(num_particles=400)
+    world = task.world
+    belief = task.prior.belief(np.random.default_rng(0))
     prior_std = belief.std.copy()
     true = (0.04, 0.06, 0.15)
     puck = np.array([1.0, 2.0])  # tan
     for angle, speed in [(math.pi / 2, 1.0), (-math.pi / 2, 0.4)]:
         result = world.slide(world.release_point(puck, angle), speed, angle, true)
-        belief.update(
-            world, puck, angle, speed, result.stop, result.hole is not None, rng
-        )
+        belief = belief.update(Observation("execution", {
+            "puck": puck, "angle": angle, "stance": None, "release_speed": speed,
+            "stop": result.stop, "fell_in_hole": result.hole is not None}))
         puck = result.stop
     assert belief.std[0] < prior_std[0] and belief.std[1] < 0.5 * prior_std[1]
     assert abs(belief.mean[1] - true[1]) < 0.01
@@ -126,15 +126,9 @@ def test_belief_concentrates_on_the_true_frictions():
 
 def test_run_episode_smoke():
     """A short episode runs and logs every push."""
-    env = make_env("2d", "threeroutes")
-    log = run_episode(
-        env,
-        "2d",
-        seed=0,
-        config=POMCPOWConfig(num_sims=20, max_depth=3),
-        num_particles=50,
-        max_pushes=2,
-    )
+    task = FrictionTask(num_particles=50, max_pushes=2, config=POMCPOWConfig(num_sims=20, max_depth=3))
+    log = run(task, seed=0, probes=1)
     assert 1 <= len(log.steps) <= 2
     assert log.outcome in ("goal", "hole", "timeout", "stuck")
-    assert len(log.true_frictions) == 3
+    assert len(log.true_frictions) == 3 and len(log.probes) == 1
+    assert log.steps[0].plan_sims == 20 and set(log.steps[0].belief) == {"blue", "tan", "green"}

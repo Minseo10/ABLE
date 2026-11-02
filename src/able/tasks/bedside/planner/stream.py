@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field
-from typing import Iterator
+from typing import Any, Iterator
 
 import numpy as np
 from kinder_models.kinematic3d.constants import HOME_JOINT_POSITIONS
@@ -23,6 +24,8 @@ from able.tasks.bedside.env import (
 )
 
 HOME_JOINTS = HOME_JOINT_POSITIONS.tolist()
+# Home with the gripper raised to 0.9 m, 0.15 m ahead: held items clear every surface.
+CARRY_JOINTS = [0.0, -0.605, np.pi, -1.635, 0.0, -2.112, np.pi / 2] + HOME_JOINTS[7:]
 GRASP_ORIENTATIONS = [(0.707, 0.707, 0.0, 0.0), (1.0, 0.0, 0.0, 0.0)]
 GRASP_BELOW_TOP = 0.005
 HOVER_HEIGHT = 0.08
@@ -59,7 +62,7 @@ class BaseConf:
 
 @dataclass(eq=False)
 class ArmTrajectory:
-    """Home -> hover -> grasp joint waypoints for one target item."""
+    """Carry -> hover -> grasp joint waypoints for one target item."""
 
     joint_plan: list
     target_object: str
@@ -79,6 +82,19 @@ class BedsideStreamContext:
     all_surfaces: list[str]
     slots: dict[str, NDArray] = field(default_factory=dict)
     requested_slots: list[tuple[str, NDArray]] = field(default_factory=list)
+    proposal: Any = None  # psi hook: `.order(o, points, rng)` ranks requested_slots
+    calls: Counter = field(default_factory=Counter)  # stream evaluations by name
+
+    def slot_points(self, o: str) -> NDArray[np.float64]:
+        """Resting position of `o` at each requested slot."""
+        return np.array([self.sim.resting_pose(o, tuple(slot[:2]), s).position
+                         for s, slot in self.requested_slots])
+
+    def place_order(self, o: str) -> NDArray[np.int64]:
+        """Order in which `o` tries the requested slots: psi's ranking, else random."""
+        if self.proposal is None:
+            return self.rng.permutation(len(self.requested_slots))
+        return np.asarray(self.proposal.order(o, self.slot_points(o), self.rng))
 
 
 def _wrap(a: float) -> float:
@@ -160,7 +176,7 @@ def sample_place_pose(ctx: BedsideStreamContext, o: str) -> Iterator[tuple[Place
     if o in ctx.requested:
         cands = [(s, slot[:2]) for s, slot in ctx.requested_slots]
         while True:
-            for k in ctx.rng.permutation(len(cands)):
+            for k in ctx.place_order(o):
                 s, xy = cands[k]
                 xy = xy + ctx.rng.uniform(-POSE_JITTER, POSE_JITTER, size=2)
                 yield (Placement(o, ctx.sim.resting_pose(o, tuple(xy), s), s),)
@@ -207,18 +223,31 @@ def inverse_kinematics_stream(
     target_id = sim._object_name_to_pybullet_id(o)  # pylint: disable=protected-access
     static = static | {target_id}
     with _scratch_pose(sim, o, p.pose):
-        found = _ik_at(ctx, o, p, hover_ee, target_ee, static)
+        found = _ik_at(ctx, o, p, g, hover_ee, target_ee, static)
     if found is not None:
         yield found
 
 
-def _ik_at(ctx, o, p, hover_ee, target_ee, static):
+def _carry_collides(sim, o: str, g: Grasp, static: set[int]) -> bool:
+    """Whether the arm in the carry conf, holding `o` with `g`, hits a static body."""
+    arm = sim.robot.arm
+    arm.set_joints(CARRY_JOINTS)
+    body = sim._object_name_to_pybullet_id(o)  # pylint: disable=protected-access
+    if any(check_body_collisions(arm.robot_id, b, sim.physics_client_id) for b in static - {body}):
+        return True
+    with _scratch_pose(sim, o, multiply_poses(arm.get_end_effector_pose(), g.transform.invert())):
+        return any(check_body_collisions(body, b, sim.physics_client_id) for b in static - {body})
+
+
+def _ik_at(ctx, o, p, g, hover_ee, target_ee, static):
     sim = ctx.sim
     arm = sim.robot.arm
     x, y = p.pose.position[:2]
     for base in _base_candidates(x, y):
         sim.robot.set_base(base)
         if any(check_body_collisions(sim.robot.base.robot_id, b, sim.physics_client_id) for b in static):
+            continue
+        if _carry_collides(sim, o, g, static):
             continue
         confs = []
         arm.set_joints(HOME_JOINTS)
@@ -233,7 +262,7 @@ def _ik_at(ctx, o, p, hover_ee, target_ee, static):
             confs.append(list(q))
         if len(confs) < 2:
             continue
-        return (BaseConf(base), ArmTrajectory([HOME_JOINTS] + confs, o, base))
+        return (BaseConf(base), ArmTrajectory([CARRY_JOINTS] + confs, o, base))
     return None
 
 

@@ -49,6 +49,8 @@ def run_one(r: int, c: int, seed: int, args) -> dict:
     ]
     if args.execute:
         cmd.append("--execute")
+    if args.true_theta:
+        cmd.append("--true-theta")
     env = {**os.environ, "PYTHONPATH": PYTHONPATH, "OMP_NUM_THREADS": "1",
            "OPENBLAS_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"}
     log = args.out / "logs" / f"r{r}_c{c}_s{seed}.log"
@@ -97,6 +99,7 @@ def main() -> None:
     parser.add_argument("--max-jobs", type=int, default=5)
     parser.add_argument("--max-rss-gb", type=float, default=4.0)
     parser.add_argument("--execute", action="store_true")
+    parser.add_argument("--true-theta", action="store_true", help="plan with the true theta, not the prior")
     args = parser.parse_args()
     args.out = args.out.resolve()
     (args.out / "logs").mkdir(parents=True, exist_ok=True)

@@ -28,7 +28,7 @@ def test_map_rectangles_tile_the_grid():
         (x1 - x0) * (y1 - y0) for _, (x0, y0, x1, y1) in puck_map.surface_rects()
     )
     assert math.isclose(area, puck_map.width * puck_map.height, rel_tol=1e-9)
-    assert set(MAPS) == {"threeroutes"}
+    assert "threeroutes" in MAPS and all(name.startswith("threeroutes") for name in MAPS)  # + levels
 
 
 def test_slide_on_one_surface_stops_at_the_coulomb_distance():
