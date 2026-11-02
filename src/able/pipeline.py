@@ -26,6 +26,8 @@ class PipelineConfig:
     episodes: int = 20
     dreams: int = 4  # per episode (learned only)
     queries: int = 1  # per episode
+    info_gathering: bool = True  # False: skip queries and the belief update from them (stages 1-2)
+    belief_update: bool = True  # False: the belief stays at the prior (no human model learning at all)
     seconds: float | None = None  # planning budget per call; None = planner default
     model: str = "flow"
     model_options: dict = field(default_factory=dict)
@@ -84,7 +86,8 @@ def dream(task, planner, belief, memory: Memory, config: PipelineConfig, rng) ->
     for _ in range(config.dreams):
         theta = belief.sample(rng, 1)[0]
         episode = run_episode(task, planner, task.sample_problem(rng), theta, belief, rng,
-                              proposal_fn(task, memory.learner), _budget(config), fallback=config.fallback)
+                              proposal_fn(task, memory.learner), _budget(config), fallback=config.fallback,
+                              update_belief=config.belief_update)
         if episode.success:
             solved += 1
             rows += memory.add(task.psi.examples(episode, episode.belief))
@@ -102,6 +105,7 @@ def record(task, planner, config: PipelineConfig, person: int, index: int, theta
     scalars = {f"info_{k}": v for k, v in info.items() if isinstance(v, (bool, int, float, str))}
     return {
         "task": task.name, "condition": config.condition, "person": person, "episode": index,
+        "info_gathering": config.info_gathering, "belief_update": config.belief_update,
         "success": episode.success, "plan_seconds": episode.plan_seconds, "effort": episode.effort,
         "effort_unit": planner.effort_unit, "steps": len(episode.steps),
         "fallback": any(s.result.info.get("fallback") for s in episode.steps),
@@ -128,14 +132,17 @@ def run_person(task, config: PipelineConfig, person: int, out: Path, seed: int =
         if config.condition == "prior_only":
             memory.learner = pickle.loads(Path(prior_model).read_bytes())
     for index in range(len(records), config.episodes):
-        belief, asked = gather(task, belief, theta, rng, config.queries)
+        asked = 0
+        if config.info_gathering and config.belief_update:
+            belief, asked = gather(task, belief, theta, rng, config.queries)
         extra = {"queries": asked}
         if config.condition == "learned":
             extra.update(dream(task, planner, belief, memory, config, rng))
             if extra["dream_rows"]:
                 extra.update(memory.refit(config))
         episode = run_episode(task, planner, task.sample_problem(rng), theta, belief, rng,
-                              proposal_fn(task, memory.learner), _budget(config), fallback=config.fallback)
+                              proposal_fn(task, memory.learner), _budget(config), fallback=config.fallback,
+                              update_belief=config.belief_update)
         belief = episode.belief
         if config.condition == "learned" and episode.success:
             if memory.add(task.psi.examples(episode, belief)):

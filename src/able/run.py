@@ -61,6 +61,10 @@ def main() -> None:
     parser.add_argument("--episodes", type=int)
     parser.add_argument("--dreams", type=int, help="per episode (person) or total (factory)")
     parser.add_argument("--queries", type=int)
+    parser.add_argument("--no-info-gathering", action="store_true",
+                        help="skip queries and the belief update from them (belief still learns from execution)")
+    parser.add_argument("--no-belief-update", action="store_true",
+                        help="never update the belief (no queries, no learning from execution)")
     parser.add_argument("--prior-model", type=Path, help="factory pickle, for prior_only")
     parser.add_argument("--rows", type=Path, nargs="*", help="factory shards, for fit")
     parser.add_argument("--resume", action="store_true")
@@ -70,6 +74,10 @@ def main() -> None:
     for key in ("episodes", "queries"):
         if getattr(args, key) is not None:
             pipeline[key] = getattr(args, key)
+    if args.no_info_gathering:
+        pipeline["info_gathering"] = False
+    if args.no_belief_update:
+        pipeline["belief_update"] = False
     if args.dreams is not None and args.command == "person":
         pipeline["dreams"] = args.dreams
     config = PipelineConfig(**{**pipeline, "condition": args.condition})

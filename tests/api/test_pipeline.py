@@ -53,3 +53,15 @@ def test_memory_keeps_groups_of_different_episodes_apart():
     memory.add(rows)
     memory.add(rows)
     assert memory.groups == [0, 0, 1, 2, 2, 3]
+
+
+def test_no_info_gathering_skips_queries_but_still_learns_from_execution(tmp_path):
+    config = PipelineConfig(condition="plain", episodes=3, info_gathering=False, **MODEL)
+    records = run_person(ReachTask(), config, 2, tmp_path / "plain_p2")
+    assert all(r["queries"] == 0 and r["info_gathering"] is False for r in records)
+
+
+def test_no_belief_update_keeps_the_prior(tmp_path):
+    config = PipelineConfig(condition="learned", episodes=3, dreams=1, belief_update=False, **MODEL)
+    records = run_person(ReachTask(), config, 2, tmp_path / "learned_p2")
+    assert len({r["belief"] for r in records}) == 1 and all(r["queries"] == 0 for r in records)

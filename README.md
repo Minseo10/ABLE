@@ -8,6 +8,7 @@ dreams to predict `psi`, the planner's proposal, so real planning gets faster.
 
 ![The loop and the dreaming step](doc/figures/approach.png)
 
+The limb-only pipeline this grew out of: [its README](doc/limb-dream-pipeline.md).
 Background: [NERC abstract](doc/presentations/NERC_Abstract.pdf) ·
 [poster](doc/poster/nerc_poster_9_48x36_preview.pdf) ·
 [lab meeting slides](<doc/presentations/Lab Meeting 260909.pptx>)
@@ -63,6 +64,11 @@ Each episode: info gathering -> belief update -> dreams -> refit `g` -> plan wit
 - `plain`: no `psi`.
 - `learned` (ABLE): dreams every episode, `g` refit online.
 - `prior_only`: `g` learned once from dreams at the prior ("factory"), frozen; the belief still updates.
+
+Ablations (any condition): `--no-info-gathering` skips the queries and the belief update from
+them, so the belief learns only from execution (as in the earlier limb runs);
+`--no-belief-update` keeps the belief at the prior throughout. With `scripts/run.sh`, pass
+them as `ARGS="--no-info-gathering"`.
 
 One person:
 

@@ -6,7 +6,8 @@
 #
 # Writes data/NAME/<condition>_p<person>.csv (+ .pkl checkpoint; reruns resume).
 # prior_only first trains the factory model: FACTORY_SHARDS x FACTORY_DREAMS dreams at the prior.
-# Env: JOBS (16), PYTHON (python), FACTORY_SHARDS (=JOBS), FACTORY_DREAMS (8, per shard).
+# Env: JOBS (16), PYTHON (python), FACTORY_SHARDS (=JOBS), FACTORY_DREAMS (8, per shard),
+#      ARGS (extra `able.run` flags, e.g. "--no-info-gathering" or "--no-belief-update").
 set -eu
 CONFIG=$(realpath "$1"); NAME=$2
 PERSONS=${3:-"0 1 2 3 4"}; CONDITIONS=${4:-"plain learned prior_only"}
@@ -17,18 +18,18 @@ OUT=$ROOT/data/$NAME
 mkdir -p "$OUT/logs" "$OUT/work"
 export PYTHONPATH=$ROOT/src${PYTHONPATH:+:$PYTHONPATH}
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
-export CONFIG OUT PYTHON
+export CONFIG OUT PYTHON ARGS=${ARGS:-}
 
 # Each job in its own working dir: PDDLStream writes temp files into the cwd.
 job() {
   kind=$1; arg=$2; cond=${3:-}
   work=$OUT/work/${kind}_${cond}_$arg; mkdir -p "$work"; cd "$work"
   if [ "$kind" = factory ]; then
-    $PYTHON -m able.run factory --config "$CONFIG" --dreams "$FACTORY_DREAMS" --seed "$arg" \
+    $PYTHON -m able.run factory --config "$CONFIG" --dreams "$FACTORY_DREAMS" --seed "$arg" $ARGS \
       --out "$OUT/factory/rows_$arg.pkl" > "$OUT/logs/factory_$arg.log" 2>&1
   else
     extra=(); [ "$cond" = prior_only ] && extra=(--prior-model "$OUT/factory.pkl")
-    $PYTHON -m able.run person --config "$CONFIG" --condition "$cond" --person "$arg" --resume \
+    $PYTHON -m able.run person --config "$CONFIG" --condition "$cond" --person "$arg" --resume $ARGS \
       --out "$OUT/${cond}_p$arg" "${extra[@]}" > "$OUT/logs/${cond}_p$arg.log" 2>&1
   fi || echo "failed: $kind $cond $arg (see $OUT/logs)"
 }
