@@ -18,11 +18,6 @@ comes, the planner can generate plan faster using $g$.
 
 ![The four-step loop and the dreaming step](figures/approach.png)
 
-More background: [NERC abstract](presentations/NERC_Abstract.pdf) ·
-[NERC poster](poster/nerc_poster_9_48x36_preview.pdf)
-([pptx](poster/nerc_poster_9_48x36.pptx)) ·
-[lab meeting slides](<presentations/Lab Meeting 260909.pptx>)
-
 ## Install
 
 The project builds on three other repos:
@@ -177,6 +172,5 @@ Mean over episodes 10-19:
 | `scripts/log_to_wandb.py` | Uploads results to Weights & Biases |
 | `data/dream/`, `figures/dream/` | Current runs and their figures, one folder per experiment |
 | `data/archive/`, `figures/archive/` | Earlier runs and figures |
-| `doc/` | Poster, abstract, slides, [earlier experiments](earlier-experiments.md) |
 | `notebooks/dreaming_rom_planner.ipynb` | The toy version of the loop this pipeline follows |
 | `tests/` | `pytest -m "not slow"` skips tests that build a simulation |
