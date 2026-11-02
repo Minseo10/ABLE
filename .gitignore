@@ -25,9 +25,9 @@ temp/
 *.partial
 
 # Results live on W&B (scripts/log_to_wandb.py), not in git
-data/
-figures/
-videos/
+/data/
+/figures/
+/videos/
 wandb/
 
 # Local work kept out of the repo
