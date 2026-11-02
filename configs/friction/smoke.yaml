@@ -1,0 +1,4 @@
+# Quick end-to-end check (~2 min).
+task: friction
+options: {env: 2d, level: L2, num_sims: 100, max_pushes: 5}
+pipeline: {episodes: 2, dreams: 1, queries: 1, model: flow, model_options: {width: 64, depth: 2, steps: 300}}

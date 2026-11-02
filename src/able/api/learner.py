@@ -1,6 +1,5 @@
 """Conditional generative learners for psi: features -> distribution over labels.
 
-API: `fit(x, y, groups=None)`, `predict(x)`, `sample(x, k) -> (n, k, dim)`, `log_prob(x, y)`.
 Training keeps the weights with the lowest loss on a held-out sixth of the groups.
 """
 
@@ -39,8 +38,7 @@ def time_embedding(t: torch.Tensor, dim: int) -> torch.Tensor:
 
 
 def ode_log_prob(field, y: torch.Tensor, times: torch.Tensor) -> torch.Tensor:
-    """Log density of `y` under the flow of `field(x, t)`, standard normal at `times[-1]`:
-    RK4 from data to noise with the exact divergence."""
+    """Log density of `y` under the flow `field(x, t)` (N(0, I) at `times[-1]`), RK4 with exact divergence."""
 
     def slope(x, t):
         x = x.detach().requires_grad_(True)
@@ -73,8 +71,6 @@ class Generative:
     seed: int = 0
     columns: int | None = None  # use only the first `columns` features
     group_fn: Callable[[np.ndarray], np.ndarray] | None = None  # groups from x when fit gets none
-
-    # Subclasses: build, loss, draw (and log_density).
 
     def build(self, cond: int, dim: int) -> None:
         raise NotImplementedError
@@ -121,7 +117,7 @@ class Generative:
                                                        pct_start=max(0.05, 3 / self.steps))
         generator = torch.Generator().manual_seed(self.seed)
         best, state, self.best_step = float("inf"), None, self.steps
-        # Reported only: (step, train loss, held-out loss) and the best weights' held-out nMSE.
+        # Reported only; history rows are (step, train loss, held-out loss).
         self.history, self.best_val, self.val_nmse = [], float("nan"), float("nan")
         watched = train[torch.randperm(len(train), generator=torch.Generator().manual_seed(1))[:2048]]
         for step in range(1, self.steps + 1):

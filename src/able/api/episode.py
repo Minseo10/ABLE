@@ -53,13 +53,20 @@ def run_episode(
     proposal_fn: Callable[[Any, Belief], Any] | None = None,
     budget: Budget | None = None,
     max_steps: int = 50,
+    fallback: bool = True,
 ) -> Episode:
-    """Plan, execute and update the belief until the task says done."""
+    """Plan, execute, update the belief until done; `fallback` replans plain if psi fails (both costs charged)."""
     episode = Episode(problem)
     state = task.reset(problem, theta, rng)
     for _ in range(max_steps):
         proposal = proposal_fn(state, belief) if proposal_fn else None
         result = planner.plan(state, belief, proposal=proposal, budget=budget, rng=rng)
+        if not result.success and proposal is not None and fallback:
+            plain = planner.plan(state, belief, proposal=None, budget=budget, rng=rng)
+            plain.seconds += result.seconds
+            plain.effort += result.effort
+            plain.info = {**plain.info, "fallback": True}
+            result = plain
         if not result.success:
             episode.steps.append(EpisodeStep(state, belief, result, None))
             break

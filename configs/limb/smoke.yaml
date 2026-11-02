@@ -1,0 +1,4 @@
+# Quick end-to-end check (~30 min): 2 episodes, 1 dream each.
+task: limb
+options: {variant: human-left-arm, max_time: 300}
+pipeline: {episodes: 2, dreams: 1, queries: 1, model: flow, model_options: {steps: 500}}

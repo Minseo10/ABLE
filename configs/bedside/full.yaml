@@ -1,0 +1,3 @@
+task: bedside
+options: {num_requested: 4, num_clutter: 4, max_time: 300}
+pipeline: {episodes: 20, dreams: 4, queries: 1, model: flow, model_options: {width: 128, depth: 3, steps: 2000}}

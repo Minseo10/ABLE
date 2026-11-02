@@ -1,0 +1,4 @@
+# Quick end-to-end check (~10 min).
+task: bedside
+options: {num_requested: 2, num_clutter: 0, max_time: 120}
+pipeline: {episodes: 2, dreams: 1, queries: 1, model: flow, model_options: {width: 64, depth: 2, steps: 300}}
