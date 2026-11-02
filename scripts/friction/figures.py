@@ -1,7 +1,4 @@
-"""Figures for the PuckPushing complexity sweep and the planner profile.
-
-Reads data/friction/complexity/*.json (one per episode) and profile.json, and writes
-figures/friction/complexity/*.png plus a CSV summary.
+"""Complexity-sweep and planner-profile figures: data/friction/complexity -> figures/friction/complexity.
 
     python scripts/friction/figures.py
 """
@@ -31,9 +28,7 @@ LEVEL_LABELS = {
     "L4": "L4\n4 holes, r=0.20",
 }
 BUDGETS = [300, 1000, 3000]
-# Ordinal blue ramp (light to dark) for the budgets.
 BUDGET_COLORS = {300: "#86b6ef", 1000: "#2a78d6", 3000: "#104281"}
-# Categorical slots in fixed order.
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6"]
 OUTCOMES = ["goal", "hole", "stuck", "timeout"]
 SURFACE = "#fcfcfb"
@@ -54,7 +49,6 @@ def style(ax) -> None:
 
 
 def load_runs() -> list[dict]:
-    """All episode logs."""
     runs = []
     for path in glob.glob(str(DATA / "*_seed*.json")):
         with open(path, encoding="utf-8") as f:
@@ -115,7 +109,7 @@ def write_summary(groups: dict) -> None:
 
 
 def fig_sr_and_time(groups: dict) -> None:
-    """Success rate, planning time per push and per episode, vs level."""
+    """Success rate and planning time (per push, per episode) vs level."""
     fig, axes = plt.subplots(2, 3, figsize=(13, 7), sharex=True)
     x = np.arange(len(LEVELS))
     for row, env in enumerate(["2d", "3d"]):
@@ -159,7 +153,7 @@ def fig_sr_and_time(groups: dict) -> None:
 
 
 def fig_sr_vs_time(groups: dict) -> None:
-    """Success rate against mean planning time per episode; one line per level."""
+    """Success rate vs planning time per episode, one line per level."""
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), sharey=True)
     for ax, env in zip(axes, ["2d", "3d"]):
         for k, level in enumerate(LEVELS):
@@ -240,7 +234,7 @@ def fig_outcomes(groups: dict) -> None:
 
 
 def fig_profile() -> None:
-    """Where planning time goes, and how deep the search tree gets."""
+    """Planning time breakdown and search-tree depth."""
     path = DATA / "profile.json"
     if not path.exists():
         return

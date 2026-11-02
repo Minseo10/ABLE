@@ -5,19 +5,19 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "able"
 version = "0.1.0"
-description = "ABLE: learn to plan faster from dreamed belief updates (limb, friction, human reach)."
+description = "ABLE: learn to plan faster from dreamed belief updates (limb MPC, friction POMCPOW, human reach PDDLStream)."
 requires-python = ">=3.10,<3.13"
 dependencies = [
     "numpy",
     "pandas",
-    "scikit-learn",
     "scipy",
     "torch",
     "matplotlib",
     "pillow",
-    "pomdp-py",
     "imageio",
     "imageio-ffmpeg",
+    "pyyaml",
+    "wandb",
     "pybullet_helpers>=0.1.0",
     "psutil",
     "gymnasium",

@@ -1,4 +1,4 @@
-"""Complexity levels of the friction task (moved to able.tasks.friction.levels)."""
+"""Re-export of able.tasks.friction.levels."""
 
 from able.tasks.friction.levels import (
     EXTRA_HOLES,

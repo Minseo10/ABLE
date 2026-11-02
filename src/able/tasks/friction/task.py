@@ -22,7 +22,7 @@ from able.tasks.friction.query import ProbeGatherer
 
 @dataclass(frozen=True)
 class FrictionPrior:
-    """The shuffled friction prior (levels dealt to the floors at random), as an able.api Prior."""
+    """Shuffled friction prior (levels dealt to floors at random) as an able.api Prior."""
 
     world: pu.PuckWorld
     dist: pu.FrictionPrior | pu.BoxFrictionPrior = pu.DEFAULT_FRICTION_PRIOR
@@ -71,7 +71,7 @@ class FrictionTask:
 
     @property
     def environment(self) -> Any:
-        """The simulator, built on first use."""
+        """Simulator, built lazily."""
         if self._env is None:
             self._env = make_level_env(self.env, self.level)
         return self._env
@@ -112,7 +112,6 @@ class FrictionTask:
                     info={**record, "reward": self.reward(record)})
 
     def reward(self, record: dict) -> float:
-        """The planner's reward for an executed push."""
         r, drive = self.rewards, record["drive_distance"]
         reward = -r.push_cost - r.drive_cost * (drive if math.isfinite(drive) else 0.0)  # as the model does
         if record["fell_in_hole"]:

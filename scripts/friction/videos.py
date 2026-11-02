@@ -1,8 +1,4 @@
-"""Videos of PuckPushing episodes, replayed from the complexity sweep.
-
-An episode is fully determined by (env, level, sims, seed), so replaying it reproduces
-the sweep's run while frames are captured: the robot driving to each push station, the
-strike, and the slide.
+"""Videos of complexity-sweep episodes, replayed deterministically from (env, level, sims, seed).
 
     # One episode:
     python scripts/friction/videos.py one --env 2d --level L2 --sims 1000 --seed 0
@@ -10,8 +6,6 @@ strike, and the slide.
     python scripts/friction/videos.py select
     # Add the floor-friction legend to videos rendered before it existed:
     python scripts/friction/videos.py legend
-
-Each frame shows the true friction of every floor in a small legend (top right).
 """
 
 from __future__ import annotations
@@ -34,7 +28,7 @@ from able.tasks.friction.run import run
 
 DATA = Path("data/friction/complexity")
 OUT = Path("videos/friction/complexity")
-# Time the arm takes to lift or lower the paddle, for display.
+# Display-only arm lift/lower time (s).
 ARM_SECONDS = 0.6
 FPS = 20
 
@@ -46,7 +40,7 @@ except OSError:
 
 
 def friction_legend(frame: np.ndarray, frictions) -> np.ndarray:
-    """Draw the true friction of each floor in a small box at the top right."""
+    """Draw each floor's true friction in a top-right box."""
     image = Image.fromarray(frame[:, :, :3]).convert("RGBA")
     overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
@@ -70,7 +64,6 @@ def friction_legend(frame: np.ndarray, frictions) -> np.ndarray:
 
 
 def caption(frame: np.ndarray, text: str) -> np.ndarray:
-    """Draw a caption bar on top of a frame."""
     image = Image.fromarray(frame[:, :, :3])
     draw = ImageDraw.Draw(image)
     draw.rectangle([0, 0, image.width, 18], fill=(255, 255, 255))
@@ -79,7 +72,7 @@ def caption(frame: np.ndarray, text: str) -> np.ndarray:
 
 
 class Recorder:
-    """Captures frames from a 2D or 3D env while an episode runs."""
+    """Captures frames from a 2D or 3D env during an episode."""
 
     def __init__(self, env, env_name: str, header: str) -> None:
         self.env = env
@@ -93,7 +86,6 @@ class Recorder:
         self._ticks = 0
 
     def snap(self) -> None:
-        """Capture the current scene."""
         if self.env_name == "2d":
             self.env._read_state_from_space()  # pylint: disable=protected-access
         text = f"{self.header} | push {self.push} {self.status}"
@@ -101,13 +93,12 @@ class Recorder:
         self.frames.append(friction_legend(frame, self.env.frictions))
 
     def tick(self) -> None:
-        """Called on every physics step; captures at the video frame rate."""
+        """Per physics step; captures at the video frame rate."""
         self._ticks += 1
         if self._ticks % self.every == 0:
             self.snap()
 
     def robot_xy_heading(self) -> tuple[np.ndarray, float]:
-        """The robot's base position and heading."""
         if self.env_name == "2d":
             pose = self.env._robot_pose  # pylint: disable=protected-access
             return np.array(pose[:2]), float(pose[2])
@@ -115,7 +106,7 @@ class Recorder:
         return np.array([base.x, base.y]), float(base.rot)
 
     def set_base(self, xy: np.ndarray, heading: float) -> None:
-        """Move the robot's base for display; the paddle stays in the gripper."""
+        """Move the base for display; the paddle stays in the gripper."""
         env = self.env
         if self.env_name == "2d":
             env._set_robot_pose(np.array([xy[0], xy[1], heading]))  # pylint: disable=protected-access
@@ -129,8 +120,7 @@ class Recorder:
             env._attach_paddle()  # pylint: disable=protected-access
 
     def move_paddle(self, goal, seconds: float = ARM_SECONDS) -> None:
-        """Show the arm carrying the paddle along a straight line to the pose `goal`
-        (turning it on the way), solving IK at every frame."""
+        """Animate the paddle along a straight line to pose `goal` (3D only), IK per frame."""
         env = self.env
         if self.env_name == "2d":
             return
@@ -161,7 +151,7 @@ class Recorder:
         return Pose((x, y, height), pose.orientation)
 
     def save_robot(self):
-        """The arm joints and paddle pose (3D), to restore after an animation."""
+        """Arm joints and paddle pose, to restore after an animation."""
         if self.env_name == "2d":
             return (self.env._paddle_stowed,)  # pylint: disable=protected-access
         from pybullet_helpers.geometry import (
@@ -190,25 +180,21 @@ class Recorder:
     def animate_drive(
         self, puck: np.ndarray, angle: float, stance: float | None = None
     ) -> None:
-        """Show the robot lifting its paddle, driving to its push station and
-        lowering the paddle behind the puck, then put it back for the env."""
+        """Animate lift, drive to the push station and lower; then restore the robot for the env."""
         env, world = self.env, self.env.world
         pose = world.push_pose(puck, angle, stance)
         if pose is None:
             return
         start, heading0 = self.robot_xy_heading()
         station, heading = pose
-        # Saved so the env continues exactly as it would without the animation (its IK
-        # starts from the current arm pose).
+        # Restored later: the env's IK starts from the current arm pose.
         saved = self.save_robot()
-        # Lift the paddle straight off the floor, then swing it over the base.
         if self.env_name == "3d":
             from pybullet_helpers.geometry import (
                 get_pose,  # pylint: disable=import-outside-toplevel
             )
 
-            # Lift the paddle straight up to carrying height, then pull it in over the
-            # base (the arm cannot reach the diagonal in between).
+            # Lift straight up, then pull in: the arm cannot reach the diagonal.
             now = get_pose(env.paddle_id, env.physics_client_id)
             carry = env._carry_pose()  # pylint: disable=protected-access
             self.move_paddle(self.at_height(now, carry.position[2]))
@@ -232,19 +218,18 @@ class Recorder:
         direction = np.array([math.cos(angle), math.sin(angle)])
         face = puck - (world.physics.puck_radius + 0.005) * direction
         if self.env_name == "3d":
-            # Reach out at carrying height over the strike pose, then lower the paddle
-            # straight down behind the puck.
+            # Reach out at carry height, then lower straight down behind the puck.
             strike = env._paddle_pose(face, angle)  # pylint: disable=protected-access
             height = env._carry_pose().position[2]  # pylint: disable=protected-access
             self.move_paddle(self.at_height(strike, height))
             self.move_paddle(strike)
-        # The env drives (and charges for) the move itself, from where it started.
+        # The env drives (and charges for) the move itself from the start pose.
         self.set_base(start, heading0)
         self.restore_robot(saved)
 
 
 def install_hooks(recorder: Recorder) -> None:
-    """Capture frames on every physics step of the env."""
+    """Hook frame capture into every physics step and env.step."""
     env = recorder.env
     if recorder.env_name == "2d":
         import pymunk  # pylint: disable=import-outside-toplevel
@@ -340,7 +325,7 @@ def select() -> list[tuple[str, str, int, int, str]]:
 
 
 def add_legends() -> None:
-    """Draw the friction legend onto the videos in OUT, from their episodes' logs."""
+    """Draw the friction legend onto existing videos in OUT from their logs."""
     for path in sorted(OUT.glob("*.mp4")):
         env_name, level, _, sims, seed = path.stem.split("_")
         log = DATA / f"{env_name}_{level}_{sims}_{seed}.json"

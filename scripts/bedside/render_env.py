@@ -1,6 +1,5 @@
-"""Render the implemented BedsideStocking3D env: initial scene, planned goal scene, slot map.
+"""Render BedsideStocking3D: initial scene, planned goal scene (final plan poses, no execution), slot map.
 
-The goal scene sets every item to its final pose in the PDDLStream plan (no execution).
 Usage: python scripts/bedside/render_env.py [out_dir] [num_requested] [num_clutter] [seed]
 """
 
@@ -48,8 +47,7 @@ def ellipsoid_dots(theta):
 
 
 def slot_markers():
-    """Green = prior-safe, yellow = this user only, grey = out of reach for this user,
-    red = excluded from requested-item candidates (never usable or not robot-reachable)."""
+    """Green prior-safe, yellow this user only, grey out of reach, red excluded from candidates."""
     cfg = SIM.config
     rng = np.random.default_rng(0)
     prior = rng.uniform(cfg.reach_theta_lb, cfg.reach_theta_ub, size=(20000, 3))

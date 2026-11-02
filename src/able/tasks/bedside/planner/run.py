@@ -1,9 +1,6 @@
-"""Solve KinDER's BedsideStocking3D environment with PDDLStream.
+"""Solve BedsideStocking3D with PDDLStream; a requested pose is usable if P_b(reachable) >= 1 - delta.
 
-The planner takes a particle belief over the user's reach ellipsoid; a requested item's
-pose is usable if P_b(reachable) >= 1 - delta. Motion is IK-only: arm trajectories are
-carry -> hover -> grasp waypoints and base moves are unchecked; execution refines both.
-"""
+Planning is IK-only (carry -> hover -> grasp waypoints, unchecked base moves); execution refines both."""
 
 from __future__ import annotations
 
@@ -260,8 +257,7 @@ BASE_RESOLUTION = 0.05
 
 
 def _base_path(sim, goal: SE2Pose) -> list[SE2Pose]:
-    """Dense collision-free base waypoints to `goal`: a straight move, or turning first or last,
-    either way round. A turn of ~pi otherwise picks its direction by float noise."""
+    """Dense collision-free base waypoints to `goal`; tries both turn directions (a ~pi turn's is float noise)."""
     # pylint: disable=protected-access
     start = sim.robot.get_base()
     joints = remove_fingers_from_extended_joints(sim.robot.arm.get_joint_positions())

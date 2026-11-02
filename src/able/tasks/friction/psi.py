@@ -53,7 +53,7 @@ class FrictionPsi:
         return Examples(np.array(x), np.array(y), np.array(groups, np.int64))
 
     def proposal(self, learner, state, belief):
-        """ActionProposer: a learner draw with probability `mix`, else (or if all are tried) model.propose."""
+        """ActionProposer: learner draw w.p. `mix`, else (or if all tried) model.propose."""
         del state
         model, cache = self.model, {}
 
@@ -81,7 +81,7 @@ def encode(push: Push) -> list[float]:
 
 
 def decode(model: PuckPushingModel, row) -> Push:
-    """A label back to a push, rounded and limited as model.propose does."""
+    """Label to push, rounded and limited as model.propose does."""
     phys = model.world.physics
     angle = round(math.atan2(row[1], row[0]), 4)
     speed = round(float(np.clip(row[2], phys.min_speed, phys.max_speed)), 4)

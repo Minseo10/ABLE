@@ -1,20 +1,7 @@
 """Dynamic PuckPushing2D: strike a puck across a floor maze of unknown friction.
 
-A mobile robot with a paddle pushes a puck to a goal through a maze (see
-`able.tasks.friction.env.puckpushing_utils` for the maps and the shared physics). The floor is tiled
-with surface patches, and each surface's sliding friction coefficient is hidden. Each
-action is one push: the robot drives behind the puck, accelerates it with its paddle to
-the commanded speed along the commanded heading, and lets go. The puck then slides until
-friction stops it, bouncing off walls and off the robot (its base and its stopped
-paddle). The robot drives around the walls and the puck to its push station. If its center passes over a hole (a red circle),
-the episode fails.
-
-Top-down PyMunk has no floor contact, so the floor's Coulomb friction is applied to the
-puck's velocity directly, using the patch under its center. The same model drives the
-planners' analytic slide model.
-
-The info dict reports what the robot measures: the release speed and the stop position,
-both noisy. Planners must not read the true friction coefficients.
+Top-down PyMunk has no floor contact, so Coulomb floor friction is applied to the puck's
+velocity directly (as in the analytic slide model).
 """
 
 from __future__ import annotations
@@ -83,10 +70,9 @@ _PUCK_COLLISION_TYPE = 11
 _WALL_COLLISION_TYPE = 12
 _PADDLE_COLLISION_TYPE = 13
 _ROBOT_COLLISION_TYPE = 14
-# Paddle face distance from the base center while tucked for driving: the paddle stays
-# inside the base's footprint.
+# Paddle face reach (m) while stowed for driving: inside the base footprint.
 _STOWED_REACH = 0.2
-# The paddle starts this far behind the puck so the two do not overlap.
+# Start gap (m) so paddle and puck do not overlap.
 _PADDLE_GAP = 0.005
 
 
@@ -98,7 +84,7 @@ class DynPuckPushing2DEnvConfig(Dynamic2DRobotEnvConfig, metaclass=FinalConfigMe
     physics: PuckPhysics = PuckPhysics()
     friction_prior: FrictionPrior | BoxFrictionPrior = DEFAULT_FRICTION_PRIOR
 
-    # Physics. No gravity or damping in the plane; floor friction is applied directly.
+    # No in-plane gravity or damping; floor friction is applied directly.
     gravity_y: float = 0.0
     damping: float = 1.0
     sim_hz: int = 240
@@ -146,12 +132,11 @@ class ObjectCentricDynPuckPushing2DEnv(
         self._robot_pose = np.array([*puck_map.robot_start, 0.0])
         self._puck_body: pymunk.Body | None = None
         self._paddle_body: pymunk.Body | None = None
-        # Whether the paddle is tucked over the base, as while driving.
         self._paddle_stowed = False
         self._robot_body: pymunk.Body | None = None
         self._outcome: str | None = None  # "goal", "hole" or None
         self._last_info: dict[str, Any] = {}
-        # Built now so renders include the walls and patches from the first reset.
+        # Built now so renders show walls and patches from the first reset.
         self._initial_constant_state = self._create_constant_initial_state()
 
     # ------------------------------------------------------------------ spaces
@@ -165,10 +150,7 @@ class ObjectCentricDynPuckPushing2DEnv(
 
     @property
     def frictions(self) -> tuple[float, ...]:
-        """The true (hidden) friction coefficient per surface.
-
-        For evaluation; planners must not read it.
-        """
+        """True (hidden) friction per surface; for evaluation only, not planners."""
         return self._frictions
 
     # ------------------------------------------------------------------ state
@@ -215,7 +197,7 @@ class ObjectCentricDynPuckPushing2DEnv(
             "omega_gripper_r": 0.0,
             "static": False,
             "base_radius": phys.robot_radius,
-            # The paddle is drawn as the gripper base, with its face at the offset.
+            # The paddle is drawn as the gripper base.
             "arm_joint": phys.paddle_offset - phys.paddle_thickness / 2,
             "arm_length": phys.paddle_offset,
             "gripper_base_width": phys.paddle_thickness,
@@ -286,7 +268,7 @@ class ObjectCentricDynPuckPushing2DEnv(
             [state.get(robot_obj, "x"), state.get(robot_obj, "y")]
             + [state.get(robot_obj, "theta")]
         )
-        # The paddle's frame is at the middle of its face, facing +x.
+        # Paddle frame: middle of its face, facing +x.
         paddle = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
         half_w = phys.paddle_width / 2
         paddle_shape = pymunk.Poly(
@@ -305,7 +287,6 @@ class ObjectCentricDynPuckPushing2DEnv(
         self._paddle_body = paddle
         self._place_paddle()
 
-        # The base is a disc the puck bounces off like a wall.
         robot = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
         robot_shape = pymunk.Circle(robot, phys.robot_radius)
         robot_shape.elasticity = 1.0
@@ -329,10 +310,7 @@ class ObjectCentricDynPuckPushing2DEnv(
     def _floor_friction(
         self, body: pymunk.Body, gravity, damping: float, dt: float
     ) -> None:
-        """Coulomb friction from the patch under the puck's center.
-
-        Replaces PyMunk's velocity update, so gravity and damping are unused.
-        """
+        """Coulomb floor friction, replacing PyMunk's velocity update."""
         del gravity, damping
         velocity = body.velocity
         speed = velocity.length
@@ -351,8 +329,7 @@ class ObjectCentricDynPuckPushing2DEnv(
         face: NDArray[np.float64] | None = None,
         angle: float | None = None,
     ) -> None:
-        """Put the paddle face at `face`, facing `angle`; by default in front of the
-        robot."""
+        """Put the paddle face at `face`, facing `angle` (default: in front)."""
         assert self._paddle_body is not None
         heading = float(self._robot_pose[2])
         if face is None:
@@ -368,8 +345,7 @@ class ObjectCentricDynPuckPushing2DEnv(
         self.pymunk_space.reindex_shapes_for_body(self._paddle_body)
 
     def _stow_paddle(self) -> None:
-        """Tuck the paddle over the base, as while driving, so it clears the puck
-        wherever the base does."""
+        """Tuck the paddle over the base, clear of the puck wherever the base is."""
         assert self._paddle_body is not None and self.pymunk_space is not None
         heading = float(self._robot_pose[2])
         face = self._robot_pose[:2] + _STOWED_REACH * np.array(
@@ -405,10 +381,7 @@ class ObjectCentricDynPuckPushing2DEnv(
     def reset(
         self, *, seed: int | None = None, options: dict | None = None
     ) -> tuple[ObjectCentricState, dict]:
-        """Reset.
-
-        `options["frictions"]` may fix the hidden friction coefficients.
-        """
+        """Reset; `options["frictions"]` may fix the hidden frictions."""
         obs, info = super().reset(seed=seed, options=options)
         if options is not None and "frictions" in options:
             frictions = tuple(float(f) for f in options["frictions"])
@@ -468,8 +441,7 @@ class ObjectCentricDynPuckPushing2DEnv(
             speed * (1.0 + float(rng.normal(0.0, phys.speed_noise))), 0.0
         )
 
-        # The commanded push is feasible; a noisy heading may not be, and then the
-        # robot stands as for the commanded one.
+        # If the noisy heading is infeasible, stand as for the commanded one.
         pose = self.world.push_pose(
             puck, actual_angle, stance
         ) or self.world.push_pose(puck, angle, stance)
@@ -481,16 +453,14 @@ class ObjectCentricDynPuckPushing2DEnv(
         self._set_robot_pose(np.array([*(station - _PADDLE_GAP * direction), heading]))
         face = puck - (phys.puck_radius + _PADDLE_GAP) * direction
         self._place_paddle(face, actual_angle)
-        # A dead paddle during the strike, so it does not bat the puck ahead.
+        # Dead paddle during the strike, so it does not bat the puck ahead.
         self._set_paddle_elasticity(0.0)
-        # The base translates with the paddle during the strike.
         base_from_paddle = self._robot_pose[:2] - face
 
         dt = 1.0 / self.config.sim_hz
         trajectory = [puck.copy()]
         fell = False
         release_speed = 0.0
-        # Accelerate uniformly over the acceleration distance, then stop dead.
         if actual_speed > 0:
             accel = actual_speed**2 / (2.0 * phys.accel_distance)
             num_accel = max(int(round(actual_speed / accel / dt)), 1)
@@ -504,8 +474,7 @@ class ObjectCentricDynPuckPushing2DEnv(
                 trajectory.append(self._puck_position())
             self._paddle_body.velocity = (0.0, 0.0)
             release_speed = float(self._puck_body.velocity.length)
-        # Let go: the paddle stops where it is, square to the push, and the puck
-        # bounces off it like off a wall.
+        # Release: the paddle stops square to the push; the puck bounces off it.
         self._paddle_body.velocity = (0.0, 0.0)
         self._set_paddle_elasticity(1.0)
         num_slide = int(self.config.max_slide_seconds / dt)
@@ -524,7 +493,7 @@ class ObjectCentricDynPuckPushing2DEnv(
             "release_speed": max(noisy_speed, 0.0),
             "stop_position": self._measure_position(stop),
             "fell_in_hole": fell,
-            # For analysis and videos only: planners observe the two measurements.
+            # Analysis/videos only; planners see just the two measurements.
             "puck_trajectory": trajectory,
         }
 

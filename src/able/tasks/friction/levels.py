@@ -29,21 +29,20 @@ LEVELS: dict[str, tuple[tuple[tuple[float, float], ...], float]] = {
 
 
 def level_world(level: str) -> PuckWorld:
-    """The level's map and physics."""
     holes, goal_radius = LEVELS[level]
     puck_map = dataclasses.replace(THREE_ROUTES, name=f"threeroutes_{level}", holes=holes)
     return PuckWorld(puck_map, PuckPhysics(goal_radius=goal_radius))
 
 
 def register_level(level: str) -> tuple[str, PuckPhysics]:
-    """Add the level's map to the env registry; return its name and physics."""
+    """Register the level's map in MAPS; return (name, physics)."""
     world = level_world(level)
     MAPS[world.puck_map.name] = world.puck_map
     return world.puck_map.name, world.physics
 
 
 def make_level_env(env_name: str, level: str):
-    """The object-centric 2D or 3D env for a level."""
+    """Object-centric 2D or 3D env for a level."""
     map_name, physics = register_level(level)
     if env_name == "2d":
         from able.tasks.friction.env.dyn_puckpushing2d import (

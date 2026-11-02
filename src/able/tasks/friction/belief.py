@@ -13,7 +13,7 @@ from able.api import Observation, ParticleBelief
 from able.tasks.friction.env.puckpushing_utils import SURFACE_NAMES, PuckWorld
 from able.tasks.friction.query import probe_log_likelihood
 
-# Factor for a particle whose predicted hole outcome disagrees with the observation.
+# Likelihood factor when a particle's predicted hole outcome disagrees.
 _HOLE_MISMATCH = 0.05
 
 
@@ -40,9 +40,7 @@ class FrictionBelief(ParticleBelief):
 def push_log_likelihood(world: PuckWorld, particles: NDArray[np.float64], puck: NDArray[np.float64], angle: float,
                         release_speed: float, stop: NDArray[np.float64], fell: bool,
                         stance: float | None = None) -> NDArray[np.float64]:
-    """Each particle slides the puck at the measured speed along the commanded heading; the stop error
-    is Gaussian along (speed and position noise) and across (heading and position noise) the final
-    direction of travel."""
+    """Per-particle slide at the measured speed; stop error Gaussian along/across the final heading."""
     phys = world.physics
     release = world.release_point(puck, angle)
     robot = world.strike_end(world.push_station(puck, angle, stance), puck, angle)

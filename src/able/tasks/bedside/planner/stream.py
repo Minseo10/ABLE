@@ -151,8 +151,7 @@ def _slot_ik_reachable(sim: ObjectCentricBedsideStocking3DEnv, slot: NDArray) ->
 
 
 def requested_candidate_slots(sim: ObjectCentricBedsideStocking3DEnv) -> list[tuple[str, NDArray]]:
-    """Bedside slots a requested item could ever satisfy: usable for the largest reach in
-    the prior support and reachable by the robot's IK. Independent of the belief."""
+    """Bedside slots within the largest prior reach and reachable by IK (belief-independent, cached)."""
     cfg = sim.config
     key = (tuple(sorted(cfg.bedside_regions.items())), cfg.reach_theta_ub, tuple(sim.shoulder))
     if key not in _CANDIDATE_CACHE:

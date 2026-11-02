@@ -1,11 +1,7 @@
-"""PyBullet environment where a mobile manipulator stocks the bedside of a seated user.
+"""PyBullet env: a mobile manipulator moves requested items from far furniture to a seated user's bedside.
 
-The user sits up in bed. Requested items start on far furniture (a book cart and a
-dresser) and must end up where the user can reach them. The user's reach is an
-ellipsoid centered at their right shoulder with semi-axes `reach_theta`; an item counts
-as reachable if `reach_margin >= 0` and the segment from the shoulder to the item is not
-blocked by another movable object. Clutter may go anywhere.
-"""
+Reach is an ellipsoid at the right shoulder (semi-axes `reach_theta`); an item is reachable if
+`reach_margin >= 0` and the shoulder-to-item segment is unblocked by other movables."""
 
 from __future__ import annotations
 
@@ -76,8 +72,6 @@ def reach_margin(
 
 @dataclass(frozen=True)
 class BedsideStocking3DEnvConfig(Kinematic3DEnvConfig, metaclass=FinalConfigMeta):
-    """Config for BedsideStocking3DEnv()."""
-
     realistic_bg: bool = False
     x_lb: float = -1.0
     x_ub: float = 3.0
@@ -111,7 +105,6 @@ class BedsideStocking3DEnvConfig(Kinematic3DEnvConfig, metaclass=FinalConfigMeta
     book_spacing: float = 0.13
 
     def get_camera_kwargs(self) -> dict[str, Any]:
-        """Get kwargs to pass to PyBullet camera."""
         return {
             "camera_target": (1.0, 0.2, 0.5),
             "camera_yaw": 120,
@@ -138,16 +131,12 @@ class BedsideStocking3DEnvConfig(Kinematic3DEnvConfig, metaclass=FinalConfigMeta
 
 
 class BedsideStocking3DObjectCentricState(Kinematic3DObjectCentricState):
-    """A state in the BedsideStocking3DEnv()."""
-
     @property
     def requested_objects(self) -> list[str]:
-        """Names of the requested items."""
         return sorted(o.name for o in self if o.name.startswith("req"))
 
     @property
     def clutter_objects(self) -> list[str]:
-        """Names of the clutter items."""
         return sorted(o.name for o in self if o.name.startswith("clutter"))
 
 
@@ -241,12 +230,10 @@ class ObjectCentricBedsideStocking3DEnv(
 
     @property
     def requested_objects(self) -> list[str]:
-        """Names of the requested items."""
         return sorted(n for n in self._items if n.startswith("req"))
 
     @property
     def clutter_objects(self) -> list[str]:
-        """Names of the clutter items."""
         return sorted(n for n in self._items if n.startswith("clutter"))
 
     @property
@@ -255,7 +242,6 @@ class ObjectCentricBedsideStocking3DEnv(
         return set(self._static_ids) | set(self.human_ids)
 
     def surface_id(self, name: str) -> int:
-        """PyBullet id of a named surface."""
         return self._surfaces[name]
 
     def resting_pose(self, name: str, xy: tuple[float, float], surface: str) -> Pose:
@@ -377,8 +363,7 @@ def segment_blocked(
     radius: float,
     physics_client_id: int,
 ) -> bool:
-    """Whether a thick segment (center ray plus four offset rays) hits any of
-    `body_ids`."""
+    """Whether a thick segment (center ray plus four offset rays) hits any of `body_ids`."""
     if not body_ids:
         return False
     start, end = np.asarray(start, dtype=float), np.asarray(end, dtype=float)

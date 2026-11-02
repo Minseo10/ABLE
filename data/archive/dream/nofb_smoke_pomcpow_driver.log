@@ -1,9 +1,0 @@
-Wrote figures/dream/nofb_smoke_pomcpow/summary.png
-Wrote figures/dream/nofb_smoke_pomcpow/summary_person23.png
-Wrote figures/dream/nofb_smoke_pomcpow/summary_person29.png
-
-                                            people  episodes  reached  rollouts_mean  rollouts_median  plan_time_mean  plan_time_median  goal_distance_mean  goal_beyond_belief_sum  memo_hits_sum  policy_reached_sum  dream_time_sum  dreams_planned_sum  dreams_reached_sum
-condition model         n_dreams seed_mode                                                                                                                                                                                                                                    
-learned   gen:flow:hist 0        step            2        40     0.95        3705.95           3006.5          122.87            105.06                0.05                       0              0                   0             0.0                   0                   0
-                        4        step            2        40     0.95        2958.35           2350.5          105.93             96.96                0.05                       0              0                   0         18108.6                 165                 156
-plain                   0        plan            2        40     0.92        4195.20           3008.0          139.33            111.02                0.05                       0              0                   0             0.0                   0                   0

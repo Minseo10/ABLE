@@ -1,14 +1,7 @@
-"""PuckPushing as a POMDP for POMCPOW.
+"""PuckPushing as a POMDP for POMCPOW: hidden per-floor friction, analytic slide transitions.
 
-The hidden part of the state is one friction coefficient per floor surface. Everything
-else (puck and robot positions, the map, the strike physics) is known. A push is a
-continuous (heading, speed) action. Transitions use the analytic slide model of
-`able.tasks.friction.env.puckpushing_utils`, with the same execution noise as the envs, and the
-observation is the noisy release speed and stop position.
-
-Rewards: each push costs `push_cost` plus `drive_cost` per meter the robot drives to its
-push station. Stopping in the goal earns `goal_reward`; passing over a hole costs
-`hole_penalty` and ends the episode.
+Observation: noisy release speed and stop position. Reward: -push_cost - drive_cost per m driven,
++goal_reward in the goal, -hole_penalty (terminal) over a hole.
 """
 
 from __future__ import annotations
@@ -37,29 +30,24 @@ ONGOING, GOAL, HOLE = 0, 1, 2
 
 @dataclass(frozen=True)
 class PuckState:
-    """A POMDP state.
-
-    Positions are rounded so states hash stably.
-    """
+    """A POMDP state; positions are rounded so states hash stably."""
 
     puck: tuple[float, float]
     robot: tuple[float, float]
     frictions: tuple[float, ...]
     outcome: int = ONGOING
     pushes: int = 0
-    # Speed the puck actually left the paddle with, on the push that led here.
+    # Actual speed off the paddle on the push that led here.
     release_speed: float = 0.0
     # Reward of the transition that led here.
     last_reward: float = 0.0
 
     @property
     def puck_array(self) -> NDArray[np.float64]:
-        """The puck position as an array."""
         return np.asarray(self.puck, dtype=np.float64)
 
     @property
     def robot_array(self) -> NDArray[np.float64]:
-        """The robot position as an array."""
         return np.asarray(self.robot, dtype=np.float64)
 
 
@@ -69,42 +57,32 @@ PuckObservation = tuple[float, float, float, bool]
 
 @dataclass(frozen=True)
 class PuckRewards:
-    """Reward parameters."""
-
     push_cost: float = 1.0
     drive_cost: float = 0.5
     goal_reward: float = 20.0
     hole_penalty: float = 50.0
-    # Value of a state from which no push is possible (e.g. stopped inside the slot).
+    # Value of a state with no feasible push (e.g. inside the slot).
     stuck_penalty: float = 30.0
 
 
 @dataclass
 class PuckPushingModel:
-    """The POMCPOW model of PuckPushing."""
-
     world: PuckWorld
     rewards: PuckRewards = field(default_factory=PuckRewards)
     friction_prior: FrictionPrior | BoxFrictionPrior = DEFAULT_FRICTION_PRIOR
     max_pushes: int = 15
-    # Proposal attempts before declaring that no push is possible.
     max_proposal_tries: int = 64
-    # How proposals set the robot's stance: "grid" picks among stances every
-    # `stance_step` radians within +-max_stance, "continuous" samples the whole range,
-    # and "auto" leaves it to the robot (the first of `base_offsets` that fits).
+    # "grid": every stance_step rad in +-max_stance; "continuous": uniform; "auto": robot picks.
     stance_mode: str = "grid"
     stance_step: float = math.radians(15)
-    # Grid resolution of the leaf-value distance field.
     value_resolution: float = 0.1
-    # Greedy rollouts keep this far from holes, beyond their radius.
+    # Rollout clearance beyond the hole radius (m).
     hole_margin: float = 0.05
     rollout_pushes: int = 6
-    # Path cells ahead used to check that a rollout can push on from where it stops.
+    # Path cells ahead checked so a rollout can push on from where it stops.
     onward_lookahead: int = 4
-    # Frictions the rollout policy assumes when choosing speeds (None: prior mean).
+    # Frictions the rollout assumes when choosing speeds (None: prior mean).
     rollout_frictions: tuple[float, ...] | None = None
-
-    # ------------------------------------------------------------------ states
 
     def initial_state(
         self,
@@ -113,7 +91,6 @@ class PuckPushingModel:
         frictions: Sequence[float],
         pushes: int = 0,
     ) -> PuckState:
-        """A state with the puck and robot at rest."""
         return PuckState(
             puck=_round_point(puck),
             robot=_round_point(robot),
@@ -124,8 +101,6 @@ class PuckPushingModel:
     def is_terminal(self, state: PuckState) -> bool:
         """Goal, hole, or out of pushes."""
         return state.outcome != ONGOING or state.pushes >= self.max_pushes
-
-    # ------------------------------------------------------------------ dynamics
 
     def step(
         self, state: PuckState, action: Push, rng: np.random.Generator
@@ -142,11 +117,11 @@ class PuckPushingModel:
     def transition(
         self, state: PuckState, action: Push, angle: float, speed: float
     ) -> PuckState:
-        """The deterministic result of executing `action` as (angle, speed)."""
+        """Deterministic result of executing `action` as (angle, speed)."""
         world, rewards = self.world, self.rewards
         puck = state.puck_array
         if not world.push_feasible(puck, action.angle, action.stance):
-            # The robot cannot make this push; it costs a push and changes nothing.
+            # Infeasible push: costs a push, changes nothing.
             return replace(
                 state,
                 pushes=state.pushes + 1,
@@ -188,11 +163,9 @@ class PuckPushingModel:
         )
 
     def reward(self, state: PuckState, action: Push, next_state: PuckState) -> float:
-        """The reward stored on `next_state` by the transition that made it."""
+        """Reward stored on `next_state` by its transition."""
         del state, action
         return next_state.last_reward
-
-    # ------------------------------------------------------------------ observations
 
     def observe(
         self, next_state: PuckState, action: Push, rng: np.random.Generator
@@ -222,14 +195,10 @@ class PuckPushingModel:
         dy = (observation[2] - next_state.puck[1]) / phys.position_obs_noise
         return math.exp(-0.5 * (speed_err**2 + dx**2 + dy**2))
 
-    # ------------------------------------------------------------------ actions
-
     def propose(
         self, state: PuckState, tried: Sequence[Push], rng: np.random.Generator
     ) -> Push | None:
-        """A uniformly random feasible push (the plain POMCPOW proposal): a random
-        heading, then a random stance among those the robot fits in, then a random
-        speed."""
+        """Uniformly random feasible push: random heading, then a fitting stance, then speed."""
         del tried
         phys = self.world.physics
         puck = state.puck_array
@@ -243,7 +212,7 @@ class PuckPushingModel:
             stance = self._sample_stance(puck, angle, rng)
             if stance is not None:
                 speed = float(rng.uniform(phys.min_speed, phys.max_speed))
-                # Rounded for hashing, but kept within the limit.
+                # Round for hashing but stay within the limit.
                 limit = phys.max_stance
                 stance = min(max(round(stance, 4), -limit), limit)
                 return Push(round(angle, 4), round(speed, 4), stance)
@@ -251,7 +220,7 @@ class PuckPushingModel:
 
     @cached_property
     def stances(self) -> NDArray[np.float64]:
-        """The stance grid the proposal picks from in "grid" mode."""
+        """Stance grid (rad) for "grid" mode."""
         limit = self.world.physics.max_stance
         n = int(math.floor(limit / self.stance_step + 1e-9))
         return self.stance_step * np.arange(-n, n + 1, dtype=np.float64)
@@ -274,16 +243,9 @@ class PuckPushingModel:
                 return float(stance)
         return None
 
-    # ------------------------------------------------------------------ leaf values
-
     @cached_property
     def _goal_paths(self) -> tuple[NDArray[np.float64], NDArray[np.int64], int, int]:
-        """Shortest puck paths to the goal on a grid around walls and holes, through
-        cells the robot can push from (so not through the slot).
-
-        Returns the distance to the goal per cell, each cell's next cell toward the
-        goal, and the grid size (nx, ny). Cells are indexed j * nx + i.
-        """
+        """Dijkstra to the goal over pushable free cells: (dist, next cell, nx, ny); cell = j * nx + i."""
         world, res = self.world, self.value_resolution
         margin = world.physics.hole_radius + self.hole_margin
         nx = int(round(world.puck_map.width / res))
@@ -321,13 +283,12 @@ class PuckPushingModel:
         return dist, pred, nx, ny
 
     def _pushable(self, point: NDArray[np.float64], num_angles: int = 16) -> bool:
-        """Whether some push is feasible from `point`, on evenly spaced headings."""
+        """Whether some push is feasible from `point` on evenly spaced headings."""
         angles = np.linspace(-math.pi, math.pi, num_angles, endpoint=False)
         return any(self.world.push_feasible(point, float(a)) for a in angles)
 
     def path_to_goal(self, point: NDArray[np.float64]) -> list[NDArray[np.float64]]:
-        """Grid points of a shortest puck path from `point` to the goal (empty if none),
-        ending at the goal itself."""
+        """Grid points of a shortest puck path to the goal, ending at the goal (empty if none)."""
         dist, pred, nx, ny = self._goal_paths
         res = self.value_resolution
         i = min(max(int(point[0] // res), 0), nx - 1)
@@ -350,8 +311,7 @@ class PuckPushingModel:
         frictions: Sequence[float],
         iterations: int = 14,
     ) -> float | None:
-        """Push speed that moves the puck `distance` along a clear straight line, or
-        None if even the top speed falls short."""
+        """Speed that slides the puck `distance` on a clear line (None if max speed falls short)."""
         phys, world = self.world.physics, self.world
         release = world.release_point(puck, angle)
         target = distance - phys.accel_distance
@@ -371,12 +331,7 @@ class PuckPushingModel:
     def greedy_push(
         self, puck: NDArray[np.float64], frictions: Sequence[float]
     ) -> Push | None:
-        """Push toward the farthest point on the shortest path to the goal that the puck
-        can reach in a straight line, at the speed that stops it there.
-
-        Unless the point is the goal, the robot must be able to push on from it along
-        the path, so the rollout does not park the puck in a dead end.
-        """
+        """Push to stop at the farthest straight-line-reachable path point that can be pushed on from."""
         world = self.world
         path = self.path_to_goal(puck)
         clearance = world.physics.hole_radius + self.hole_margin
@@ -401,14 +356,7 @@ class PuckPushingModel:
         return None
 
     def value(self, state: PuckState) -> float:
-        """Return of a greedy rollout from `state`.
-
-        Each push heads for the farthest point on the shortest path to the goal that the
-        puck can reach in a straight line. Speeds are chosen with `rollout_frictions`
-        (the belief mean), while the slides use the state's own frictions, so the
-        estimate pays for misjudging them. A rollout that has not reached the goal after
-        `rollout_pushes` gets no goal reward.
-        """
+        """Greedy-rollout return; speeds use `rollout_frictions` but slides use the state's, so misjudging costs."""
         rewards = self.rewards
         if state.outcome in (GOAL, HOLE):
             return 0.0

@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 from able.api import Observation
 from able.tasks.friction.env.puckpushing_utils import GRAVITY, PuckPhysics
 
-# A fine grid of standard-normal speed errors, fine enough next to the position noise.
+# Quadrature grid over standard-normal speed errors.
 _NODES = np.linspace(-5.0, 5.0, 201)
 _WEIGHTS = np.exp(-0.5 * _NODES**2) / np.exp(-0.5 * _NODES**2).sum()
 

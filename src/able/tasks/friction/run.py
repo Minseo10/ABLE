@@ -1,7 +1,4 @@
-"""Run one friction-task episode with POMCPOW and log it.
-
-Each step plans from the friction belief, executes the push in the env (2D PyMunk or 3D
-PyBullet), and conditions the belief on the measured release speed and stop position.
+"""Run and log one friction-task episode with POMCPOW (2D PyMunk or 3D PyBullet env).
 
 Example:
     python -m able.tasks.friction.run --env 2d --level L2 --seed 0 --sims 2000
@@ -25,8 +22,6 @@ from able.tasks.friction.task import FrictionProblem, FrictionTask
 
 @dataclass
 class StepLog:
-    """One executed push."""
-
     angle: float
     speed: float
     stance: float | None  # base heading relative to the push (None: the robot picked it)
@@ -46,8 +41,6 @@ class StepLog:
 
 @dataclass
 class EpisodeLog:
-    """One episode."""
-
     env: str
     map_name: str
     seed: int
@@ -98,7 +91,7 @@ def run(task: FrictionTask, seed: int, frictions: tuple[float, ...] | None = Non
 
 
 def _ess(belief, observations) -> float:
-    """Effective sample size of the push's weights (nan if unobserved, 0 if nothing explains it)."""
+    """Effective sample size of the push's weights (nan if unobserved, 0 if none explain it)."""
     if not observations:
         return float("nan")
     log_w = belief.log_likelihood(observations[0], belief.particles)

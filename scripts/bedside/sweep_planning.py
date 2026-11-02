@@ -1,8 +1,6 @@
-"""Planning-time sweep for BedsideStocking3D: requested items x clutter items x seeds.
+"""Planning-time sweep for BedsideStocking3D (requested x clutter x seeds), one subprocess + JSON per run.
 
-Each run is a subprocess of able.tasks.bedside.planner.run that writes
-one JSON file. Runs whose JSON already exists are skipped, so the sweep can be resumed.
-A run is killed if its memory exceeds --max-rss-gb (recorded as killed="memory").
+Resumable (existing JSONs are skipped); runs over --max-rss-gb are killed (killed="memory").
 
 Usage:
   python scripts/bedside/sweep_planning.py --out data/bedside/planning_sweep

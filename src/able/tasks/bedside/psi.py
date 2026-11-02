@@ -33,9 +33,7 @@ class PlaceProposal:
 
 @dataclass
 class BedsidePsi:
-    """One row per requested item: item one-hot (MAX_REQUESTED), clutter occupancy of every
-    bedside region slot (config.region_slots, in bedside_regions order), belief mean and std.
-    Label: the item's final placement position in the plan."""
+    """Row per requested item: one-hot, clutter occupancy per bedside slot, belief features; label: final xyz."""
 
     config: BedsideStocking3DEnvConfig = field(default_factory=BedsideStocking3DEnvConfig)
     k: int = 16

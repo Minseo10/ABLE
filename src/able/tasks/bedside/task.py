@@ -88,7 +88,7 @@ class BedsideTask:
         return BedsideState(obs, problem.seed, theta)
 
     def execute(self, state: BedsideState, plan: Any, rng: np.random.Generator) -> Step:
-        """Run the whole plan; observe whether the person reached each placed requested item."""
+        """Run the plan; observe whether each placed requested item is reached."""
         sim = self.sim
         sim.reset(options={"init_state": state.obs})
         sim.reach_theta = state.theta.copy()

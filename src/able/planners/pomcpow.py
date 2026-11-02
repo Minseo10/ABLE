@@ -1,13 +1,6 @@
-"""POMCPOW: online tree search for POMDPs with continuous actions and observations.
+"""Domain-free POMCPOW (Sunberg & Kochenderfer, ICAPS 2018) for continuous actions and observations.
 
-Sunberg & Kochenderfer, "Online Algorithms for POMDPs with Continuous State, Action, and
-Observation Spaces" (ICAPS 2018). Progressive widening limits the actions tried at each
-observation node and the observations kept under each action node, and every observation
-node holds the weighted states that reached it, so it carries a belief.
-
-The solver is domain-free. A domain supplies a `POMDPModel`. New actions at a node come
-from an `ActionProposer`, which defaults to the model's own sampler; passing a different
-proposer (for example a learned one) changes only where the search looks.
+A domain supplies a `POMDPModel`; an optional `ActionProposer` (e.g. learned) replaces its action sampler.
 """
 
 from __future__ import annotations
@@ -32,10 +25,7 @@ class POMDPModel(Protocol[S, A, O]):
         """Sample a next state and the reward of the transition."""
 
     def reward(self, state: S, action: A, next_state: S) -> float:
-        """Reward of reaching `next_state` from `state` with `action`.
-
-        Used when a simulation continues from a state drawn from a node's belief.
-        """
+        """Reward of `state -> next_state` under `action`; used when resampling from a node's belief."""
 
     def observe(self, next_state: S, action: A, rng: np.random.Generator) -> O:
         """Sample an observation of `next_state`."""
@@ -66,23 +56,21 @@ class POMCPOWConfig:
     """Search parameters."""
 
     num_sims: int = 1000
-    # Stop early once this many seconds have passed (None: run all simulations).
-    max_time: float | None = None
+    max_time: float | None = None  # seconds; None runs all simulations
     max_depth: int = 10
     discount: float = 1.0
     exploration: float = 20.0
-    # Progressive widening: a node with N visits may have up to k * N^alpha children.
+    # Progressive widening (k, alpha): up to k * N^alpha children at N visits.
     action_widening: tuple[float, float] = (2.0, 0.5)
     observation_widening: tuple[float, float] = (1.0, 0.25)
-    # Random rollout steps before the model's leaf value takes over.
-    rollout_depth: int = 0
+    rollout_depth: int = 0  # random steps before the model's leaf value
 
 
 @dataclass
 class _ObservationNode(Generic[S, A]):
     visits: int = 0
     actions: dict = field(default_factory=dict)
-    # The states that reached this node, with a running total of their weights.
+    # States that reached this node, with cumulative weights.
     states: list = field(default_factory=list)
     cumulative: list = field(default_factory=list)
     exhausted: bool = False
@@ -93,7 +81,6 @@ class _ActionNode:
     visits: int = 0
     value: float = 0.0
     children: dict = field(default_factory=dict)
-    # Times each child observation was generated.
     counts: dict = field(default_factory=dict)
 
 
@@ -105,8 +92,7 @@ class SearchStats:
     seconds: float = 0.0
     root_actions: int = 0
     max_depth_reached: int = 0
-    # Visits and value of each root action, best first.
-    root_values: list = field(default_factory=list)
+    root_values: list = field(default_factory=list)  # (action, visits, value), best first
 
 
 class POMCPOW(Generic[S, A, O]):
@@ -127,10 +113,7 @@ class POMCPOW(Generic[S, A, O]):
         self._depth_reached = 0
 
     def plan(self, particles: Sequence[S]) -> tuple[A | None, SearchStats]:
-        """Search from a belief given as equally weighted state particles.
-
-        Returns None if no action could be proposed at the root.
-        """
+        """Search from equally weighted state particles; action is None if none could be proposed."""
         start = time.perf_counter()
         config = self.config
         particles = list(particles)
@@ -164,8 +147,6 @@ class POMCPOW(Generic[S, A, O]):
             self.root.actions.items(), key=lambda kv: (kv[1].visits, kv[1].value)
         )
         return best[0], stats
-
-    # ------------------------------------------------------------------ internals
 
     @staticmethod
     def _widened(visits: int, size: int, widening: tuple[float, float]) -> bool:
@@ -226,7 +207,6 @@ class POMCPOW(Generic[S, A, O]):
         self._depth_reached = max(self._depth_reached, config.max_depth - depth + 1)
         selected = self._select_action(state, node)
         if selected is None:
-            # No action is possible here: the state is a dead end.
             return model.value(state)
         action, child = selected
         next_state, reward = model.step(state, action, self.rng)

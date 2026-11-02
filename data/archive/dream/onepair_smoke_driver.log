@@ -1,9 +1,0 @@
-Wrote figures/dream/onepair_smoke/summary.png
-Wrote figures/dream/onepair_smoke/summary_person23.png
-Wrote figures/dream/onepair_smoke/summary_person29.png
-
-                                            people  episodes  reached  rollouts_mean  rollouts_median  plan_time_mean  plan_time_median  goal_distance_mean  goal_beyond_belief_sum  memo_hits_sum  policy_reached_sum  dream_time_sum  dreams_planned_sum  dreams_reached_sum
-condition model         n_dreams seed_mode                                                                                                                                                                                                                                    
-learned   gen:flow:hist 0        step            2        80     0.94        4584.36           2689.5          130.82             99.30                0.07                       0              0                   0             0.0                   0                   0
-                        4        step            2        80     0.94        2428.43           2024.5           65.25             56.14                0.05                       0              0                   0         24548.0                 330                 303
-plain                   0        plan            2        80     0.85        7091.59           3808.0          187.16            131.44                0.13                       0              0                   0             0.0                   0                   0

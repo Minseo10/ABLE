@@ -1,8 +1,0 @@
-pybullet build time: Mar 13 2026 19:11:15
-b3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
-No inertial data for link, using mass=1, localinertiadiagonal = 1,1,1, identity local inertial frameb3Warning[examples/Importers/ImportURDFDemo/BulletUrdfImporter.cpp,126]:
-base_rootisolated-left-arm 1.0 20 error 0.2099692472094543 valid 16
-isolated-left-arm 1.0 40 error 0.29647086604629225 valid 16
-isolated-left-arm 1.0 60 error 0.11282031267685166 valid 16
-isolated-left-arm 1.0 80 error 0.07924918989889917 valid 16
-RESULT {'variant': 'isolated-left-arm', 'mass_scale': 1.0, 'rollouts': 16, 'control_steps': 88, 'physics_steps': 1033, 'wall_seconds': 37.36644732998684, 'closed_error': 0.04961981581516639, 'replay_error': 0.05517360801959681, 'max_joint_trace_discrepancy': 0.002579190069463763, 'final_joint_trace_discrepancy': 0.0018070907529288416}
