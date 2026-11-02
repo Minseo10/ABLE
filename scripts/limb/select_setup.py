@@ -80,8 +80,14 @@ def mpc_score(variant, offset, roll, base, n: int, max_time: float, seed: int) -
         last = ep.steps[-1]
         runs.append({"success": ep.success, "seconds": ep.plan_seconds, "rollouts": ep.effort,
                      "failure": last.result.info.get("failure") or (last.step.info.get("failure") if last.step else "")})
-    return {"success": float(np.mean([r["success"] for r in runs])),
-            "seconds": float(np.mean([r["seconds"] for r in runs])), "runs": runs}
+    return {**mpc_stats(runs), "runs": runs}
+
+
+def mpc_stats(runs: list[dict]) -> dict:
+    """Success and time over runs that reached the MPC (not task-sampling misses)."""
+    tried = [r for r in runs if r["failure"] != "no reachable task"] or [{"success": False, "seconds": float("inf")}]
+    return {"success": float(np.mean([r["success"] for r in tried])),
+            "seconds": float(np.mean([r["seconds"] for r in tried])), "tried": len(tried)}
 
 
 def select(args) -> dict:
@@ -126,7 +132,17 @@ def merge(directory: Path) -> None:
     from able.tasks.limb.setup import FixedSetup, save_setup
 
     for path in sorted(directory.glob("*.json")):
-        chosen = json.loads(path.read_text()).get("chosen")
+        report = json.loads(path.read_text())
+        best = None
+        for e in report.get("stage_b", []):
+            e.update(mpc_stats(e["runs"]))  # rescore reports from before mpc_stats
+            key = (e["success"], e["reach"], -e["seconds"])
+            if best is None or key > best[0]:
+                best = (key, e)
+        chosen = None if best is None else {
+            "variant": report["variant"], "offset": best[1]["offset"], "roll": best[1]["roll"],
+            "base": best[1]["base"], "stats": {"reach": best[1]["reach"], "mpc_success": best[1]["success"],
+                                               "mpc_seconds": best[1]["seconds"], "mpc_tried": best[1]["tried"]}}
         if chosen is None:
             print(f"{path.stem}: no usable pair")
             continue

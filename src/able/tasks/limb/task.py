@@ -219,7 +219,9 @@ class LimbTask:
             self._sim, ctx = make_sampling_context(self.settings)
             reset_to_start(ctx)
             grasp = wrist_grasp(ctx, self.setup.offset, self.setup.roll)
-            self._sampler = ReachableTaskSampler(ctx, grasp=grasp, base=self.setup.base_pose)
+            # One fixed base reaches few random tasks, so draw more (IK checks only).
+            self._sampler = ReachableTaskSampler(ctx, max_goal_draws=60, max_init_draws=40,
+                                                 grasp=grasp, base=self.setup.base_pose)
         return self._sampler
 
     def sample_problem(self, rng: np.random.Generator) -> Task:
