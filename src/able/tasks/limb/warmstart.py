@@ -133,12 +133,12 @@ def make_regressor(spec: str):
     Each reads only the first `BASE_FEATURES` columns unless the spec ends in `:hist`.
     """
     if spec.startswith("gen:"):
-        from able.tasks.limb.generative import KINDS
+        from able.tasks.limb.generative import KINDS, limb_segments
 
         hist = spec.endswith(":hist")
         kind, *parts = spec.removesuffix(":hist").split(":")[1:]
         options = {"steps": int(p[1:]) for p in parts if p.startswith("s")}
-        return KINDS[kind](columns=None if hist else BASE_FEATURES, **options)
+        return KINDS[kind](columns=None if hist else BASE_FEATURES, group_fn=limb_segments, **options)
     if spec.endswith(":hist"):
         return _make_regressor(spec[: -len(":hist")])
     from sklearn.preprocessing import FunctionTransformer

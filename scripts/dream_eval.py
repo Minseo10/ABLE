@@ -330,11 +330,11 @@ def screen(args):
 def steps_job(job):
     directory, stem, label, seed = job
     one_thread()
-    from able.tasks.limb.generative import KINDS
+    from able.tasks.limb.generative import KINDS, limb_segments
 
     xt, yt, xs, ys, var, std = split(directory, stem)
     kind, attribute = SAMPLERS[label]
-    model = KINDS[kind](seed=seed).fit(xt, yt)
+    model = KINDS[kind](seed=seed, group_fn=limb_segments).fit(xt, yt)
     rows = []
     for steps in STEPS:
         setattr(model, attribute, steps)
