@@ -1,6 +1,6 @@
-"""Stage A: fixed-seed fingerprints of a task's components vs tests/golden/<host>/<task>.json.
+"""Stage A: fixed-seed fingerprints of a task's components vs tests/baselines/<host>/<task>.json.
 
-    PYTHONPATH=src python scripts/check/golden.py --task limb [--update] [--report out.json]
+    PYTHONPATH=src python scripts/check/baseline.py --task limb [--update] [--report out.json]
 
 Ints, strings, bools and hashes must match exactly; floats within rtol 1e-6, atol 1e-9.
 """
@@ -223,10 +223,10 @@ def main() -> None:
     parser.add_argument("--task", choices=TASKS, required=True)
     parser.add_argument("--update", action="store_true", help="write this machine's baseline")
     parser.add_argument("--report", type=Path, help="JSON list of check results")
-    parser.add_argument("--golden", type=Path, default=ROOT / "tests" / "golden")
+    parser.add_argument("--baselines", type=Path, default=ROOT / "tests" / "baselines")
     args = parser.parse_args()
 
-    path = args.golden / host() / f"{args.task}.json"
+    path = args.baselines / host() / f"{args.task}.json"
     baseline = json.loads(path.read_text()) if path.exists() else None
     seed_all()
     results, fingerprint, sections = [], {}, TASKS[args.task]()
@@ -249,7 +249,7 @@ def main() -> None:
         elif args.update:
             note = "baseline written"
         elif baseline is None or name not in baseline:
-            status, note = "SKIP", f"no baseline for {host()}: run scripts/check.sh --update-golden"
+            status, note = "SKIP", f"no baseline for {host()}: run scripts/check.sh --save-baseline"
         else:
             bad = diff(baseline[name], fp)
             if bad:

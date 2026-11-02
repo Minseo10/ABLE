@@ -103,13 +103,13 @@ Experiments before this layout are there too (tag `archive`, index run `archive/
 After a merge, run both stages at once (at most `JOBS=12` processes, W&B off; about 6 min on 32 cores):
 
 ```bash
-PYTHON=python scripts/check.sh [--tasks "limb friction bedside"] [--update-golden] [--keep]
+PYTHON=python scripts/check.sh [--tasks "limb friction bedside"] [--save-baseline] [--keep]
 ```
 
 It prints one PASS/FAIL/SKIP table and the log dir (kept with `--keep` or on a failure) and exits
 non-zero on any FAIL.
 
-- **Stage A, golden** (`scripts/check/golden.py`): fixed-seed fingerprints of each task's pieces (the
+- **Stage A, baseline** (`scripts/check/baseline.py`): fixed-seed fingerprints of each task's pieces (the
   query chosen and answered, the posterior, a plain and a psi-seeded episode, psi's rows), compared to
   saved values. PDDLStream's plans depend on timing, so the bedside records only "solved and executed".
 - **Stage B, end to end** (`configs/<task>/check.yaml`, `scripts/check/e2e_validate.py`): the factory,
@@ -118,8 +118,8 @@ non-zero on any FAIL.
   query, the ablations' queries and beliefs, resume, the video flag and `scripts/figures.py`.
 
 Floats differ slightly across machines' math libraries, so baselines are per machine:
-`tests/golden/<hostname>/<task>.json`. Without one, Stage A reports SKIP; on a new machine, or after
-an intended change, run `scripts/check.sh --update-golden` once and commit the files.
+`tests/baselines/<hostname>/<task>.json`. Without one, Stage A reports SKIP; on a new machine, or after
+an intended change, run `scripts/check.sh --save-baseline` once and commit the files.
 
 ## Task folders
 
@@ -146,7 +146,7 @@ Every task has the same files; each role class inherits its `able.api` base:
 | `src/able/planners/` | Task-free planners: `mpc.py` (predictive sampling + psi seeding), `pomcpow.py`, `pddlstream.py` (wrapper); tasks subclass or configure them |
 | `configs/` | Smoke, full and check configs per task |
 | `scripts/run.sh`, `figures.py`, `log_to_wandb.py` | Shared launcher, figures, upload |
-| `scripts/check.sh`, `scripts/check/`, `tests/golden/` | Post-merge check and its per-machine baselines |
+| `scripts/check.sh`, `scripts/check/`, `tests/baselines/` | Post-merge check and its per-machine baselines |
 | `scripts/limb/`, `scripts/friction/`, `scripts/bedside/` | Task-specific sweeps and renders |
 | `notebooks/dreaming_rom_planner.ipynb` | The toy loop the pipeline follows |
 | `tests/` | `pytest -m "not slow"` skips tests that run a planner in simulation |

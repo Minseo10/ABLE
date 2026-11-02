@@ -1,4 +1,4 @@
-"""Post-merge check: Stage A (golden fingerprints) and Stage B (end-to-end runs), in parallel.
+"""Post-merge check: Stage A (baseline fingerprints) and Stage B (end-to-end runs), in parallel.
 
 Run it through scripts/check.sh (sets PYTHONPATH, threads and W&B off); see its header.
 """
@@ -23,11 +23,11 @@ CHECK = ROOT / "scripts" / "check"
 TASKS = ("limb", "friction", "bedside")
 # Measured seconds per job (32 cores, 12 jobs); longest chains start first.
 COST = {
-    "limb": {"golden": 220, "factory": 100, "fit": 20, "plain": 245, "learned": 355, "prior_only": 200,
+    "limb": {"baseline": 220, "factory": 100, "fit": 20, "plain": 245, "learned": 355, "prior_only": 200,
              "no_info": 75, "no_belief": 80, "resume_1": 70, "resume_2": 50, "validate": 15},
-    "friction": {"golden": 10, "factory": 20, "fit": 2, "plain": 45, "learned": 95, "prior_only": 45,
+    "friction": {"baseline": 10, "factory": 20, "fit": 2, "plain": 45, "learned": 95, "prior_only": 45,
                  "no_info": 22, "no_belief": 22, "resume_1": 12, "resume_2": 23, "validate": 10},
-    "bedside": {"golden": 40, "factory": 35, "fit": 2, "plain": 70, "learned": 140, "prior_only": 70,
+    "bedside": {"baseline": 40, "factory": 35, "fit": 2, "plain": 70, "learned": 140, "prior_only": 70,
                 "no_info": 35, "no_belief": 35, "resume_1": 55, "resume_2": 40, "validate": 15},
 }
 
@@ -55,9 +55,9 @@ class Job:
 
 
 def stage_a(task: str, root: Path, py: str, update: bool) -> list[Job]:
-    report = root / "reports" / f"golden_{task}.json"
-    cmd = [py, str(CHECK / "golden.py"), "--task", task, "--report", str(report)] + (["--update"] if update else [])
-    return [Job(f"golden_{task}", "A", task, "golden", cmd, COST[task]["golden"], report=report)]
+    report = root / "reports" / f"baseline_{task}.json"
+    cmd = [py, str(CHECK / "baseline.py"), "--task", task, "--report", str(report)] + (["--update"] if update else [])
+    return [Job(f"baseline_{task}", "A", task, "baseline", cmd, COST[task]["baseline"], report=report)]
 
 
 def stage_b(task: str, root: Path, py: str) -> list[Job]:
@@ -200,7 +200,7 @@ def table(jobs: list[Job]) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--tasks", default=" ".join(TASKS))
-    parser.add_argument("--update-golden", action="store_true")
+    parser.add_argument("--save-baseline", action="store_true")
     parser.add_argument("--keep", action="store_true")
     args = parser.parse_args()
     tasks = args.tasks.split()
@@ -215,7 +215,7 @@ def main() -> None:
            "MPLCONFIGDIR": str(root / "tmp")}
     env["PYTHONPATH"] = os.pathsep.join(p for p in (str(ROOT / "src"), env.get("PYTHONPATH")) if p)
     py = sys.executable
-    order = [j for t in tasks for j in stage_a(t, root, py, args.update_golden)]
+    order = [j for t in tasks for j in stage_a(t, root, py, args.save_baseline)]
     order += [j for t in tasks for j in stage_b(t, root, py)]
     jobs = {j.name: j for j in order}
     print(f"check: {len(jobs)} jobs, at most {limit} at once; logs in {root / 'logs'}", flush=True)
@@ -223,7 +223,7 @@ def main() -> None:
     schedule(jobs, limit, root, env)
     wall = time.time() - started
     print(table(order))
-    for job in order:  # golden diffs (expected -> got)
+    for job in order:  # baseline diffs (expected -> got)
         if job.stage == "A" and any(r["status"] == "FAIL" for r in job.rows):
             text = (root / "logs" / f"{job.name}.log").read_text(errors="replace").splitlines()
             print("\n".join(ln for ln in text if "differing keys" in ln or ln.startswith("  ") and " -> " in ln))
