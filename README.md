@@ -9,9 +9,6 @@ dreams to predict `psi`, the planner's proposal, so real planning gets faster.
 ![The loop and the dreaming step](doc/figures/approach.png)
 
 The limb-only pipeline this grew out of: [its README](doc/limb-dream-pipeline.md).
-Background: [NERC abstract](doc/presentations/NERC_Abstract.pdf) ·
-[poster](doc/poster/nerc_poster_9_48x36_preview.pdf) ·
-[lab meeting slides](<doc/presentations/Lab Meeting 260909.pptx>)
 
 ## Tasks
 

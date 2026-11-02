@@ -1,4 +1,4 @@
-"""Frame capture for friction-task pushes: drive to the push station, strike, slide."""
+"""Friction-only frame capture: a push runs inside env.step, so frames come from physics-step hooks."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 from able.tasks.friction.env.puckpushing_utils import SURFACE_NAMES, SURFACE_RGB
+from able.video import caption
 
 FPS = 10  # frames per second of sim time
 ARM_SECONDS = 0.6  # display-only arm lift/lower time
@@ -41,15 +42,6 @@ def friction_legend(frame: np.ndarray, frictions) -> np.ndarray:
         draw.rectangle([x0 + pad, y + 2, x0 + pad + swatch, y + 2 + swatch], fill=color, outline=(90, 90, 90, 255))
         draw.text((x0 + 2 * pad + swatch, y), line, fill=(30, 30, 30, 255), font=LEGEND_FONT)
     return np.asarray(Image.alpha_composite(image, overlay).convert("RGB"))
-
-
-def caption(frame: np.ndarray, text: str) -> np.ndarray:
-    """Draw `text` in a white strip along the top."""
-    image = Image.fromarray(frame[:, :, :3])
-    draw = ImageDraw.Draw(image)
-    draw.rectangle([0, 0, image.width, 18], fill=(255, 255, 255))
-    draw.text((6, 3), text, fill=(30, 30, 30))
-    return np.asarray(image)
 
 
 class Recorder:

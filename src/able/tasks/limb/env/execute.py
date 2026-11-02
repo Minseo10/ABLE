@@ -28,6 +28,7 @@ from able.tasks.limb.planning.utils import (
     release_grasp,
     robot_motion_violation,
 )
+from able.video import FrameRecorder
 
 __all__ = ["RolloutLog", "advance_logged", "execute_action", "execute_plan"]
 
@@ -65,16 +66,17 @@ def advance_logged(sim, correction, log: RolloutLog) -> HumanTorques:
 
 def execute_action(
     ctx: LimbStreamContext, name: str, args: tuple, log: RolloutLog | None = None,
-    frames: list | None = None, every: int = 15,
+    recorder: FrameRecorder | None = None,
 ) -> bool:
     """Execute one plan action; False if it broke a constraint. Only `move_limb` steps are logged."""
+    recorder = recorder or FrameRecorder(ctx.sim, None)
     sim = ctx.sim
     if name == "move_base":
         _, base_plan, _ = args
         release_grasp(sim)
         for target_base in base_plan[1:]:
             sim.robot.set_base(target_base)
-            _snap(sim, frames)
+            recorder.snap()
             if ctx.check_base_collisions and base_in_collision(ctx):
                 return False
     elif name == "grasp":
@@ -83,7 +85,7 @@ def execute_action(
         sim.robot.set_base(base_conf)
         for waypoint in arm_trajectory.joint_plan:
             sim.robot.arm.set_joints(list(waypoint))
-            _snap(sim, frames)
+            recorder.snap()
             if arm_in_collision(ctx) or human_in_collision(ctx):
                 return False
         engage_grasp(sim)
@@ -91,8 +93,7 @@ def execute_action(
         _, _, _, _, _, _, torque_trajectory, _ = args
         assert isinstance(torque_trajectory, TorqueTrajectory)
         for i, torque in enumerate(torque_trajectory.robot_torques):
-            if i % every == 0:
-                _snap(sim, frames)
+            recorder.tick()
             commanded = np.asarray(torque, dtype=np.float64) + hold_torque(sim)
             if exceeds_robot_torque_limits(ctx, commanded):
                 return False
@@ -117,17 +118,12 @@ def execute_plan(
     log: RolloutLog | None = None,
     frames: list | None = None,
 ) -> bool:
-    """Execute `plan`, with an optional per-step log and RGB frames."""
+    """Execute `plan`, with an optional per-step log and RGB frames (every 15th MPC step)."""
+    recorder = FrameRecorder(ctx.sim, frames, every=15)
     try:
         for name, args in plan:
-            if not execute_action(ctx, name, args, log, frames):
+            if not execute_action(ctx, name, args, log, recorder):
                 return False
         return ctx.sim.goal_reached()
     finally:
-        _snap(ctx.sim, frames)
-
-
-def _snap(sim, frames: list | None) -> None:
-    if frames is not None:
-        frames.append(np.asarray(sim.render(), dtype=np.uint8)[..., :3])
-
+        recorder.snap()

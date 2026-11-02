@@ -23,7 +23,7 @@ from able.tasks.limb.env.human import (
 from able.tasks.limb.env.variant import scene_config
 
 if TYPE_CHECKING:
-    from able.tasks.limb.env.episode import PlannerSettings
+    from able.tasks.limb.env.sim import PlannerSettings
     from able.tasks.limb.planning.setup import FixedSetup
     from able.tasks.limb.task import LimbProblem
 
@@ -336,7 +336,7 @@ class LimbDistribution(TaskDistribution):
     @property
     def sampler(self) -> ReachableTaskSampler:
         """Built on first use: it needs a simulator."""
-        from able.tasks.limb.env.episode import make_sampling_context
+        from able.tasks.limb.env.sim import make_sampling_context
         from able.tasks.limb.planning.run import reset_to_start
         from able.tasks.limb.planning.setup import wrist_grasp
 

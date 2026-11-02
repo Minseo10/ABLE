@@ -5,9 +5,7 @@ import math
 import numpy as np
 
 from able.api import Observation
-from able.planners.pomcpow import POMCPOWConfig
 from able.tasks.friction import FrictionTask
-from able.tasks.friction.env.episode import run
 from able.tasks.friction.env.puckpushing_utils import THREE_ROUTES, PuckWorld, Push
 from able.tasks.friction.planning.model import (
     GOAL,
@@ -122,13 +120,3 @@ def test_belief_concentrates_on_the_true_frictions():
         puck = result.stop
     assert belief.std[0] < prior_std[0] and belief.std[1] < 0.5 * prior_std[1]
     assert abs(belief.mean[1] - true[1]) < 0.01
-
-
-def test_run_episode_smoke():
-    """A short episode runs and logs every push."""
-    task = FrictionTask(num_particles=50, max_pushes=2, config=POMCPOWConfig(num_sims=20, max_depth=3))
-    log = run(task, seed=0, probes=1)
-    assert 1 <= len(log.steps) <= 2
-    assert log.outcome in ("goal", "hole", "timeout", "stuck")
-    assert len(log.true_frictions) == 3 and len(log.probes) == 1
-    assert log.steps[0].plan_sims == 20 and set(log.steps[0].belief) == {"blue", "tan", "green"}

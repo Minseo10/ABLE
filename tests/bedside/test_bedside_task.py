@@ -33,8 +33,9 @@ from able.tasks.bedside import (
     PlaceProposal,
     reach_distance,
 )
-from able.tasks.bedside.env.execute import _base_path, render_frame
+from able.tasks.bedside.env.execute import _base_path
 from able.tasks.bedside.planning.problem import build_stream_context
+from able.video import render
 
 THETA = np.array([0.7, 0.6, 0.65])
 
@@ -131,9 +132,9 @@ def test_base_path_turns_without_collision(task):
     assert task.sim.robot.get_base().x == pytest.approx(1.75)
 
 
-def test_render_frame(task):
+def test_render(task):
     task.reset(task.sample_problem(np.random.default_rng(0)), THETA, np.random.default_rng(0))
-    plain, captioned = render_frame(task.sim), render_frame(task.sim, "place req0 on nightstand")
+    plain, captioned = render(task.sim), render(task.sim, "place req0 on nightstand")
     for f in (plain, captioned):
         assert f.ndim == 3 and f.shape[2] == 3 and f.dtype == np.uint8
     assert plain.shape == captioned.shape and (plain != captioned).any()

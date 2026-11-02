@@ -16,13 +16,13 @@ from numpy.typing import NDArray
 from able.api import Observation, Step, Task
 from able.tasks.limb.belief import LimbPrior, execution_evidence
 from able.tasks.limb.distribution import LimbDistribution
-from able.tasks.limb.env.episode import (
+from able.tasks.limb.env.execute import RolloutLog, execute_plan
+from able.tasks.limb.env.sim import (
     DEFAULT_PLANNER_SETTINGS,
     EpisodeResult,
     PlannerSettings,
     score_range_of_motion,
 )
-from able.tasks.limb.env.execute import RolloutLog, execute_plan
 from able.tasks.limb.env.variant import select as select_variant
 from able.tasks.limb.planner import LimbPlan, LimbPlanner
 from able.tasks.limb.planning.run import reset_to_start

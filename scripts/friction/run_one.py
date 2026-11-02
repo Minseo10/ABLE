@@ -7,9 +7,10 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
+from run_episode import run
+
 from able.planners.pomcpow import POMCPOWConfig
 from able.tasks.friction import FrictionTask
-from able.tasks.friction.env.episode import run
 
 
 def main() -> None:

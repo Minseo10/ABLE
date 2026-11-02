@@ -14,7 +14,7 @@ from able.planners.pomcpow import POMCPOWConfig
 from able.tasks.friction.belief import FrictionPrior
 from able.tasks.friction.env import puckpushing_utils as pu
 from able.tasks.friction.env.levels import level_world, make_level_env
-from able.tasks.friction.env.video import Recorder
+from able.tasks.friction.env.push_recorder import Recorder
 from able.tasks.friction.planner import FrictionPlanner
 from able.tasks.friction.planning.model import PuckPushingModel, PuckRewards
 from able.tasks.friction.psi import FrictionPsi

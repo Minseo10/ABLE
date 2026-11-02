@@ -273,7 +273,7 @@ def test_an_unknown_variant_is_rejected():
 
 def test_particle_limits_are_a_chance_constraint_over_the_belief():
     """A configuration is believed inside when enough particles allow it."""
-    from able.tasks.limb.env.episode import ParticleLimits
+    from able.tasks.limb.env.sim import ParticleLimits
 
     select_variant(DEFAULT_VARIANT)
     joint, sign = active_joints()[0], active_signs()[0]
@@ -391,7 +391,7 @@ def test_an_execution_updates_the_belief_as_the_notebook_does():
 
 def test_a_goal_beyond_the_belief_is_retargeted_just_inside_it():
     """As the notebook's planner stops at the nearest point it believes reachable."""
-    from able.tasks.limb.env.episode import ParticleLimits
+    from able.tasks.limb.env.sim import ParticleLimits
     from able.tasks.limb.planner import retarget
     from able.tasks.limb.task import LimbProblem
 

@@ -18,11 +18,11 @@ from pathlib import Path
 
 import imageio.v2 as imageio
 import numpy as np
+from run_episode import run
 
 from able.planners.pomcpow import POMCPOWConfig
 from able.tasks.friction import FrictionTask
-from able.tasks.friction.env.episode import run
-from able.tasks.friction.env.video import friction_legend
+from able.tasks.friction.env.push_recorder import friction_legend
 
 DATA = Path("data/friction/complexity")
 OUT = Path("videos/friction/complexity")

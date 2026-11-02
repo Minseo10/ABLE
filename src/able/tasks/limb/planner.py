@@ -11,14 +11,14 @@ import numpy as np
 from able.planners.deadline import PlanningTimeout
 from able.planners.mpc import MPCPlanner, SeedStats
 from able.tasks.limb.belief import LimbBelief
-from able.tasks.limb.env.episode import (
+from able.tasks.limb.env.human import active_joints
+from able.tasks.limb.env.sim import (
     DEFAULT_PLANNER_SETTINGS,
     ParticleLimits,
     PlannerSettings,
     joint_limits,
     open_episode,
 )
-from able.tasks.limb.env.human import active_joints
 from able.tasks.limb.planning.setup import FixedSetup, approach, wrist_grasp
 from able.tasks.limb.planning.stream import (
     LimbConf,

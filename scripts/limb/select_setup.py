@@ -97,7 +97,7 @@ def mpc_stats(runs: list[dict]) -> dict:
 
 def select(args) -> dict:
     from able.tasks.limb.distribution import ReachableTaskSampler
-    from able.tasks.limb.env.episode import make_sampling_context
+    from able.tasks.limb.env.sim import make_sampling_context
     from able.tasks.limb.env.variant import select as select_variant
     from able.tasks.limb.planning.run import reset_to_start
 

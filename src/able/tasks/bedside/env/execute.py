@@ -19,6 +19,7 @@ from pybullet_helpers.motion_planning import (
 
 from able.tasks.bedside.env.bedside_stocking3d import ObjectCentricBedsideStocking3DEnv
 from able.tasks.bedside.planning.stream import CARRY_JOINTS
+from able.video import FrameRecorder
 
 
 def _clip(sim, action):
@@ -134,35 +135,17 @@ def _caption(plan, i: int) -> str:
     return ""
 
 
-def render_frame(sim: ObjectCentricBedsideStocking3DEnv, caption: str = "") -> np.ndarray:
-    """RGB uint8 (H, W, 3) from the config camera, optionally captioned."""
-    img = np.ascontiguousarray(np.asarray(sim.render(), dtype=np.uint8)[..., :3])
-    if caption:
-        from PIL import Image, ImageDraw
-
-        im = Image.fromarray(img)
-        ImageDraw.Draw(im).text((10, 10), caption, fill=(0, 0, 0))
-        img = np.asarray(im)
-    return img
-
-
 def execute_plan(sim: ObjectCentricBedsideStocking3DEnv, plan, seed: int = 0,
                  frames: list | None = None, stride: int = 8) -> bool:
     """Execute a move_base/pick/place plan; arm paths are refined with BiRRT.
 
     If `frames` is a list, append a rendered frame every `stride` sim steps and after each gripper action."""
-    caption, steps = "", 0
-
-    def capture() -> None:
-        if frames is not None:
-            frames.append(render_frame(sim, caption))
+    recorder = FrameRecorder(sim, frames, every=stride)
+    capture = recorder.snap
 
     def step(action) -> None:
-        nonlocal steps
         sim.step(action)
-        steps += 1
-        if frames is not None and steps % stride == 0:
-            capture()
+        recorder.tick()
 
     def to_joints(target, tol=1e-3, attempts=40):
         for _ in range(attempts):
@@ -195,7 +178,7 @@ def execute_plan(sim: ObjectCentricBedsideStocking3DEnv, plan, seed: int = 0,
     for q in _arm_path(sim, CARRY_JOINTS, set(), seed)[1:]:
         to_joints(q)
     for i, (name, args) in enumerate(plan):
-        caption = _caption(plan, i) if frames is not None else ""
+        recorder.text = _caption(plan, i) if recorder.on else ""
         if name == "move_base":
             to_base(args[1].pose)
         elif name in ("pick", "place"):
