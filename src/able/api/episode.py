@@ -55,6 +55,7 @@ def run_episode(
     max_steps: int = 50,
     fallback: bool = True,
     update_belief: bool = True,
+    frames: list | None = None,
 ) -> Episode:
     """Plan, execute, update the belief until done; `fallback` replans plain if psi fails (both costs charged)."""
     episode = Episode(problem)
@@ -71,7 +72,7 @@ def run_episode(
         if not result.success:
             episode.steps.append(EpisodeStep(state, belief, result, None))
             break
-        step = task.execute(state, result.plan, rng)
+        step = task.execute(state, result.plan, rng, frames=frames)
         episode.steps.append(EpisodeStep(state, belief, result, step))
         for obs in step.observations if update_belief else ():
             belief = belief.update(obs)

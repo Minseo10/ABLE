@@ -54,8 +54,8 @@ class EpisodeLog:
 
 
 def run(task: FrictionTask, seed: int, frictions: tuple[float, ...] | None = None, probes: int = 0,
-        proposal_fn: Callable[[Any, Any], Any] | None = None) -> EpisodeLog:
-    """Probe up to `probes` floors, then push until the goal, a hole, or `max_pushes`."""
+        proposal_fn: Callable[[Any, Any], Any] | None = None, frames: list | None = None) -> EpisodeLog:
+    """Probe up to `probes` floors, then push until the goal, a hole, or `max_pushes`; frames go to `frames`."""
     rng = np.random.default_rng(seed)
     theta = np.asarray(task.prior.sample(rng) if frictions is None else frictions, np.float64)
     belief = task.prior.belief(rng)
@@ -69,7 +69,7 @@ def run(task: FrictionTask, seed: int, frictions: tuple[float, ...] | None = Non
         log.probes.append({"floor": query.floor, "speed": query.speed, "distance": answer.value,
                            "belief": belief.summary()})
     episode = run_episode(task, task.make_planner(), FrictionProblem(seed), theta, belief, rng,
-                          proposal_fn=proposal_fn, max_steps=task.max_pushes)
+                          proposal_fn=proposal_fn, max_steps=task.max_pushes, frames=frames)
     for k, s in enumerate(episode.steps):
         if s.step is None:
             log.outcome = "stuck"

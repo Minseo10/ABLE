@@ -85,7 +85,7 @@ class ReachTask:
     def reset(self, problem, theta, rng):
         return {"x": 0.0, "goal": problem["goal"], "theta": float(theta[0])}
 
-    def execute(self, state, plan, rng):
+    def execute(self, state, plan, rng, frames=None):
         x = min(state["x"] + plan, state["theta"])
         new = {**state, "x": x}
         done = abs(x - min(state["goal"], state["theta"])) < 0.05 or x >= state["theta"] - 1e-9

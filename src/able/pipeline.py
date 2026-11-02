@@ -32,6 +32,9 @@ class PipelineConfig:
     model: str = "flow"
     model_options: dict = field(default_factory=dict)
     fallback: bool = True
+    wandb: str | None = None  # experiment name: log each episode live to W&B
+    video_every: int = 0  # record every Nth real episode (W&B only); 0 = no videos
+    video_fps: int = 10
 
 
 @dataclass
@@ -131,6 +134,22 @@ def run_person(task, config: PipelineConfig, person: int, out: Path, seed: int =
         belief, memory, records = task.prior.belief(rng), Memory(), []
         if config.condition == "prior_only":
             memory.learner = pickle.loads(Path(prior_model).read_bytes())
+    if config.video_every and not config.wandb:
+        raise ValueError("videos are stored on W&B only: set --wandb")
+    logger = None
+    if config.wandb:
+        from able.wandb_log import Logger
+
+        logger = Logger(task.name, config.wandb, out, config)
+    try:
+        _episodes(task, config, person, out, ckpt, planner, rng, theta, belief, memory, records, logger)
+    finally:
+        if logger is not None:
+            logger.finish()
+    return records
+
+
+def _episodes(task, config, person, out, ckpt, planner, rng, theta, belief, memory, records, logger) -> None:
     for index in range(len(records), config.episodes):
         asked = 0
         if config.info_gathering and config.belief_update:
@@ -140,18 +159,21 @@ def run_person(task, config: PipelineConfig, person: int, out: Path, seed: int =
             extra.update(dream(task, planner, belief, memory, config, rng))
             if extra["dream_rows"]:
                 extra.update(memory.refit(config))
+        frames = [] if config.video_every and index % config.video_every == 0 else None
         episode = run_episode(task, planner, task.sample_problem(rng), theta, belief, rng,
                               proposal_fn(task, memory.learner), _budget(config), fallback=config.fallback,
-                              update_belief=config.belief_update)
+                              update_belief=config.belief_update, frames=frames)
         belief = episode.belief
         if config.condition == "learned" and episode.success:
             if memory.add(task.psi.examples(episode, belief)):
                 extra.update(memory.refit(config))
-        records.append(record(task, planner, config, person, index, theta, episode, extra))
+        records.append(record(task, planner, config, person, index, theta, episode,
+                              {**extra, "video": bool(frames)}))
         _write_csv(out.with_suffix(".csv"), records)
         ckpt.write_bytes(pickle.dumps({"rng": rng, "theta": theta, "belief": belief, "memory": memory,
                                        "records": records}))
-    return records
+        if logger is not None:
+            logger.log(records[-1], frames, config.video_fps)
 
 
 def factory_rows(task, config: PipelineConfig, dreams: int, seed: int = 0) -> Memory:

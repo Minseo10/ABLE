@@ -1,6 +1,8 @@
 """Upload one experiment to W&B: one run per <condition>_p<person>.csv, grouped by task/experiment.
 
     python scripts/log_to_wandb.py data/friction_full [--figures figures/friction_full] [--force]
+
+Runs already logged live (`able.run --wandb`) have the same name and are skipped.
 """
 
 from __future__ import annotations
@@ -12,9 +14,7 @@ from pathlib import Path
 import pandas as pd
 import wandb
 
-PROJECT = "learning-forceful-manipulation"
-METRICS = ("plan_seconds", "effort", "success", "steps", "queries", "dream_seconds", "dreams_solved",
-           "rows", "fit_seconds", "val_nmse", "info_goal_distance")
+from able.wandb_log import METRICS, PROJECT, run_name
 
 
 def existing(group: str) -> set[str]:
@@ -22,13 +22,13 @@ def existing(group: str) -> set[str]:
     return {r.name for r in api.runs(f"{api.default_entity}/{PROJECT}", filters={"group": group})}
 
 
-def upload(path: Path, group: str) -> None:
+def upload(path: Path, group: str, name: str) -> None:
     frame = pd.read_csv(path)
     first = frame.iloc[0]
     config = {k: (first[k].item() if hasattr(first[k], "item") else first[k])
               for k in ("task", "condition", "person", "effort_unit") if k in frame}
     config["theta"] = json.loads(first["theta"])
-    run = wandb.init(project=PROJECT, name=f"{group}/{path.stem}", group=group,
+    run = wandb.init(project=PROJECT, name=name, group=group,
                      job_type=str(first["condition"]), config=config, tags=[str(first["task"])],
                      reinit="finish_previous")
     run.define_metric("episode")
@@ -54,13 +54,17 @@ def main() -> None:
     runs = sorted(args.data.glob("*_p*.csv"))
     if not runs:
         raise SystemExit(f"no runs in {args.data}")
-    group = f"{pd.read_csv(runs[0]).task.iloc[0]}/{args.data.name}"
+    data = args.data.resolve()
+    experiment = str(data.relative_to(Path("data").resolve())) if data.is_relative_to(Path("data").resolve()) else data.name
+    task = pd.read_csv(runs[0]).task.iloc[0]
+    group, _ = run_name(task, experiment, "")
     done = set() if args.force else existing(group)
     for path in runs:
-        if f"{group}/{path.stem}" in done:
+        name = run_name(task, experiment, path.stem)[1]
+        if name in done:
             print(f"skip {path.stem}")
             continue
-        upload(path, group)
+        upload(path, group, name)
     if args.figures and args.figures.exists():
         run = wandb.init(project=PROJECT, name=f"{group}/figures", group=group, job_type="figures",
                          reinit="finish_previous")

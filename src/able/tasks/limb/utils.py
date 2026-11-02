@@ -79,7 +79,8 @@ def advance_logged(sim, correction, log: RolloutLog) -> HumanTorques:
 
 
 def execute_action(
-    ctx: LimbStreamContext, name: str, args: tuple, log: RolloutLog | None = None
+    ctx: LimbStreamContext, name: str, args: tuple, log: RolloutLog | None = None,
+    frames: list | None = None, every: int = 15,
 ) -> bool:
     """Execute one plan action; False if it broke a constraint. Only `move_limb` steps are logged."""
     sim = ctx.sim
@@ -88,6 +89,7 @@ def execute_action(
         release_grasp(sim)
         for target_base in base_plan[1:]:
             sim.robot.set_base(target_base)
+            _snap(sim, frames)
             if ctx.check_base_collisions and base_in_collision(ctx):
                 return False
     elif name == "grasp":
@@ -96,13 +98,16 @@ def execute_action(
         sim.robot.set_base(base_conf)
         for waypoint in arm_trajectory.joint_plan:
             sim.robot.arm.set_joints(list(waypoint))
+            _snap(sim, frames)
             if arm_in_collision(ctx) or human_in_collision(ctx):
                 return False
         engage_grasp(sim)
     elif name == "move_limb":
         _, _, _, _, _, _, torque_trajectory, _ = args
         assert isinstance(torque_trajectory, TorqueTrajectory)
-        for torque in torque_trajectory.robot_torques:
+        for i, torque in enumerate(torque_trajectory.robot_torques):
+            if i % every == 0:
+                _snap(sim, frames)
             commanded = np.asarray(torque, dtype=np.float64) + hold_torque(sim)
             if exceeds_robot_torque_limits(ctx, commanded):
                 return False
@@ -125,12 +130,21 @@ def execute_plan(
     ctx: LimbStreamContext,
     plan: list[tuple[str, tuple]],
     log: RolloutLog | None = None,
+    frames: list | None = None,
 ) -> bool:
-    """`run.execute_plan` with an optional per-step log."""
-    for name, args in plan:
-        if not execute_action(ctx, name, args, log):
-            return False
-    return ctx.sim.goal_reached()
+    """Execute `plan`, with an optional per-step log and RGB frames."""
+    try:
+        for name, args in plan:
+            if not execute_action(ctx, name, args, log, frames):
+                return False
+        return ctx.sim.goal_reached()
+    finally:
+        _snap(ctx.sim, frames)
+
+
+def _snap(sim, frames: list | None) -> None:
+    if frames is not None:
+        frames.append(np.asarray(sim.render(), dtype=np.uint8)[..., :3])
 
 
 def base_candidates(

@@ -18,6 +18,7 @@ from able.tasks.friction.model import PuckPushingModel, PuckRewards
 from able.tasks.friction.planner import POMCPOWPlanner
 from able.tasks.friction.psi import FrictionPsi
 from able.tasks.friction.query import ProbeGatherer
+from able.tasks.friction.video import Recorder
 
 
 @dataclass(frozen=True)
@@ -68,6 +69,7 @@ class FrictionTask:
         self.gatherer = ProbeGatherer(self.world.physics)
         self.psi = FrictionPsi(self.model)
         self._env: Any = None
+        self._recorder: Any = None
 
     @property
     def environment(self) -> Any:
@@ -75,6 +77,13 @@ class FrictionTask:
         if self._env is None:
             self._env = make_level_env(self.env, self.level)
         return self._env
+
+    @property
+    def recorder(self) -> Recorder:
+        """Frame recorder for `environment`, built lazily."""
+        if self._recorder is None:
+            self._recorder = Recorder(self.environment, self.env, header=f"{self.env.upper()} {self.level}")
+        return self._recorder
 
     def make_planner(self) -> POMCPOWPlanner:
         return POMCPOWPlanner(self.model, self.config)
@@ -88,10 +97,14 @@ class FrictionTask:
         start = self.world.puck_map
         return FrictionState(np.array(start.puck_start, np.float64), np.array(start.robot_start, np.float64))
 
-    def execute(self, state: FrictionState, plan: pu.Push, rng: np.random.Generator) -> Step:
+    def execute(self, state: FrictionState, plan: pu.Push, rng: np.random.Generator,
+                frames: list | None = None) -> Step:
         del rng
-        action = [plan.angle, plan.speed] + ([] if plan.stance is None else [plan.stance])
-        _, _, terminated, _, info = self.environment.step(np.array(action))
+        action = np.array([plan.angle, plan.speed] + ([] if plan.stance is None else [plan.stance]))
+        if frames is None:
+            _, _, terminated, _, info = self.environment.step(action)
+        else:
+            _, _, terminated, _, info = self.recorder.record(frames, action, state.pushes + 1)
         stop = np.asarray(info["stop_position"], np.float64)
         feasible = bool(info["push_feasible"])
         record = {

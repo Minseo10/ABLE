@@ -18,7 +18,11 @@ from able.api import (
     run_episode,
 )
 from able.tasks.bedside import BedsideTask, PlaceProposal, reach_distance
-from able.tasks.bedside.planner.run import _base_path, build_stream_context
+from able.tasks.bedside.planner.run import (
+    _base_path,
+    build_stream_context,
+    render_frame,
+)
 
 THETA = np.array([0.7, 0.6, 0.65])
 
@@ -99,6 +103,27 @@ def test_base_path_turns_without_collision(task):
     path = _base_path(task.sim, SE2Pose(1.28, 0.21, -np.pi))
     assert np.allclose([path[-1].x, path[-1].y, abs(path[-1].rot)], [1.28, 0.21, np.pi])
     assert task.sim.robot.get_base().x == pytest.approx(1.75)
+
+
+def test_render_frame(task):
+    task.reset(task.sample_problem(np.random.default_rng(0)), THETA, np.random.default_rng(0))
+    plain, captioned = render_frame(task.sim), render_frame(task.sim, "place req0 on nightstand")
+    for f in (plain, captioned):
+        assert f.ndim == 3 and f.shape[2] == 3 and f.dtype == np.uint8
+    assert plain.shape == captioned.shape and (plain != captioned).any()
+
+
+@pytest.mark.slow
+def test_episode_frames(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    task = BedsideTask(num_clutter=0, max_time=60.0)
+    rng = np.random.default_rng(0)
+    frames: list = []
+    episode = run_episode(task, task.make_planner(), task.sample_problem(rng), THETA, task.prior.belief(rng), rng,
+                          frames=frames)
+    assert episode.success and len(frames) > 10
+    assert all(f.ndim == 3 and f.shape[2] == 3 and f.dtype == np.uint8 for f in frames)
+    assert len({f.shape for f in frames}) == 1
 
 
 @pytest.mark.slow

@@ -231,14 +231,14 @@ class LimbTask:
     def reset(self, problem: Task, theta, rng: np.random.Generator) -> LimbState:
         return LimbState(problem, np.asarray(theta, np.float64), int(rng.integers(2**31)))
 
-    def execute(self, state: LimbState, plan: LimbPlan, rng) -> Step:
+    def execute(self, state: LimbState, plan: LimbPlan, rng, frames: list | None = None) -> Step:
         del rng
         sim, ctx = plan.sim, plan.ctx
         try:
             result = EpisodeResult(solved=True)
             reset_to_start(ctx)
             log = RolloutLog()
-            result.goal_reached = execute_plan(ctx, plan.actions, log=log)
+            result.goal_reached = execute_plan(ctx, plan.actions, log=log, frames=frames)
             if not result.goal_reached:
                 result.failure_reason = "the executed plan missed the goal"
             result.limb_path = [list(q) for q in log.limb_positions]

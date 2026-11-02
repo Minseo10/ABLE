@@ -293,8 +293,45 @@ def _base_path(sim, goal: SE2Pose) -> list[SE2Pose]:
     return found
 
 
-def execute_plan(sim: ObjectCentricBedsideStocking3DEnv, plan, seed: int = 0) -> bool:
-    """Execute a move_base/pick/place plan; arm paths are refined with BiRRT."""
+def _caption(plan, i: int) -> str:
+    """Label for action i: the next pick/place."""
+    for name, args in plan[i:]:
+        if name == "pick":
+            return f"pick {args[0]}"
+        if name == "place":
+            return f"place {args[0]} on {args[1].surface}"
+    return ""
+
+
+def render_frame(sim: ObjectCentricBedsideStocking3DEnv, caption: str = "") -> np.ndarray:
+    """RGB uint8 (H, W, 3) from the config camera, optionally captioned."""
+    img = np.ascontiguousarray(np.asarray(sim.render(), dtype=np.uint8)[..., :3])
+    if caption:
+        from PIL import Image, ImageDraw
+
+        im = Image.fromarray(img)
+        ImageDraw.Draw(im).text((10, 10), caption, fill=(0, 0, 0))
+        img = np.asarray(im)
+    return img
+
+
+def execute_plan(sim: ObjectCentricBedsideStocking3DEnv, plan, seed: int = 0,
+                 frames: list | None = None, stride: int = 8) -> bool:
+    """Execute a move_base/pick/place plan; arm paths are refined with BiRRT.
+
+    If `frames` is a list, append a rendered frame every `stride` sim steps and after each gripper action."""
+    caption, steps = "", 0
+
+    def capture() -> None:
+        if frames is not None:
+            frames.append(render_frame(sim, caption))
+
+    def step(action) -> None:
+        nonlocal steps
+        sim.step(action)
+        steps += 1
+        if frames is not None and steps % stride == 0:
+            capture()
 
     def to_joints(target, tol=1e-3, attempts=40):
         for _ in range(attempts):
@@ -302,30 +339,32 @@ def execute_plan(sim: ObjectCentricBedsideStocking3DEnv, plan, seed: int = 0) ->
             d = get_jointwise_difference(
                 sim.robot.arm.get_arm_joint_infos()[:7], list(target[:7]), cur
             )
-            sim.step(_clip(sim, [0.0, 0.0, 0.0] + d + [0.0]))
+            step(_clip(sim, [0.0, 0.0, 0.0] + d + [0.0]))
             if max(abs(x) for x in d) < tol:
                 return
 
     def to_base(target, attempts=200):
         for q in _base_path(sim, target):
             d = q - sim.robot.get_base()
-            sim.step(_clip(sim, [d.x, d.y, d.rot] + [0.0] * 8))
+            step(_clip(sim, [d.x, d.y, d.rot] + [0.0] * 8))
         for _ in range(attempts):
             d = target - sim.robot.get_base()
             if max(abs(d.x), abs(d.y), abs(d.rot)) < 1e-3:
                 return
-            sim.step(_clip(sim, [d.x, d.y, d.rot] + [0.0] * 8))
+            step(_clip(sim, [d.x, d.y, d.rot] + [0.0] * 8))
 
     def gripper(close: bool):
         for _ in range(5):
-            sim.step(_clip(sim, [0.0] * 10 + [-1.0 if close else 1.0]))
+            step(_clip(sim, [0.0] * 10 + [-1.0 if close else 1.0]))
             held = sim._grasped_object  # pylint: disable=protected-access
             if (held is not None) == close:
                 return
 
+    capture()
     for q in _arm_path(sim, CARRY_JOINTS, set(), seed)[1:]:
         to_joints(q)
-    for name, args in plan:
+    for i, (name, args) in enumerate(plan):
+        caption = _caption(plan, i) if frames is not None else ""
         if name == "move_base":
             to_base(args[1].pose)
         elif name in ("pick", "place"):
@@ -336,12 +375,14 @@ def execute_plan(sim: ObjectCentricBedsideStocking3DEnv, plan, seed: int = 0) ->
             for q in approach[1:] + _descent(sim, hover, grasp, target, seed):
                 to_joints(q)
             gripper(close=name == "pick")
+            capture()
             to_joints(hover)
             retreat = _arm_path(sim, traj.joint_plan[0], set(), seed)
             for q in retreat[1:]:
                 to_joints(q)
         else:
             raise ValueError(f"Unknown action: {name}")
+    capture()
     return sim.goal_reached()
 
 

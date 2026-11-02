@@ -68,12 +68,17 @@ def main() -> None:
     parser.add_argument("--prior-model", type=Path, help="factory pickle, for prior_only")
     parser.add_argument("--rows", type=Path, nargs="*", help="factory shards, for fit")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--wandb", metavar="EXPERIMENT", help="log each episode live to W&B under task/EXPERIMENT")
+    parser.add_argument("--video-every", type=int, default=0,
+                        help="upload a video of every Nth real episode to W&B (needs --wandb; nothing kept locally)")
     args = parser.parse_args()
 
     task_options, pipeline = load_config(args.config)
     for key in ("episodes", "queries"):
         if getattr(args, key) is not None:
             pipeline[key] = getattr(args, key)
+    if args.command == "person":
+        pipeline.update(wandb=args.wandb, video_every=args.video_every)
     if args.no_info_gathering:
         pipeline["info_gathering"] = False
     if args.no_belief_update:

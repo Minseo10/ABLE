@@ -65,3 +65,21 @@ def test_no_belief_update_keeps_the_prior(tmp_path):
     config = PipelineConfig(condition="learned", episodes=3, dreams=1, belief_update=False, **MODEL)
     records = run_person(ReachTask(), config, 2, tmp_path / "learned_p2")
     assert len({r["belief"] for r in records}) == 1 and all(r["queries"] == 0 for r in records)
+
+
+def test_live_logger_encodes_video_and_leaves_nothing_behind(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    from able.wandb_log import Logger
+
+    monkeypatch.setenv("WANDB_MODE", "disabled")
+    logger = Logger("reach", "test", tmp_path / "learned_p0", PipelineConfig())
+    frames = [np.full((16, 16, 3), i * 20, np.uint8) for i in range(6)]
+    logger.log({"episode": 0, "success": True, "plan_seconds": 1.0}, frames, fps=5)
+    logger.finish()
+    assert not Path(logger.dir).exists() and not list(tmp_path.iterdir())
+
+
+def test_videos_need_wandb(tmp_path):
+    with pytest.raises(ValueError):
+        run_person(ReachTask(), PipelineConfig(episodes=1, video_every=1, **MODEL), 0, tmp_path / "x")

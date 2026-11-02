@@ -79,16 +79,23 @@ python -m able.run person --config configs/friction/smoke.yaml --condition learn
 A full experiment (people x conditions, at most `JOBS` processes, resumable):
 
 ```bash
-scripts/run.sh configs/friction/full.yaml friction_full "0 1 2 3 4" "plain learned prior_only"
+VIDEO_EVERY=5 scripts/run.sh configs/friction/full.yaml friction_full "0 1 2 3 4" "plain learned prior_only"
 python scripts/figures.py data/friction_full              # figures/friction_full/{curves.png,summary.csv}
-python scripts/log_to_wandb.py data/friction_full --figures figures/friction_full
+python scripts/log_to_wandb.py data/friction_full --figures figures/friction_full   # adds the figures
 ```
+
+Where results go:
+
+- `data/NAME/<condition>_p<person>.csv` (one row per episode: success, planning time, effort,
+  belief, dream stats) and a `.pkl` checkpoint, locally.
+- W&B, live (`WANDB=1`, the default): one run per person and condition in group `task/NAME`,
+  with per-episode metrics; `VIDEO_EVERY=N` adds a video of every Nth real episode. Videos
+  are only on W&B, never written to `data/`. Single runs: `--wandb NAME --video-every N`.
+- Figures are not made automatically: run `scripts/figures.py`, then `log_to_wandb.py --figures`.
 
 Configs (`configs/<task>/{smoke,full}.yaml`) hold the task options and the pipeline
 settings (episodes, dreams, queries, model). To split work, run different tasks or
 different people on different machines with the same config; results merge on W&B.
-Each run writes `<condition>_p<person>.csv` (one row per episode: success, planning time,
-effort, belief, dream stats) and a `.pkl` checkpoint.
 
 Results are not kept in git: they go to the
 [W&B project](https://wandb.ai/tahitiro2-ewha-womans-university/learning-forceful-manipulation).

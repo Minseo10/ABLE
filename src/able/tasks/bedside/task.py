@@ -59,6 +59,7 @@ class BedsideTask:
     delta: float = 0.1
     num_particles: int = 2000
     max_time: float = 120.0
+    frame_stride: int = 8  # sim steps per video frame
     config: BedsideStocking3DEnvConfig = field(default_factory=BedsideStocking3DEnvConfig)
     sim: ObjectCentricBedsideStocking3DEnv = field(init=False, repr=False)
     prior: ReachPrior = field(init=False)
@@ -87,12 +88,13 @@ class BedsideTask:
         self.sim.reach_theta = theta.copy()
         return BedsideState(obs, problem.seed, theta)
 
-    def execute(self, state: BedsideState, plan: Any, rng: np.random.Generator) -> Step:
-        """Run the plan; observe whether each placed requested item is reached."""
+    def execute(self, state: BedsideState, plan: Any, rng: np.random.Generator, frames: list | None = None) -> Step:
+        """Run the plan; observe whether each placed requested item is reached. Appends RGB frames if given."""
         sim = self.sim
         sim.reset(options={"init_state": state.obs})
         sim.reach_theta = state.theta.copy()
-        success = bool(execute_plan(sim, plan, seed=int(rng.integers(2**31 - 1))))
+        success = bool(execute_plan(sim, plan, seed=int(rng.integers(2**31 - 1)), frames=frames,
+                                    stride=self.frame_stride))
         observations, reachable = [], {}
         for o in sim.requested_objects:
             body = sim._object_name_to_pybullet_id(o)  # pylint: disable=protected-access
