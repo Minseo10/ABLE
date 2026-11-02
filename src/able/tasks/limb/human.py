@@ -1,6 +1,4 @@
-"""The person whose limb is repositioned: `theta` scales one factor per active motion,
-applied to the AAOS normal adult range of motion the environment ships.
-"""
+"""The person: `theta` scales each active motion of the AAOS normal adult range of motion."""
 
 from __future__ import annotations
 
@@ -68,16 +66,13 @@ DEFAULT_PRIOR = RoMPrior()
 
 
 def default_magnitudes() -> NDArray[np.float64]:
-    """The default magnitude of each active motion, in radians.
-
-    This is `R` in the likelihood: the range that `theta` scales.
-    """
+    """Default magnitude of each active motion (rad); `R` in the likelihood."""
     defaults = DEFAULT_RANGE_OF_MOTION.as_dict()
     return np.deg2rad([defaults[motion] for motion in active_motions()])
 
 
 def theta_to_range_of_motion(theta: NDArray[np.float64]) -> RangeOfMotion:
-    """The person's full range of motion, the inactive motions left at their default."""
+    """Full range of motion; inactive motions stay at default."""
     factors = dict(zip(active_motions(), map(float, theta), strict=True))
     return DEFAULT_RANGE_OF_MOTION.scaled(factors)
 

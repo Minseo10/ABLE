@@ -1,8 +1,6 @@
-"""Which limb, in which scene, this process is working on.
+"""The process-wide `scene-side-limb` variant (16 shipped); set via env var so workers inherit it.
 
-The environment ships sixteen `scene-side-limb` variants. The scene only changes the
-furniture; the limb decides which three motions `theta` scales. Selected once per process
-so the worker processes a run spawns inherit it.
+The scene only changes the furniture; the limb decides which three motions `theta` scales.
 """
 
 from __future__ import annotations
@@ -31,7 +29,7 @@ class LimbVariant:
 
     @property
     def inactive_joints(self) -> tuple[int, ...]:
-        """The limb joints no active motion bounds, held at their nominal value."""
+        """Limb joints no active motion bounds (held at nominal)."""
         return tuple(j for j in range(6) if j not in self.active_joints)
 
 
@@ -62,7 +60,7 @@ _LIMB_MOTIONS: dict[str, tuple[tuple[str, int, int], ...]] = {
 
 
 def _build(name: str) -> LimbVariant:
-    """The variant `name` describes, rejecting a name the environment does not ship."""
+    """Build the variant `name`; reject names the environment does not ship."""
     if name not in VARIANTS:
         raise ValueError(f"Unknown variant {name!r}; expected one of {list(VARIANTS)}")
     limb_name = f"human-{name.split('-', 1)[1]}"
@@ -77,17 +75,17 @@ def _build(name: str) -> LimbVariant:
 
 
 def select(name: str) -> LimbVariant:
-    """Work on `name` from here on, in this process and in the workers it spawns."""
+    """Select `name` for this process and the workers it spawns."""
     variant = _build(name)
     os.environ[ENV_VAR] = name
     return variant
 
 
 def current() -> LimbVariant:
-    """The selected variant, or the isolated right arm if nothing selected one."""
+    """The selected variant (default: isolated right arm)."""
     return _build(os.environ.get(ENV_VAR, DEFAULT_VARIANT))
 
 
 def scene_config():
-    """The environment configuration for the selected variant."""
+    """Env config for the selected variant."""
     return create_variant_config(current().name)

@@ -1,9 +1,6 @@
-"""PDDLStream stream implementations for LimbRepositioning3D.
+"""PDDLStream streams for LimbRepositioning3D, composing the helpers in utils.py.
 
-See run.py for the domain design, and utils.py for the simulator helpers these compose.
-
-Streams restore scratch changes via `saved_sim_state`; MPC rollouts use a private
-PyBullet world.
+Streams restore scratch changes via `saved_sim_state`; MPC rollouts use a private world.
 """
 
 from __future__ import annotations
@@ -73,10 +70,7 @@ GRASP_ROLLS: tuple[float, ...] = (0.0, np.pi)
 
 @dataclass(eq=False)
 class LimbConf:
-    """A configuration of the passive limb.
-
-    `eq=False` because pddlstream identifies stream outputs by identity.
-    """
+    """Passive limb configuration; `eq=False` as pddlstream keys outputs by identity."""
 
     positions: tuple[float, ...]
 
@@ -86,7 +80,7 @@ class LimbConf:
 
 @dataclass(eq=False)
 class ArmTrajectory:
-    """A joint-space path that takes the arm from its retracted conf onto the grasp."""
+    """Joint-space arm path from the retracted conf onto the grasp."""
 
     joint_plan: list[JointPositions]
 
@@ -96,16 +90,12 @@ class ArmTrajectory:
 
 @dataclass(eq=False)
 class TorqueTrajectory:
-    """An open-loop torque trajectory, one entry per environment step.
+    """Open-loop torque trajectory, one entry per env step.
 
-    - `robot_torques`: the corrections, each commanded on top of the live hold.
-    - `human_torques`: the total torque the person's joints bear, t_h.
-    - `robot_induced_torques`: the robot's share of that total, t_r.
-    - `limb_path`: the limb's joint positions, starting configuration first, so one
-      entry longer than the others.
-    - `commanded_torques`: correction plus hold, what the robot is actually asked for
-      and the only one the robot's torque limits bind.
-    - `plan_seconds`: the MPC's wall time, charged to the step whose search spent it.
+    `robot_torques` are corrections on the live hold; `commanded_torques` add the hold
+    (what robot limits bind). `human_torques` is the person's total (t_h) and
+    `robot_induced_torques` the robot's share (t_r). `limb_path` starts at the start
+    conf, so it is one longer. `plan_seconds` is MPC wall time per step.
     """
 
     robot_torques: list[JointTorques]
@@ -121,12 +111,7 @@ class TorqueTrajectory:
 
 @dataclass
 class MPCConfig:
-    """Predictive-sampling MPC hyperparameters.
-
-    Mirrors limb-manipulation's `PredictiveSamplingPlanner`.
-
-    Rollouts run in a private copy of the PyBullet environment.
-    """
+    """Predictive-sampling MPC hyperparameters (mirrors limb-manipulation's)."""
 
     num_rollouts: int = 32
     horizon: int = 12
@@ -167,7 +152,6 @@ class LimbStreamContext:
     sim: ObjectCentricLimbRepositioning3DEnv
     start_base_pose: SE2Pose
     grasp_base_pose: SE2Pose
-    # The arm's retracted configuration.
     retract_joints: JointPositions
     limb_name: str = "limb"
     motion_seed: int = 0
@@ -180,15 +164,16 @@ class LimbStreamContext:
     num_ik_attempts: int = 12
     best_attempt: BestAttempt | None = None
     base_rejections: Counter = field(default_factory=Counter)
-    # Where planning time went, keyed by stream and by the stages nested inside them.
     profile: StreamProfile = field(default_factory=StreamProfile, repr=False)
     resting_penetration: dict[int, float] = field(default_factory=dict, repr=False)
-    # The range of motion the planner is allowed to use
+    # Range of motion the planner may use.
     believed_joint_limits: tuple[JointPositions, JointPositions] | None = None
     # Seeds the MPC's nominal control points.
     warm_start: Callable[[CoupledState, np.ndarray, int], np.ndarray] | None = None
-    # A base pose already known to serve this task, tried before the grid sweep.
+    # Known-good base pose, tried before sampling.
     base_pose_hint: SE2Pose | None = None
+    # MPC class plan_limb_motion builds (default PredictiveSamplingMPC).
+    mpc_class: Callable[..., PredictiveSamplingMPC] | None = None
     true_joint_limits: tuple[JointPositions, JointPositions] = field(
         init=False, repr=False
     )
@@ -224,10 +209,7 @@ class LimbStreamContext:
         self.refresh_collision_baseline()
 
     def refresh_collision_baseline(self) -> None:
-        """Record anatomical attachment overlap with the torso and other limbs.
-
-        Call this only in the start state, as `reset_to_start` does.
-        """
+        """Record resting overlap with torso and limbs; call only in the start state."""
         self.resting_penetration = {
             body_id: min(0.0, pair_clearance(self.sim, self.sim.limb.robot_id, body_id))
             for body_id in self.human_collision_ids
@@ -235,20 +217,12 @@ class LimbStreamContext:
 
     @property
     def scene_collision_ids(self) -> list[int]:
-        """Furniture the robot must not drive into.
-
-        This is the environment's own list, empty for the isolated and human scenes.
-        """
+        """Furniture the robot must not hit; empty in the isolated and human scenes."""
         return list(self.sim.scene.get_scene_collision_ids())
 
     @property
     def human_collision_ids(self) -> list[int]:
-        """The torso, and every limb except the one being moved.
-
-        The environment models none of this, so the arm may be driven through it.
-
-        The limb being repositioned is a target rather than an obstacle.
-        """
+        """The torso and every limb but the moved one (the env ignores these)."""
         scene = self.sim.scene
         ids = [
             limb.robot_id
@@ -269,10 +243,7 @@ class LimbStreamContext:
 
     @property
     def base_obstacle_ids(self) -> list[int]:
-        """The entire person, including the manipulated limb, and furniture.
-
-        Kept separate from `check_robot_collisions`, which governs the arm.
-        """
+        """Whole person (moved limb too) and furniture; always checked for the base."""
         return (
             [self.sim.limb.robot_id]
             + self.human_collision_ids
@@ -296,10 +267,7 @@ class LimbStreamContext:
         return self._within(self.believed_joint_limits, list(joint_positions))
 
     def truly_in_limits(self, joint_positions: JointPositions) -> bool:
-        """Whether it actually is.
-
-        For scoring only; planning must not read this.
-        """
+        """Whether it actually is; for scoring only, planning must not read this."""
         return self._within(self.true_joint_limits, list(joint_positions))
 
     @property
@@ -350,9 +318,7 @@ def plan_grasp_motion(
     init_conf: LimbConf,
     goal_conf: LimbConf,
 ) -> Iterator[tuple[SE2Pose, ArmTrajectory, CoupledState]]:
-    """Yield a base pose that holds the grasp throughout, and the arm path onto it.
-
-    A rigid grasp ties the limb configuration to the end-effector pose.
+    """Yield a base pose holding the grasp from init to goal, and the arm path onto it.
 
     Requiring IK at the goal too is what makes `move_base` a real decision.
     """
@@ -373,8 +339,7 @@ def plan_grasp_motion(
         deferred: list[tuple[float, SE2Pose, ArmTrajectory, CoupledState]] = []
         for base_conf in candidates:
             sim.robot.set_base(base_conf)
-            # Seed each IK from the previous solution to stay on one continuous branch,
-            # since the arm cannot teleport between branches while welded to the limb.
+            # Chain IK seeds: the welded arm cannot jump between IK branches.
             seed: JointPositions = ctx.retract_joints
             reachable = True
             saturation = 0.0
@@ -455,7 +420,7 @@ def plan_base_motion(
     """Plan a collision-free path for the mobile base from `q1` to `q2`."""
     sim = ctx.sim
     with saved_sim_state(sim):
-        # The base is only ever driven with the hand empty (see the domain)
+        # The base only drives with the hand empty.
         release_grasp(sim)
         sim.robot.arm.set_joints(list(ctx.retract_joints))
         with ctx.profile.timed("base_motion_planning"):
@@ -484,12 +449,7 @@ def _charge_rollout(ctx: LimbStreamContext, outcome: str, start: float) -> None:
 def plan_limb_motion(
     ctx: LimbStreamContext, s1: CoupledState, q2: LimbConf
 ) -> Iterator[tuple[TorqueTrajectory, CoupledState]]:
-    """Generate a torque trajectory from state `s1` to limb configuration `q2`.
-
-    Runs predictive-sampling MPC closed-loop, recording the torques it applies.
-
-    It stops with enough headroom that an open-loop replay also lands in tolerance.
-    """
+    """Run MPC from `s1` to `q2`, stopping with headroom for an open-loop replay."""
     sim = ctx.sim
     call_start = time.time()
     if not ctx.in_believed_limits(list(q2.positions)):
@@ -501,7 +461,7 @@ def plan_limb_motion(
     goal = np.asarray(q2.positions, dtype=np.float64)
     cfg = ctx.mpc
     threshold = max(ctx.goal_atol - cfg.replay_slack, ctx.goal_atol / 2)
-    with saved_sim_state(sim), PredictiveSamplingMPC(ctx, goal, s1) as mpc:
+    with saved_sim_state(sim), (ctx.mpc_class or PredictiveSamplingMPC)(ctx, goal, s1) as mpc:
         restore_state(sim, s1)
         motion_start = time.monotonic()
         robot_torques: list[JointTorques] = []
@@ -601,8 +561,7 @@ def plan_limb_motion(
         else:
             giveup = f"ran out of control steps at an error of {error:.3f}"
 
-        # The MPC ran closed-loop, but execution replays the torques open-loop, so
-        # certify the state that replay produces rather than the closed-loop one.
+        # Execution replays open-loop, so certify the replayed state.
         s2: CoupledState | None = None
         human_torques: list[JointTorques] = []
         robot_induced: list[JointTorques] = []
@@ -613,8 +572,7 @@ def plan_limb_motion(
             restore_state(sim, s1)
             limb_path.append(list(sim.limb.get_joint_positions()))
             for torque in robot_torques:
-                # Read before the step: `advance` clips this, so afterwards there is
-                # nothing left to see of a saturated command.
+                # Read before the step: `advance` clips a saturated command away.
                 step_command = commanded_robot_torque(sim, torque)
                 commanded_torques.append(list(step_command))
                 human_torque = advance_corrected(sim, torque)
@@ -641,8 +599,7 @@ def plan_limb_motion(
                         "replayed open-loop into the person, furniture or robot base"
                     )
                     break
-                # The replay drifts from the closed-loop run, so it is checked
-                # separately, and here at every step rather than every control step.
+                # Replay drifts from the closed loop, so check every step.
                 if limb_out_of_limits(ctx):
                     reached = False
                     giveup = "replayed open-loop past the limb's anatomical limits"
@@ -709,10 +666,7 @@ def check_human_joint_limits(
     trajectory: TorqueTrajectory,
     s2: CoupledState,
 ) -> bool:
-    """Constraint: the limb stays in the person's range of motion for the whole motion.
-
-    Every configuration of the open-loop replay is checked, not only the goal.
-    """
+    """Constraint: every replayed limb configuration stays in the range of motion."""
     del s1, q2, s2  # the constraint is on the trajectory alone
     for positions in trajectory.limb_path:
         if not ctx.in_believed_limits(list(positions)):
@@ -749,8 +703,7 @@ def check_robot_torque_limits(
 ) -> bool:
     """Constraint: the robot is never asked for a torque outside its action space."""
     del s1, q2, s2  # the constraint is on the trajectory alone
-    # A trajectory assembled without a replay, as a failed attempt is, has only the
-    # corrections to offer; they are a lower bound on what was asked for.
+    # Without a replay (failed attempts), corrections are a lower bound on commands.
     torques = trajectory.commanded_torques or trajectory.robot_torques
     for torque in torques:
         if exceeds_robot_torque_limits(ctx, torque):
@@ -764,12 +717,7 @@ class NoFeasibleMotion(RuntimeError):
 
 
 class PredictiveSamplingMPC:
-    """Predictive-sampling MPC over robot joint torques.
-
-    A port of limb-manipulation's `PredictiveSamplingPlanner` to KinDER.
-
-    Rollouts run in a private copy of the PyBullet environment.
-    """
+    """Predictive-sampling MPC over robot torques, ported from limb-manipulation."""
 
     def __init__(
         self,
@@ -867,10 +815,7 @@ class PredictiveSamplingMPC:
         return candidates
 
     def _sample_candidates(self, error: float, state=None) -> list[np.ndarray]:
-        """Warm-started nominal, zero torque, goal-directed candidates, and noisy draws.
-
-        Each candidate is a set of control points rather than a torque sequence.
-        """
+        """Control-point candidates: nominal, warm start, zero, goal-directed, noisy."""
         cfg = self._cfg
         scale = cfg.noise_scale * float(
             np.clip(error / cfg.noise_reference_error, cfg.min_noise_ratio, 1.0)
@@ -1008,10 +953,7 @@ class PredictiveSamplingMPC:
     def _velocity_penalty(
         self, velocities: JointVelocities, squared_distance: float
     ) -> float:
-        """Damp the limb near the goal, and cap its speed at `max_velocity`.
-
-        Without these the MPC blows through the goal band and whips the limb around.
-        """
+        """Damp the limb near the goal and cap its speed, so MPC does not overshoot."""
         cfg = self._cfg
         magnitude = float(np.linalg.norm(velocities))
         penalty = 0.0

@@ -1,8 +1,4 @@
-"""Planner helpers kinder-baselines `main` renamed or dropped, under the names used here.
-
-Adds the per-step `RolloutLog`, an `execute_plan` that fills it, and thin wrappers over
-the renamed base-pose and IK helpers, so the planner repo stays untouched.
-"""
+"""Planner helpers kinder-baselines `main` renamed or dropped: `RolloutLog`, a logging `execute_plan`, wrappers."""
 
 from __future__ import annotations
 
@@ -53,10 +49,7 @@ __all__ = [
 
 @dataclass
 class RolloutLog:
-    """Per-step measurements of an executed `move_limb`, filled by `advance_logged`.
-
-    Records the state *after* each simulator step, which is what `dense_rows` expects.
-    """
+    """Per-step `move_limb` measurements, recorded *after* each simulator step (as `dense_rows` expects)."""
 
     correction_torques: list[JointTorques] = field(default_factory=list)
     commanded_torques: list[JointTorques] = field(default_factory=list)
@@ -88,10 +81,7 @@ def advance_logged(sim, correction, log: RolloutLog) -> HumanTorques:
 def execute_action(
     ctx: LimbStreamContext, name: str, args: tuple, log: RolloutLog | None = None
 ) -> bool:
-    """Execute one plan action; False if it broke a constraint.
-
-    Only `move_limb` steps are logged, so `log` indexes torque steps one to one.
-    """
+    """Execute one plan action; False if it broke a constraint. Only `move_limb` steps are logged."""
     sim = ctx.sim
     if name == "move_base":
         _, base_plan, _ = args
@@ -136,7 +126,7 @@ def execute_plan(
     plan: list[tuple[str, tuple]],
     log: RolloutLog | None = None,
 ) -> bool:
-    """`run.execute_plan`, with the optional per-step log `main` no longer takes."""
+    """`run.execute_plan` with an optional per-step log."""
     for name, args in plan:
         if not execute_action(ctx, name, args, log):
             return False
@@ -146,11 +136,5 @@ def execute_plan(
 def base_candidates(
     ctx: LimbStreamContext, grasp: Pose, limb_positions: JointPositions
 ) -> Iterator:
-    """Base poses from which the arm can hold `grasp` at `limb_positions`, nearest first.
-
-    The old helper swept a grid around the variant's placement and took no grasp; `main`
-    samples placements around the grasp target instead and already screens each with an
-    IK solve, so callers keep only their own collision and controllability checks. It is
-    a generator: each candidate costs an IK solve, so take as many as needed and stop.
-    """
+    """IK-screened base poses that can hold `grasp` at `limb_positions`, nearest first (lazy: one IK each)."""
     yield from _base_candidates_for(ctx, grasp, list(limb_positions))

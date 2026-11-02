@@ -36,17 +36,11 @@ JointTorques = list[float]
 
 @dataclass
 class StreamProfile:
-    """Wall-clock seconds and call counts, keyed by stream or by inner stage.
-
-    Stage keys nest inside stream keys, so their totals overlap by design.
-
-    Each key also splits by whether the call produced anything, since a stream that
-    burns its budget and yields nothing is what makes planning slow.
-    """
+    """Wall-clock seconds and call counts per stream or stage; stage keys nest."""
 
     seconds: dict[str, float] = field(default_factory=dict)
     calls: dict[str, int] = field(default_factory=dict)
-    # The subset of the above spent on calls that produced no usable result.
+    # Subset spent on calls that produced nothing.
     wasted_seconds: dict[str, float] = field(default_factory=dict)
     wasted_calls: dict[str, int] = field(default_factory=dict)
 
@@ -60,17 +54,13 @@ class StreamProfile:
             self.add(key, time.perf_counter() - start)
 
     def wrap(self, key: str, iterator: Iterator) -> Iterator:
-        """Charge each `next()` of `iterator` to `key`, leaving it lazy.
-
-        A call cut short still charges what it spent, or a run interrupted inside a
-        stream reads as if the time went to the search.
-        """
+        """Charge each `next()` of `iterator` to `key` lazily, even if cut short."""
         while True:
             start = time.perf_counter()
             try:
                 item = next(iterator)
             except StopIteration:
-                # The call that exhausts the stream produced nothing for its time.
+                # The exhausting call produced nothing.
                 self.add(key, time.perf_counter() - start, produced=False)
                 return
             except BaseException:  # pylint: disable=broad-except
@@ -113,12 +103,12 @@ REACH_RADIUS_PERCENTILES = (55.0, 90.0)
 IK_PROBE_ORIGIN = (50.0, 50.0)
 CLEARANCE_PROBE_DISTANCE = 0.1
 COLLISION_MARGIN = 0.01
-# Numerical tolerance for contact, not permission to inherit an invalid start pose.
+# Numerical contact tolerance only.
 CONTACT_PENETRATION_TOLERANCE = 0.002
 HUMAN_TORQUE_LIMITS = {
     "arm": 50.0,
     "leg": 100.0,
-}  # Placeholders, to be tuned to realistic human joint limits.
+}  # Placeholders, not yet tuned to real human limits.
 ROBOT_INDUCED_TORQUE_LIMITS = {"arm": 25.0, "leg": 50.0}
 ROBOT_TORQUE_LIMITS = (200.0, 200.0, 200.0, 200.0, 100.0, 100.0, 100.0)
 JACOBIAN_DAMPING = 0.1
@@ -140,7 +130,7 @@ class GraspFrame:
 
 @dataclass(eq=False)
 class CoupledState:
-    """A full coupled state of the robot and limb, base pose included for the weld."""
+    """Coupled robot and limb state, base pose included for the weld."""
 
     base_pose: SE2Pose
     robot_positions: JointPositions
@@ -164,10 +154,7 @@ class HumanTorques:
 
     @property
     def robot(self) -> np.ndarray:
-        """What the motion adds over the static load; zero while merely holding.
-
-        Tone is already inside `total`, so subtracting it again would leave `-tone`.
-        """
+        """Torque the motion adds over the static load (tone is already in `total`)."""
         return self.total - self.gravity
 
 
@@ -459,11 +446,7 @@ def _inverse_dynamics(
     velocities: JointVelocities,
     accelerations: list[float],
 ) -> np.ndarray:
-    """Inverse dynamics for a body whose base may be tilted.
-
-    PyBullet reads gravity as if the base were upright, so it is given in the base
-    frame.
-    """
+    """Inverse dynamics with gravity in the base frame; PyBullet assumes it upright."""
     client = sim.physics_client_id
     gravity = np.asarray(sim.config.gravity, dtype=np.float64)
     _, orientation = p.getBasePositionAndOrientation(body_id, physicsClientId=client)
@@ -527,8 +510,7 @@ def _robot_torque_for_limb_load(
         gram + damping * np.eye(gram.shape[0]), limb_jacobian @ load
     )
     wrench = _base_twist_transform(sim).T @ damped
-    # The wrench acts at the limb's grasp frame; the arm's Jacobian is at its own tool
-    # frame, and a slid grasp separates the two, so shift the moment across the offset.
+    # Shift the moment from the limb grasp frame to the arm tool frame (slid grasp).
     offset_world = np.subtract(
         sim.limb.get_end_effector_pose().position,
         sim.robot.arm.get_end_effector_pose().position,
@@ -551,8 +533,7 @@ def _limb_coupling_torque(sim: ObjectCentricLimbRepositioning3DEnv) -> np.ndarra
 def limb_directed_torque(
     sim: ObjectCentricLimbRepositioning3DEnv, goal: np.ndarray, gain: float
 ) -> np.ndarray:
-    """The robot torque driving the limb toward `goal`, through the same coupling
-    chain."""
+    """The robot torque driving the limb toward `goal` via the coupling chain."""
     error = np.asarray(goal) - np.asarray(sim.limb.get_joint_positions())
     return _robot_torque_for_limb_load(sim, gain * error)
 
@@ -642,8 +623,7 @@ def hold_saturation(sim: ObjectCentricLimbRepositioning3DEnv) -> float:
 def grasp_hold_ratio(
     ctx: LimbStreamContext, grasp: Pose, limb_positions: JointPositions
 ) -> float:
-    """`hold_saturation` for holding `grasp` at `limb_positions`, or inf if
-    unreachable."""
+    """`hold_saturation` holding `grasp` at `limb_positions`; inf if unreachable."""
     solution = grasp_ik(ctx, grasp, tuple(limb_positions), ctx.retract_joints)
     if solution is None:
         return float("inf")
@@ -713,8 +693,7 @@ def limb_slide_axis(
 def slid_grasp(
     ctx: LimbStreamContext, nominal: Pose, slide: float, roll: float = 0.0
 ) -> Pose:
-    """`nominal` slid `slide` up the limb and rolled `roll`, the slide in the limb
-    frame."""
+    """`nominal` slid `slide` up the limb (limb frame) and rolled `roll`."""
     offset = Pose(tuple((ctx.grasp_slide_axis * slide).tolist()))
     spin = Pose.from_rpy((0.0, 0.0, 0.0), (0.0, 0.0, roll))
     return multiply_poses(offset, nominal, spin)
@@ -840,12 +819,7 @@ def arm_in_collision(
 def control_saturation(
     ctx: LimbStreamContext, arm_positions: JointPositions | None = None
 ) -> float:
-    """How hard the arm must work to hold the limb still, as a fraction of its torque.
-
-    1.0 is the feasibility limit, and infinity means the grasp is singular.
-
-    Measured at `arm_positions` if given.
-    """
+    """Hold torque as a fraction of arm limits (1.0 = limit); inf if singular."""
     sim = ctx.sim
     if arm_positions is not None:
         sim.robot.arm.set_joints(list(arm_positions))
@@ -880,7 +854,7 @@ def human_in_collision(ctx: LimbStreamContext) -> bool:
         resting = ctx.resting_penetration.get(body_id, 0.0)
         if pair_clearance(sim, sim.limb.robot_id, body_id) < resting - COLLISION_MARGIN:
             return True
-    # Furniture and the robot base do not share the anatomical attachment overlap.
+    # Furniture and base get no resting-overlap allowance.
     for body_id in [*ctx.scene_collision_ids, sim.robot.base.robot_id]:
         if (
             pair_clearance(sim, sim.limb.robot_id, body_id)

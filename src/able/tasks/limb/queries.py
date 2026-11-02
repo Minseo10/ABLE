@@ -1,10 +1,6 @@
-"""Asking the person to move one joint to a target, and watching where they stop.
+"""Queries: the person pushes one (ungrasped) joint toward a target; where they stop is the answer.
 
-The limb is simulated ungrasped, so a query is the person moving themselves. A constant
-human effort pushes toward the target against an end-of-range restoring torque, and is
-kept below `stiffness * zone_width` so they stop short of their passive bound. Constant
-rather than PD on purpose: a PD term would reach the target whatever resisted it, and the
-stopping point is the whole observation.
+Effort is constant, not PD (PD would always reach the target), and below `stiffness * zone_width`.
 """
 
 from __future__ import annotations
@@ -31,10 +27,7 @@ from able.tasks.limb.human import (
 
 @dataclass(frozen=True)
 class QueryModel:
-    """How the person resists at the end of their range, and how hard they push.
-
-    The constants are placeholders on a plausible scale, not fitted to a person.
-    """
+    """End-of-range resistance and push effort; placeholder constants, not fitted."""
 
     zone_width: float = 0.3
     stiffness: float = 40.0
@@ -61,20 +54,16 @@ class QueryModel:
 
     @property
     def short_fall(self) -> float:
-        """How far short of the passive bound the person stops, on average."""
+        """Mean distance short of the passive bound where the person stops."""
         return self.zone_width - self.effort_mean / self.stiffness
 
     @property
     def tau(self) -> float:
-        """The likelihood's noise, in radians: effort variability over stiffness."""
+        """Likelihood noise (rad): effort stddev over stiffness."""
         return self.effort_stddev / self.stiffness
 
     def draw_effort(self, rng: np.random.Generator) -> float:
-        """One trial's effort, redrawn until it is a push the person can hold back.
-
-        At or above `stiffness * zone_width` it hits the hard stop, at or below zero it
-        does not move; neither is the behaviour this model describes.
-        """
+        """One trial's effort, redrawn until in `(0, stiffness * zone_width)`."""
         ceiling = self.stiffness * self.zone_width
         while True:
             effort = float(rng.normal(self.effort_mean, self.effort_stddev))
@@ -82,7 +71,7 @@ class QueryModel:
                 return effort
 
     def restoring_torque(self, reach: float, bound: float) -> float:
-        """The end-of-range torque, in coordinates where the person pushes upward."""
+        """End-of-range torque, in coordinates where the person pushes upward."""
         if reach <= bound - self.zone_width:
             return 0.0
         if reach < bound:
@@ -107,7 +96,7 @@ class QueryOutcome:
 
 
 class QuerySimulator:
-    """A standalone limb the queries are run on, kept alive across a person's rounds."""
+    """Standalone query limb, kept alive across a person's rounds."""
 
     def __init__(
         self, theta: NDArray[np.float64], model: QueryModel = DEFAULT_QUERY_MODEL
@@ -162,11 +151,7 @@ class QuerySimulator:
         rng: np.random.Generator,
         on_step: Callable[[int, float], None] | None = None,
     ) -> QueryOutcome:
-        """Push one joint toward `target` and report where the person stopped.
-
-        `target` and the answer are magnitudes; the sign is the motion's own. `on_step`
-        is called per simulator step with the step index and current reach, for recording.
-        """
+        """Push one joint toward `target` (a magnitude); `on_step(step, reach)` is for recording."""
         model = self.model
         joint = self.limb.arm_joints[active_joints()[motion_index]]
         sign = active_signs()[motion_index]
@@ -194,7 +179,7 @@ class QuerySimulator:
             physicsClientId=self.physics_client_id,
         )
 
-        # It only counts as settled once it has actually started moving.
+        # Settled only counts once it has started moving.
         settled = 0
         peak = 0.0
         moving = False
@@ -256,8 +241,7 @@ class QuerySimulator:
 
 @dataclass
 class PushToLimitGatherer:
-    """Ask about the least-certain motion: the person pushes toward a target near its
-    default limit (raised past any floor); the stop angle is the answer."""
+    """Query the least-certain motion with a target near its default limit (raised past any floor)."""
 
     probe_band: float = 0.3  # target spread around the limit, rad
     model: QueryModel = DEFAULT_QUERY_MODEL

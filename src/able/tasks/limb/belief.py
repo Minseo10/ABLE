@@ -1,14 +1,10 @@
-"""The robot's belief about `theta`: one Gaussian per active motion.
+"""Belief over `theta`: one Gaussian per active motion, closed-form linear-Gaussian update.
 
-The likelihood is linear-Gaussian, so the update is closed form. A query answer is where
-the person stopped, which `short_fall` offsets back toward their passive bound. An
-execution that stayed inside the person only says the limit lies beyond where the limb
-went: that raises a floor that truncates the Gaussian from below.
+Executions that stayed inside the person raise a floor that truncates the Gaussian from below.
 """
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from dataclasses import dataclass, replace
 
 import numpy as np
@@ -31,45 +27,9 @@ from able.tasks.limb.queries import DEFAULT_QUERY_MODEL, QueryModel, QueryOutcom
 FLOOR_STEP = 1e-3
 
 
-def pooled_tau(answers: Sequence[Sequence[float]], fallback: float) -> float:
-    """The likelihood's noise, measured from repeat answers about the same motion.
-
-    A person's bound does not move between rounds, so answers about one motion differ
-    only by how hard they pushed. Pooled across motions; `fallback` until a repeat.
-    """
-    residuals = []
-    degrees = 0
-    for repeats in answers:
-        if len(repeats) < 2:
-            continue
-        values = np.asarray(repeats, dtype=np.float64)
-        residuals.append(values - values.mean())
-        degrees += len(values) - 1
-    if degrees == 0:
-        return fallback
-    estimate = float(np.sqrt(np.sum(np.concatenate(residuals) ** 2) / degrees))
-    # Identical answers would divide by zero in the update.
-    return max(estimate, 1e-4)
-
-
-def refit(base: "Belief", answers, tau: float, short_fall: float) -> "Belief":
-    """Fold every answer so far into `base`, so a revised `tau` applies to all of them."""
-    belief = base
-    for index, repeats in enumerate(answers):
-        for answer in repeats:
-            belief = belief.updated(index, answer, tau, short_fall)
-    return belief
-
-
 @dataclass(frozen=True)
 class Belief:
-    """A mean and a standard deviation per active motion.
-
-    `low` and `high` are the population's bounds. The Gaussian is untruncated so the
-    conjugate update stays closed form; `sample`, `planning_mean` and `width` read the
-    truncation to `[lower, high]`, where `lower` is the population's bound raised by
-    what the person has been seen to reach.
-    """
+    """Untruncated Gaussian per motion (closed-form update); reads truncate to `[lower, high]`."""
 
     mean: NDArray[np.float64]
     stddev: NDArray[np.float64]
@@ -86,7 +46,7 @@ class Belief:
 
     @property
     def lower(self) -> NDArray[np.float64]:
-        """The least each motion's factor can be: the population's bound, or the floor."""
+        """Per-motion lower bound: the population's `low` or the floor."""
         low = np.full(len(self.mean), self.low)
         return low if self.floor is None else np.maximum(low, self.floor)
 
@@ -97,12 +57,12 @@ class Belief:
 
     @property
     def planning_mean(self) -> NDArray[np.float64]:
-        """The one theta to plan under: the mean of the truncated belief."""
+        """Mean of the truncated belief."""
         return np.asarray(self._truncated().mean(), dtype=np.float64)
 
     @property
     def width(self) -> float:
-        """How uncertain the belief still is, summed over motions, as the notebook's."""
+        """Truncated stddev summed over motions."""
         return float(np.sum(self._truncated().std()))
 
     def raised(self, motion_index: int, scale: float) -> "Belief":
@@ -114,7 +74,7 @@ class Belief:
 
     @classmethod
     def from_prior(cls, prior: RoMPrior) -> "Belief":
-        """The belief before any query, taken from the population prior."""
+        """Belief before any query."""
         n = len(active_motions())
         return cls(
             np.full(n, prior.mean), np.full(n, prior.stddev), prior.low, prior.high
@@ -127,10 +87,7 @@ class Belief:
     def updated(
         self, motion_index: int, answer: float, tau: float, short_fall: float = 0.0
     ) -> "Belief":
-        """Condition on one query answer, leaving the other motions untouched.
-
-        `answer` is the magnitude of the joint angle the person stopped at.
-        """
+        """Condition one motion on a query answer (magnitude of the stop angle)."""
         magnitude = default_magnitudes()[motion_index]
         prior_mean = self.mean[motion_index]
         prior_var = self.stddev[motion_index] ** 2
@@ -147,11 +104,11 @@ class Belief:
         return replace(self, mean=mean, stddev=stddev)
 
     def as_features(self) -> NDArray[np.float64]:
-        """The belief as the six numbers the warm-start model reads."""
+        """Mean and stddev, as the warm-start model reads them."""
         return np.concatenate([self.mean, self.stddev])
 
     def key_features(self) -> NDArray[np.float64]:
-        """Everything a cache key should tell apart: the Gaussian and its floor."""
+        """Cache-key features: the Gaussian and its floor."""
         return np.concatenate([self.mean, self.stddev, self.lower])
 
 

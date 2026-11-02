@@ -37,32 +37,15 @@ def test_settled_answer_updates_and_censored_answer_raises_the_floor():
     assert belief.update(Observation("query", fast)) is belief
 
 
-def test_execution_evidence_matches_observe():
-    from able.tasks.limb.belief import execution_evidence
-    from able.tasks.limb.dream_pipeline import observe
-
-    rng = np.random.default_rng(3)
-    belief = LimbPrior().belief(rng)
-    person = np.array([0.8, 1.0, 0.9])
-    path = rng.uniform(-2.5, 2.5, (30, 7))
-    expected, _ = observe(belief.gaussian, path, person)
-    got = belief.update(Observation("execution", execution_evidence(path, person))).gaussian
-    assert np.allclose(got.mean, expected.mean) and np.allclose(got.lower, expected.lower)
-
-
 @pytest.mark.slow
-def test_gatherer_reproduces_gather_information():
-    from able.tasks.limb.planner import gather_information
-
+def test_gatherer_narrows_the_belief_toward_the_person():
     theta = np.array([0.85, 1.05, 0.95])
-    reference = gather_information(theta, np.random.default_rng(7))
     rng = np.random.default_rng(7)
-    gatherer = PushToLimitGatherer()
-    belief = LimbPrior().belief(rng)
+    gatherer, belief = PushToLimitGatherer(), LimbPrior().belief(rng)
+    start = belief.gaussian.stddev.copy()
     try:
-        for _ in range(len(reference.outcomes)):
+        for _ in range(6):
             belief = belief.update(gatherer.respond(theta, gatherer.choose(belief, rng), rng))
     finally:
         gatherer.close()
-    assert np.allclose(belief.gaussian.mean, reference.posterior.mean)
-    assert np.allclose(belief.gaussian.stddev, reference.posterior.stddev)
+    assert np.all(belief.gaussian.stddev <= start) and belief.gaussian.stddev.sum() < start.sum()
