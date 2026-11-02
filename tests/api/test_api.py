@@ -17,6 +17,7 @@ from able.api import (
     PsiSpec,
     Step,
     Task,
+    TaskDistribution,
     make_learner,
     run_episode,
 )
@@ -31,7 +32,7 @@ class ReachBelief(ParticleBelief):
 
 
 @dataclass(frozen=True)
-class ReachPrior:
+class ReachPrior(Prior):
     def sample(self, rng):
         return rng.uniform(0.2, 1.0, 1)
 
@@ -39,7 +40,7 @@ class ReachPrior:
         return ReachBelief(rng.uniform(0.2, 1.0, (400, 1)), np.array([0.2]), np.array([1.0]))
 
 
-class AskMax:
+class AskMax(InfoGatherer):
     def choose(self, belief, rng):
         return "max"
 
@@ -47,7 +48,7 @@ class AskMax:
         return Observation("query", float(theta[0] + rng.normal(0, NOISE)), query)
 
 
-class StepPlanner:
+class StepPlanner(Planner):
     """Moves at most 0.3 per step toward the goal (or psi's target)."""
 
     effort_unit = "steps"
@@ -58,7 +59,7 @@ class StepPlanner:
         return PlanResult(move, seconds=0.0, effort=1.0, trace=target)
 
 
-class ReachPsi:
+class ReachPsi(PsiSpec):
     def examples(self, episode, belief):
         x = [np.concatenate([[s.state["goal"]], belief.features()]) for s in episode.steps]
         y = [[s.result.trace] for s in episode.steps]
@@ -69,18 +70,21 @@ class ReachPsi:
         return float(learner.predict(x)[0, 0])
 
 
+class ReachDistribution(TaskDistribution):
+    def sample(self, rng):
+        return {"goal": float(rng.uniform(0.2, 1.0))}
+
+
 @dataclass
-class ReachTask:
+class ReachTask(Task):
     name: str = "reach"
     prior: ReachPrior = field(default_factory=ReachPrior)
     gatherer: AskMax = field(default_factory=AskMax)
     psi: ReachPsi = field(default_factory=ReachPsi)
+    distribution: ReachDistribution = field(default_factory=ReachDistribution)
 
     def make_planner(self):
         return StepPlanner()
-
-    def sample_problem(self, rng):
-        return {"goal": float(rng.uniform(0.2, 1.0))}
 
     def reset(self, problem, theta, rng):
         return {"x": 0.0, "goal": problem["goal"], "theta": float(theta[0])}

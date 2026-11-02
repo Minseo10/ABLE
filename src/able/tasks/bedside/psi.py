@@ -8,8 +8,8 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from able.api import Belief, Examples
-from able.tasks.bedside.env import BedsideStocking3DEnvConfig
+from able.api import Belief, Examples, PsiSpec
+from able.tasks.bedside.env.bedside_stocking3d import BedsideStocking3DEnvConfig
 
 MAX_REQUESTED = 8  # req0..req7, the largest registered variant
 
@@ -32,7 +32,7 @@ class PlaceProposal:
 
 
 @dataclass
-class BedsidePsi:
+class BedsidePsi(PsiSpec):
     """Row per requested item: one-hot, clutter occupancy per bedside slot, belief features; label: final xyz."""
 
     config: BedsideStocking3DEnvConfig = field(default_factory=BedsideStocking3DEnvConfig)

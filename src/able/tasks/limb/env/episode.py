@@ -1,22 +1,23 @@
-"""Per-episode simulator setup, planning deadlines, and execution scoring."""
+"""Per-episode simulator setup and execution scoring."""
 
 from __future__ import annotations
 
 import dataclasses
-import signal
-from contextlib import contextmanager
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import numpy as np
 from kinder.envs.dynamic3d.limbs import BodyMass
 from numpy.typing import NDArray
 from pybullet_helpers.geometry import SE2Pose
 
-from able.tasks.limb.human import (
+from able.tasks.limb.env.human import (
     DEFAULT_PRIOR,
     theta_to_joint_limits,
     theta_to_range_of_motion,
 )
+from able.tasks.limb.env.variant import current as current_variant
+from able.tasks.limb.env.variant import scene_config
 from able.tasks.limb.planning.run import (
     build_stream_context,
     create_env,
@@ -25,9 +26,9 @@ from able.tasks.limb.planning.run import (
 from able.tasks.limb.planning.stream import (
     MPCConfig,
 )
-from able.tasks.limb.tasks import Task
-from able.tasks.limb.variant import current as current_variant
-from able.tasks.limb.variant import scene_config
+
+if TYPE_CHECKING:
+    from able.tasks.limb.task import LimbProblem
 
 
 @dataclass(frozen=True)
@@ -53,29 +54,6 @@ DEFAULT_PLANNER_SETTINGS = PlannerSettings()
 
 # Metres either side of its home pose the base motion planner may sample.
 BASE_REACH = 3.0
-
-
-class PlanningTimeout(BaseException):
-    """Planning deadline hit; a `BaseException` so streams' `except Exception` can't swallow it."""
-
-
-@contextmanager
-def hard_deadline(seconds: float | None):
-    """Raise `PlanningTimeout` after `seconds` wall-clock (SIGALRM, main thread); None/<=0 = no limit."""
-    if seconds is None or seconds <= 0:
-        yield
-        return
-
-    def fire(signum, frame):  # pylint: disable=unused-argument
-        raise PlanningTimeout(f"hit the {seconds:g} s hard planning time limit")
-
-    previous = signal.signal(signal.SIGALRM, fire)
-    signal.setitimer(signal.ITIMER_REAL, seconds)
-    try:
-        yield
-    finally:
-        signal.setitimer(signal.ITIMER_REAL, 0)
-        signal.signal(signal.SIGALRM, previous)
 
 
 @dataclass
@@ -134,7 +112,7 @@ class ParticleLimits:
         return np.quantile(self.particles, 1.0 - self.confidence, axis=0)
 
 
-def build_episode_env(task: Task, theta: NDArray[np.float64], settings: PlannerSettings):
+def build_episode_env(task: LimbProblem, theta: NDArray[np.float64], settings: PlannerSettings):
     """Build the env for one person and task."""
     config = scene_config()
     config = dataclasses.replace(
@@ -168,8 +146,10 @@ def build_episode_env(task: Task, theta: NDArray[np.float64], settings: PlannerS
 
 def make_sampling_context(settings: PlannerSettings = DEFAULT_PLANNER_SETTINGS):
     """A `(sim, ctx)` for cheap goal-reachability tests (few IK attempts)."""
+    from able.tasks.limb.task import LimbProblem
+
     config = scene_config()
-    task = Task(
+    task = LimbProblem(
         limb_init=tuple(config.scene.limb_init_joint_positions),
         robot_init=tuple(config.robot_initial_joints),
         limb_goal=tuple(config.scene.limb_goal_joint_positions),
@@ -185,7 +165,7 @@ def make_sampling_context(settings: PlannerSettings = DEFAULT_PLANNER_SETTINGS):
 
 
 def open_episode(
-    task: Task,
+    task: LimbProblem,
     theta: NDArray[np.float64],
     believed_theta: NDArray[np.float64],
     seed: int,

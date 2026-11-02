@@ -1,9 +1,9 @@
-"""Tasks (limb start, robot start, limb goal) and samplers that draw them against a person's range."""
+"""P(problem): limb start, robot start and limb goal, drawn against a person's range and reachability."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Iterator
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Iterator
 
 import numpy as np
 from kinder.envs.dynamic3d.limb_utils import (
@@ -14,8 +14,18 @@ from kinder.envs.dynamic3d.limb_utils import (
 )
 from numpy.typing import NDArray
 
-from able.tasks.limb.human import active_joints, theta_to_joint_limits
-from able.tasks.limb.variant import scene_config
+from able.api import TaskDistribution
+from able.tasks.limb.env.human import (
+    DEFAULT_PRIOR,
+    active_joints,
+    theta_to_joint_limits,
+)
+from able.tasks.limb.env.variant import scene_config
+
+if TYPE_CHECKING:
+    from able.tasks.limb.env.episode import PlannerSettings
+    from able.tasks.limb.planning.setup import FixedSetup
+    from able.tasks.limb.task import LimbProblem
 
 
 def inactive_joints() -> tuple[int, ...]:
@@ -24,34 +34,7 @@ def inactive_joints() -> tuple[int, ...]:
 
 
 @dataclass(frozen=True)
-class Task:
-    """One `(q_init_human, q_init_robot, q_goal_human)`."""
-
-    limb_init: tuple[float, ...]
-    robot_init: tuple[float, ...]
-    limb_goal: tuple[float, ...]
-    # Base pose the reachability check accepted, if any.
-    base_pose: object | None = None
-
-    def __post_init__(self) -> None:
-        assert len(self.limb_init) == NUM_LIMB_JOINTS
-        assert len(self.limb_goal) == NUM_LIMB_JOINTS
-        assert len(self.robot_init) == NUM_ROBOT_JOINTS
-
-    @property
-    def separation(self) -> float:
-        """Limb travel distance in the environment's metric."""
-        return joint_position_distance(
-            LIMB_JOINT_INFOS, list(self.limb_init), list(self.limb_goal)
-        )
-
-    def as_features(self) -> NDArray[np.float64]:
-        """The 19 task numbers the warm-start model reads."""
-        return np.concatenate([self.limb_init, self.robot_init, self.limb_goal])
-
-
-@dataclass(frozen=True)
-class TaskDistribution:
+class TaskBox:
     """`P(task)` as a box: active joints drawn from the middle `inner_fraction` of the range."""
 
     inner_fraction: float = 1.0
@@ -75,8 +58,10 @@ class TaskDistribution:
         theta: NDArray[np.float64],
         true_theta: NDArray[np.float64] | None = None,
         robot_limits: tuple[NDArray[np.float64], NDArray[np.float64]] | None = None,
-    ) -> Task:
+    ) -> LimbProblem:
         """One task: goal drawn against `theta`, start inside `true_theta` (only the goal may lie outside)."""
+        from able.tasks.limb.task import LimbProblem
+
         scene = scene_config().scene
         nominal_limb = np.asarray(scene.limb_init_joint_positions, dtype=np.float64)
         nominal_robot = np.asarray(
@@ -103,7 +88,7 @@ class TaskDistribution:
             )
             if robot_limits is not None:
                 robot_init = np.clip(robot_init, robot_limits[0], robot_limits[1])
-            return Task(
+            return LimbProblem(
                 limb_init=tuple(limb_init),
                 robot_init=tuple(robot_init),
                 limb_goal=tuple(limb_goal),
@@ -119,13 +104,13 @@ class TaskDistribution:
         theta: NDArray[np.float64],
         count: int,
         robot_limits: tuple[NDArray[np.float64], NDArray[np.float64]] | None = None,
-    ) -> Iterator[Task]:
+    ) -> Iterator[LimbProblem]:
         """Draw `count` tasks for one person."""
         for _ in range(count):
             yield self.sample(rng, theta, robot_limits)
 
 
-DEFAULT_TASK_DISTRIBUTION = TaskDistribution()
+DEFAULT_TASK_BOX = TaskBox()
 
 
 class ReachableTaskSampler:
@@ -134,7 +119,7 @@ class ReachableTaskSampler:
     def __init__(
         self,
         ctx,
-        distribution: TaskDistribution = None,  # type: ignore[assignment]
+        box: TaskBox = None,  # type: ignore[assignment]
         max_goal_draws: int = 30,
         max_init_draws: int = 8,
         max_conf_draws: int = 200,
@@ -145,7 +130,7 @@ class ReachableTaskSampler:
         from able.tasks.limb.planning.stream import sample_grasp
 
         self.ctx = ctx
-        self.distribution = distribution or DEFAULT_TASK_DISTRIBUTION
+        self.box = box or DEFAULT_TASK_BOX
         self.max_goal_draws = max_goal_draws
         self.max_init_draws = max_init_draws
         self.max_conf_draws = max_conf_draws
@@ -158,8 +143,8 @@ class ReachableTaskSampler:
         from able.tasks.limb.planning.utils import (
             CONTACT_PENETRATION_TOLERANCE,
             pair_clearance,
+            saved_sim_state,
         )
-        from able.tasks.limb.utils import saved_sim_state
 
         ctx, sim = self.ctx, self.ctx.sim
         with saved_sim_state(sim):
@@ -172,8 +157,12 @@ class ReachableTaskSampler:
 
     def _base_pose_for(self, limb_init):
         """Nearest base pose that can hold the grasp at `limb_init`, or None."""
-        from able.tasks.limb.planning.utils import release_grasp
-        from able.tasks.limb.utils import base_candidates, grasp_ik, saved_sim_state
+        from able.tasks.limb.planning.utils import (
+            base_candidates,
+            grasp_ik,
+            release_grasp,
+            saved_sim_state,
+        )
 
         sim = self.ctx.sim
         with saved_sim_state(sim):
@@ -199,10 +188,11 @@ class ReachableTaskSampler:
             NUM_REACH_CHECKS,
         )
         from able.tasks.limb.planning.utils import (
+            grasp_ik,
             limb_is_controllable,
             release_grasp,
+            saved_sim_state,
         )
-        from able.tasks.limb.utils import grasp_ik, saved_sim_state
 
         if self._in_furniture(limb_init) or self._in_furniture(limb_goal):
             return False
@@ -244,8 +234,7 @@ class ReachableTaskSampler:
         """Whether the arm self-collides (the arm planner could never leave such a start)."""
         from pybullet_helpers.motion_planning import check_collisions_with_held_object
 
-        from able.tasks.limb.planning.utils import extend_with_fingers
-        from able.tasks.limb.utils import saved_sim_state
+        from able.tasks.limb.planning.utils import extend_with_fingers, saved_sim_state
 
         sim = self.ctx.sim
         with saved_sim_state(sim):
@@ -259,8 +248,8 @@ class ReachableTaskSampler:
         nominal = np.asarray(scene_config().robot_initial_joints, np.float64)
         for _ in range(self.max_conf_draws):
             robot_init = nominal + rng.uniform(
-                -self.distribution.robot_jitter,
-                self.distribution.robot_jitter,
+                -self.box.robot_jitter,
+                self.box.robot_jitter,
                 size=NUM_ROBOT_JOINTS,
             )
             if not self._self_colliding(robot_init):
@@ -271,15 +260,17 @@ class ReachableTaskSampler:
 
     def sample_init(
         self, rng: np.random.Generator, theta: NDArray[np.float64]
-    ) -> Task:
+    ) -> LimbProblem:
         """A graspable start with no goal (`limb_goal` = init), e.g. for hindsight babbling."""
-        low, high = self.distribution.inner_range(theta)
+        from able.tasks.limb.task import LimbProblem
+
+        low, high = self.box.inner_range(theta)
         for _ in range(self.max_init_draws):
             limb_init = self._draw_limb_conf(rng, low, high)
             base_conf = self._base_pose_for(limb_init)
             if base_conf is None:
                 continue
-            return Task(
+            return LimbProblem(
                 limb_init=tuple(limb_init),
                 robot_init=tuple(self._draw_robot_init(rng)),
                 limb_goal=tuple(limb_init),
@@ -295,10 +286,12 @@ class ReachableTaskSampler:
         rng: np.random.Generator,
         theta: NDArray[np.float64],
         true_theta: NDArray[np.float64] | None = None,
-    ) -> Task:
-        """One task that some base pose can carry out; see `TaskDistribution.sample`."""
-        low, high = self.distribution.inner_range(theta)
-        start_low, start_high = self.distribution.inner_range(
+    ) -> LimbProblem:
+        """One task that some base pose can carry out; see `TaskBox.sample`."""
+        from able.tasks.limb.task import LimbProblem
+
+        low, high = self.box.inner_range(theta)
+        start_low, start_high = self.box.inner_range(
             theta if true_theta is None else true_theta
         )
         for _ in range(self.max_init_draws):
@@ -312,14 +305,14 @@ class ReachableTaskSampler:
                     LIMB_JOINT_INFOS, list(limb_init), list(limb_goal)
                 )
                 if not (
-                    self.distribution.min_separation
+                    self.box.min_separation
                     <= separation
-                    <= self.distribution.max_separation
+                    <= self.box.max_separation
                 ):
                     continue
                 if not self._reachable_from(base_conf, limb_init, limb_goal):
                     continue
-                return Task(
+                return LimbProblem(
                     limb_init=tuple(limb_init),
                     robot_init=tuple(self._draw_robot_init(rng)),
                     limb_goal=tuple(limb_goal),
@@ -329,3 +322,33 @@ class ReachableTaskSampler:
             f"no reachable task found for theta={theta} in "
             f"{self.max_init_draws} x {self.max_goal_draws} draws"
         )
+
+
+@dataclass
+class LimbDistribution(TaskDistribution):
+    """Problems reachable from the fixed grasp and base (IK checks only)."""
+
+    settings: PlannerSettings
+    setup: FixedSetup
+    _sim: Any = field(default=None, init=False, repr=False)
+    _sampler: ReachableTaskSampler | None = field(default=None, init=False, repr=False)
+
+    @property
+    def sampler(self) -> ReachableTaskSampler:
+        """Built on first use: it needs a simulator."""
+        from able.tasks.limb.env.episode import make_sampling_context
+        from able.tasks.limb.planning.run import reset_to_start
+        from able.tasks.limb.planning.setup import wrist_grasp
+
+        if self._sampler is None:
+            self._sim, ctx = make_sampling_context(self.settings)
+            reset_to_start(ctx)
+            grasp = wrist_grasp(ctx, self.setup.offset, self.setup.roll)
+            # One fixed base reaches few random tasks, so draw more (IK checks only).
+            self._sampler = ReachableTaskSampler(ctx, max_goal_draws=60, max_init_draws=40,
+                                                 grasp=grasp, base=self.setup.base_pose)
+        return self._sampler
+
+    def sample(self, rng: np.random.Generator) -> LimbProblem:
+        """Goals inside the prior-mean person's range; narrower beliefs retarget them."""
+        return self.sampler.sample(rng, np.full(3, DEFAULT_PRIOR.mean))

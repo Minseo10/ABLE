@@ -3,21 +3,43 @@
 import numpy as np
 import pytest
 
-from able.api import Belief, InfoGatherer, Observation, Prior
-from able.tasks.limb.belief import LimbPrior
-from able.tasks.limb.human import default_magnitudes
-from able.tasks.limb.queries import (
-    DEFAULT_QUERY_MODEL,
-    PushToLimitGatherer,
-    QueryOutcome,
+from able.api import (
+    Belief,
+    InfoGatherer,
+    Observation,
+    Planner,
+    Prior,
+    PsiSpec,
+    Task,
+    TaskDistribution,
 )
+from able.planners.mpc import MPCPlanner
+from able.tasks.limb import (
+    LimbBelief,
+    LimbDistribution,
+    LimbGatherer,
+    LimbPlanner,
+    LimbPrior,
+    LimbPsi,
+    LimbTask,
+)
+from able.tasks.limb.env.human import default_magnitudes
+from able.tasks.limb.env.query import DEFAULT_QUERY_MODEL, QueryOutcome
+
+
+def test_role_classes_inherit_the_api_bases():
+    roles = [(LimbTask, Task), (LimbDistribution, TaskDistribution), (LimbPrior, Prior),
+             (LimbBelief, Belief), (LimbGatherer, InfoGatherer), (LimbPlanner, MPCPlanner),
+             (LimbPlanner, Planner), (LimbPsi, PsiSpec)]
+    for role, base in roles:
+        assert issubclass(role, base), (role, base)
 
 
 def test_limb_pieces_satisfy_the_protocols():
     prior = LimbPrior()
     belief = prior.belief(np.random.default_rng(0))
     assert isinstance(prior, Prior) and isinstance(belief, Belief)
-    assert isinstance(PushToLimitGatherer(), InfoGatherer)
+    assert isinstance(LimbGatherer(), InfoGatherer)
     assert belief.sample(np.random.default_rng(0), 5).shape == (5, 3)
     assert belief.features().shape == (6,)
 
@@ -41,7 +63,7 @@ def test_settled_answer_updates_and_censored_answer_raises_the_floor():
 def test_gatherer_narrows_the_belief_toward_the_person():
     theta = np.array([0.85, 1.05, 0.95])
     rng = np.random.default_rng(7)
-    gatherer, belief = PushToLimitGatherer(), LimbPrior().belief(rng)
+    gatherer, belief = LimbGatherer(), LimbPrior().belief(rng)
     start = belief.gaussian.stddev.copy()
     try:
         for _ in range(6):

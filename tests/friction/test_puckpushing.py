@@ -7,14 +7,14 @@ import numpy as np
 from able.api import Observation
 from able.planners.pomcpow import POMCPOWConfig
 from able.tasks.friction import FrictionTask
+from able.tasks.friction.env.episode import run
 from able.tasks.friction.env.puckpushing_utils import THREE_ROUTES, PuckWorld, Push
-from able.tasks.friction.model import (
+from able.tasks.friction.planning.model import (
     GOAL,
     HOLE,
     ONGOING,
     PuckPushingModel,
 )
-from able.tasks.friction.run import run
 
 FRICTIONS = (0.03, 0.07, 0.15)
 

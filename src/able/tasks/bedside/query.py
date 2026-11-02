@@ -7,10 +7,10 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
-from able.api import Belief, Observation
+from able.api import Belief, InfoGatherer, Observation
 from able.tasks.bedside.belief import QUERY_NOISE, reach_distance
-from able.tasks.bedside.env import BedsideStocking3DEnvConfig
-from able.tasks.bedside.planner.stream import NOMINAL_HALF_HEIGHT
+from able.tasks.bedside.env.bedside_stocking3d import BedsideStocking3DEnvConfig
+from able.tasks.bedside.planning.stream import NOMINAL_HALF_HEIGHT
 
 
 def bedside_directions(config: BedsideStocking3DEnvConfig, shoulder: NDArray) -> NDArray[np.float64]:
@@ -20,8 +20,15 @@ def bedside_directions(config: BedsideStocking3DEnvConfig, shoulder: NDArray) ->
     return d / np.linalg.norm(d, axis=1, keepdims=True)
 
 
+@dataclass(frozen=True, eq=False)
+class BedsideQuery:
+    """Hold a target along `direction`; the person reports how far they reach."""
+
+    direction: NDArray[np.float64]  # unit vector from the shoulder
+
+
 @dataclass
-class ReachGatherer:
+class BedsideGatherer(InfoGatherer):
     """Asks along the direction where the belief disagrees most about the reach distance."""
 
     directions: NDArray[np.float64]  # (n, 3) unit vectors
@@ -29,14 +36,15 @@ class ReachGatherer:
     min_std: float = 0.01  # ask nothing once every direction's reach std is below this (m)
     num_particles: int = 1000
 
-    def choose(self, belief: Belief, rng: np.random.Generator) -> NDArray[np.float64] | None:
+    def choose(self, belief: Belief, rng: np.random.Generator) -> BedsideQuery | None:
         particles = getattr(belief, "particles", None)
         if particles is None:
             particles = belief.sample(rng, self.num_particles)
         std = reach_distance(self.directions[:, None], particles[None]).std(1)
         k = int(std.argmax())
-        return None if std[k] < self.min_std else self.directions[k].copy()
+        return None if std[k] < self.min_std else BedsideQuery(self.directions[k].copy())
 
-    def respond(self, theta: NDArray[np.float64], query: NDArray, rng: np.random.Generator) -> Observation:
-        r = float(reach_distance(query, theta)) + rng.normal(0.0, self.noise)
-        return Observation("query", r, np.asarray(query, float))
+    def respond(self, theta: NDArray[np.float64], query: BedsideQuery, rng: np.random.Generator) -> Observation:
+        """Observation.query is the direction itself."""
+        r = float(reach_distance(query.direction, theta)) + rng.normal(0.0, self.noise)
+        return Observation("query", r, np.asarray(query.direction, float))

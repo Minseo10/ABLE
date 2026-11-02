@@ -1,11 +1,11 @@
-"""Queries: the person pushes one (ungrasped) joint toward a target; where they stop is the answer.
+"""The simulated person: they push one (ungrasped) joint toward a target; where they stop is the answer.
 
 Effort is constant, not PD (PD would always reach the target), and below `stiffness * zone_width`.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable
 
 import numpy as np
@@ -15,11 +15,9 @@ from kinder.envs.dynamic3d.limbs import create_human_limb
 from numpy.typing import NDArray
 from pybullet_helpers.geometry import Pose
 
-from able.api.belief import Observation
-from able.tasks.limb.human import (
+from able.tasks.limb.env.human import (
     active_joints,
     active_signs,
-    default_magnitudes,
     limb_name,
     theta_to_bounds,
 )
@@ -238,29 +236,3 @@ class QuerySimulator:
         if p.isConnected(physicsClientId=self.physics_client_id):
             p.disconnect(physicsClientId=self.physics_client_id)
 
-
-@dataclass
-class PushToLimitGatherer:
-    """Query the least-certain motion with a target near its default limit (raised past any floor)."""
-
-    probe_band: float = 0.3  # target spread around the limit, rad
-    model: QueryModel = DEFAULT_QUERY_MODEL
-    _sims: dict = field(default_factory=dict, repr=False)
-
-    def choose(self, belief, rng: np.random.Generator) -> tuple[int, float]:
-        g = belief.gaussian
-        i = int(np.argmax(g.stddev))
-        bound = default_magnitudes()[i] * max(1.0, float(g.lower[i]))
-        return i, float(bound + rng.uniform(-self.probe_band, self.probe_band))
-
-    def respond(self, theta, query, rng: np.random.Generator) -> Observation:
-        key = np.asarray(theta, np.float64).tobytes()
-        if key not in self._sims:
-            self.close()  # one person at a time
-            self._sims[key] = QuerySimulator(theta, self.model)
-        return Observation("query", self._sims[key].ask(*query, rng), query)
-
-    def close(self) -> None:
-        for sim in self._sims.values():
-            sim.close()
-        self._sims.clear()

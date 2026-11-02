@@ -1,19 +1,21 @@
-"""psi's features and labels for the limb: one row per MPC control step."""
+"""psi for the limb: features and labels, one row per MPC control step, and the MPC warm-start hook."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 from kinder.envs.dynamic3d.limb_utils import NUM_ROBOT_JOINTS
 from numpy.typing import NDArray
 
+from able.api import Examples, PsiSpec
 from able.planners.mpc import control_basis as _control_basis
+from able.tasks.limb.belief import LimbBelief
+from able.tasks.limb.env.execute import RolloutLog
 from able.tasks.limb.planning.stream import (
     MPCConfig,
     TorqueTrajectory,
 )
-from able.tasks.limb.utils import RolloutLog
 
 # Limb (6) and robot (7) positions, goal (6), belief (6) and step: what every model reads.
 BASE_FEATURES = 26
@@ -145,3 +147,39 @@ def dense_rows(segments, log: RolloutLog, belief_features, mpc: MPCConfig) -> li
 def limb_segments(features) -> np.ndarray:
     """One group per planned segment: a new one starts at step 0."""
     return np.cumsum(np.asarray(features)[:, BASE_FEATURES - 1] == 0)
+
+
+@dataclass
+class LimbPsi(PsiSpec):
+    """x = limb/robot state, goal, belief, step (+ velocities, last torque); y = next horizon of torques."""
+
+    mpc: MPCConfig = field(default_factory=MPCConfig)
+
+    def examples(self, episode, belief: LimbBelief) -> Examples:
+        rows = []
+        for s in episode.steps:
+            if s.step is not None and "segments" in s.step.info:
+                rows += dense_rows(s.step.info["segments"], s.step.info["log"], belief.features(), self.mpc)
+        if not rows:
+            return Examples.empty(0, 0)
+        x = np.array([r.features for r in rows])
+        y = np.array([np.asarray(r.torques).ravel() for r in rows])
+        return Examples(x, y, limb_segments(x).astype(np.int64))
+
+    def proposal(self, learner, state, belief: LimbBelief):
+        """`ctx.warm_start` hook: predicted horizon, plus learner draws as `samples`."""
+        features, horizon = belief.features(), self.mpc.horizon
+        draws = np.random.default_rng(getattr(state, "seed", None))  # reproducible learner draws
+
+        def hook(s, goal, step=0.0):
+            if step == 0:
+                hook.previous = None
+            x = state_features(s, goal, features, step, hook.previous).reshape(1, -1)
+            return learner.predict(x)[0].reshape(horizon, -1)
+
+        def samples(s, goal, step, k):
+            x = state_features(s, goal, features, step, hook.previous).reshape(1, -1)
+            return learner.sample(x, k, seed=int(draws.integers(2**31)))[0].reshape(k, horizon, -1)
+
+        hook.previous, hook.samples = None, samples
+        return hook

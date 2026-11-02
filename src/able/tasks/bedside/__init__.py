@@ -2,13 +2,14 @@
 
 from importlib import import_module
 
-# Lazy, so `python -m able.tasks.bedside.planner.run` does not import run.py twice.
+# Lazy, so importing the package does not load PyBullet and PDDLStream.
 _EXPORTS = {
-    "ReachBelief": "belief", "reach_distance": "belief",
+    "BedsideBelief": "belief", "BedsidePrior": "belief", "reach_distance": "belief",
+    "BedsideDistribution": "distribution",
+    "BedsidePlanner": "planner",
     "BedsidePsi": "psi", "PlaceProposal": "psi",
-    "ReachGatherer": "query", "bedside_directions": "query",
-    "BedsidePlanner": "solver",
-    "BedsideProblem": "task", "BedsideState": "task", "BedsideTask": "task", "ReachPrior": "task",
+    "BedsideGatherer": "query", "BedsideQuery": "query", "bedside_directions": "query",
+    "BedsideProblem": "task", "BedsideState": "task", "BedsideTask": "task",
 }
 
 __all__ = sorted(_EXPORTS)

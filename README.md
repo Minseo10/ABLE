@@ -28,7 +28,7 @@ All three tasks implement one API (`src/able/api`) and run through one pipeline.
 | Effort | MPC rollouts | POMCPOW simulations | stream calls |
 | Code | `able/tasks/limb` | `able/tasks/friction` | `able/tasks/bedside` |
 
-The limb's fixed grasp and base per variant are in `src/able/tasks/limb/fixed_setup.json`,
+The limb's fixed grasp and base per variant are in `src/able/tasks/limb/planning/fixed_setup.json`,
 chosen by `scripts/limb/select_setup.py` (reach over prior tasks, then plain-MPC success).
 
 ## Install
@@ -100,6 +100,21 @@ different people on different machines with the same config; results merge on W&
 Results are not kept in git: they go to the
 [W&B project](https://wandb.ai/tahitiro2-ewha-womans-university/learning-forceful-manipulation).
 Experiments before this layout are there too (tag `archive`, index run `archive/index`).
+
+## Task folders
+
+Every task has the same files; each role class inherits its `able.api` base:
+
+| File | Class (base) | Limb / Friction / Human reach |
+| --- | --- | --- |
+| `task.py` | `<T>Task(Task)`, `<T>Problem`, `<T>State` | |
+| `distribution.py` | `<T>Distribution(TaskDistribution)` | reachable start/goal / env seed / clutter seed |
+| `belief.py` | `<T>Prior(Prior)`, `<T>Belief(Belief)` | Gaussian RoM / particles / particles |
+| `query.py` | `<T>Query`, `<T>Gatherer(InfoGatherer)` | push to limit / probe push / max reach |
+| `planner.py` | `<T>Planner` | `MPCPlanner` / `POMCPOWPlanner` / `PDDLStreamPlanner` (from `able.planners`) |
+| `psi.py` | `<T>Psi(PsiSpec)` | MPC seed / push proposals / slot ordering |
+| `env/` | simulator, plan execution, frame capture | |
+| `planning/` | planner internals | MPC streams + fixed setup / POMDP model / PDDL domain + streams |
 
 ## Layout
 

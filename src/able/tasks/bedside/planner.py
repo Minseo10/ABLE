@@ -11,8 +11,8 @@ from pddlstream.language.constants import PDDLProblem
 
 from able.api import Belief
 from able.planners.pddlstream import PDDLStreamPlanner
-from able.tasks.bedside.env import ObjectCentricBedsideStocking3DEnv
-from able.tasks.bedside.planner.run import build_stream_context, create_problem
+from able.tasks.bedside.env.bedside_stocking3d import ObjectCentricBedsideStocking3DEnv
+from able.tasks.bedside.planning.problem import build_stream_context, create_problem
 
 
 @dataclass

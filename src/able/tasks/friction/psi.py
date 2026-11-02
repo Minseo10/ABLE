@@ -8,15 +8,15 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
-from able.api import Examples
+from able.api import Examples, PsiSpec
 from able.tasks.friction.env.puckpushing_utils import Push
-from able.tasks.friction.model import PuckPushingModel
+from able.tasks.friction.planning.model import PuckPushingModel
 
 X_DIM, Y_DIM = 13, 4
 
 
 @dataclass
-class FrictionPsi:
+class FrictionPsi(PsiSpec):
     """x = puck, goal, floor one-hot, belief mean and std; y = (cos, sin, speed, stance) of a root push."""
 
     model: PuckPushingModel

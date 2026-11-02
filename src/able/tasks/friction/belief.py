@@ -1,4 +1,4 @@
-"""Particle belief over the floors' friction coefficients."""
+"""Friction prior and particle belief over the floors' friction coefficients."""
 
 from __future__ import annotations
 
@@ -9,12 +9,30 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from able.api import Observation, ParticleBelief
+from able.api import Observation, ParticleBelief, Prior
+from able.tasks.friction.env import puckpushing_utils as pu
 from able.tasks.friction.env.puckpushing_utils import SURFACE_NAMES, PuckWorld
 from able.tasks.friction.query import probe_log_likelihood
 
 # Likelihood factor when a particle's predicted hole outcome disagrees.
 _HOLE_MISMATCH = 0.05
+
+
+@dataclass(frozen=True)
+class FrictionPrior(Prior):
+    """Shuffled friction prior (levels dealt to floors at random) as an able.api Prior."""
+
+    world: PuckWorld
+    dist: pu.FrictionPrior | pu.BoxFrictionPrior = pu.DEFAULT_FRICTION_PRIOR
+    num_particles: int = 500
+
+    def sample(self, rng: np.random.Generator) -> NDArray[np.float64]:
+        return self.dist.sample(rng)
+
+    def belief(self, rng: np.random.Generator) -> FrictionBelief:
+        low, high = self.dist.bounds
+        return FrictionBelief(self.dist.sample(rng, self.num_particles), low, high,
+                              seed=int(rng.integers(2**31)), world=self.world)
 
 
 @dataclass(frozen=True)

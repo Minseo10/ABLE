@@ -6,12 +6,16 @@ A domain supplies a `POMDPModel`; an optional `ActionProposer` (e.g. learned) re
 from __future__ import annotations
 
 import bisect
+import dataclasses
 import math
 import time
+from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Callable, Generic, Hashable, Protocol, Sequence, TypeVar
+from typing import Any, Callable, Generic, Hashable, Protocol, Sequence, TypeVar
 
 import numpy as np
+
+from able.api import Belief, Budget, Planner, PlanResult
 
 S = TypeVar("S")
 A = TypeVar("A", bound=Hashable)
@@ -249,3 +253,32 @@ class POMCPOW(Generic[S, A, O]):
         child.visits += 1
         child.value += (total - child.value) / child.visits
         return total
+
+
+@dataclass
+class POMCPOWPlanner(Planner):
+    """Plans one action from the belief's particles; psi's hook is POMCPOW's ActionProposer."""
+
+    config: POMCPOWConfig = field(default_factory=POMCPOWConfig)
+    effort_unit: str = "pomcpow_sims"
+
+    @abstractmethod
+    def pomdp(self, state: Any, belief: Belief) -> POMDPModel:
+        """The model to search, set up for `belief`."""
+
+    @abstractmethod
+    def particles(self, state: Any, belief: Belief) -> list:
+        """Root states, one per belief particle."""
+
+    def plan(self, state: Any, belief: Belief, proposal: Any = None, budget: Budget | None = None,
+             rng: np.random.Generator | None = None) -> PlanResult:
+        config = self.config
+        if budget is not None and budget.effort is not None:
+            config = dataclasses.replace(config, num_sims=int(budget.effort))
+        if budget is not None and budget.seconds is not None:
+            config = dataclasses.replace(config, max_time=budget.seconds)
+        solver = POMCPOW(self.pomdp(state, belief), config, proposer=proposal,
+                         rng=rng if rng is not None else np.random.default_rng(0))
+        action, stats = solver.plan(self.particles(state, belief))
+        return PlanResult(action, stats.seconds, stats.num_sims, trace=stats.root_values,
+                          info={"root_actions": stats.root_actions, "max_depth": stats.max_depth_reached})

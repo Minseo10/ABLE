@@ -10,19 +10,13 @@ from kinder.envs.dynamic3d.limbs import (
 )
 
 from able.tasks.limb.belief import (
-    Belief,
     LimbBelief,
+    RoMGaussian,
     apply_evidence,
     execution_evidence,
 )
-from able.tasks.limb.features import (
-    BASE_FEATURES,
-    control_basis,
-    project_torques,
-    segment_features,
-    state_features,
-)
-from able.tasks.limb.human import (
+from able.tasks.limb.distribution import DEFAULT_TASK_BOX, inactive_joints
+from able.tasks.limb.env.human import (
     DEFAULT_PRIOR,
     active_joints,
     active_motions,
@@ -31,12 +25,19 @@ from able.tasks.limb.human import (
     theta_to_bounds,
     theta_to_joint_limits,
 )
+from able.tasks.limb.env.query import DEFAULT_QUERY_MODEL, QueryModel
+from able.tasks.limb.env.variant import DEFAULT_VARIANT, ENV_VAR, VARIANTS
+from able.tasks.limb.env.variant import _build as _build_variant
+from able.tasks.limb.env.variant import select as select_variant
 from able.tasks.limb.planning.stream import MPCConfig
-from able.tasks.limb.queries import DEFAULT_QUERY_MODEL, PushToLimitGatherer, QueryModel
-from able.tasks.limb.tasks import DEFAULT_TASK_DISTRIBUTION, inactive_joints
-from able.tasks.limb.variant import DEFAULT_VARIANT, ENV_VAR, VARIANTS
-from able.tasks.limb.variant import _build as _build_variant
-from able.tasks.limb.variant import select as select_variant
+from able.tasks.limb.psi import (
+    BASE_FEATURES,
+    control_basis,
+    project_torques,
+    segment_features,
+    state_features,
+)
+from able.tasks.limb.query import LimbGatherer
 
 
 def test_theta_scales_the_bound_of_the_joint_each_motion_governs():
@@ -70,7 +71,7 @@ def test_prior_draws_stay_inside_the_plausible_range():
 def test_belief_update_moves_toward_the_truth_and_narrows():
     magnitudes = default_magnitudes()
     truth = np.array([0.85, 1.05, 0.75])
-    belief = Belief.from_prior(DEFAULT_PRIOR)
+    belief = RoMGaussian.from_prior(DEFAULT_PRIOR)
     model = DEFAULT_QUERY_MODEL
     for _ in range(4):
         for i in range(len(truth)):
@@ -83,7 +84,7 @@ def test_belief_update_moves_toward_the_truth_and_narrows():
 def test_a_noiseless_answer_is_inverted_exactly_in_the_limit():
     """With a vanishing tau the posterior mean is the answer divided by the range."""
     magnitudes = default_magnitudes()
-    belief = Belief.from_prior(DEFAULT_PRIOR)
+    belief = RoMGaussian.from_prior(DEFAULT_PRIOR)
     truth = 0.83
     answer = truth * magnitudes[0] - 0.2
     updated = belief.updated(0, answer, tau=1e-6, short_fall=0.2)
@@ -120,12 +121,12 @@ def test_sampled_tasks_respect_the_person_and_the_separation():
     rng = np.random.default_rng(0)
     for _ in range(50):
         theta = DEFAULT_PRIOR.sample(rng)
-        task = DEFAULT_TASK_DISTRIBUTION.sample(rng, theta)
+        task = DEFAULT_TASK_BOX.sample(rng, theta)
         lower, upper = theta_to_joint_limits(theta)
         for positions in (task.limb_init, task.limb_goal):
             assert np.all(np.asarray(positions) >= lower - 1e-9)
             assert np.all(np.asarray(positions) <= upper + 1e-9)
-        assert task.separation >= DEFAULT_TASK_DISTRIBUTION.min_separation
+        assert task.separation >= DEFAULT_TASK_BOX.min_separation
 
 
 def test_control_basis_matches_the_mpc_expansion():
@@ -184,8 +185,8 @@ def test_history_features_follow_the_base_features():
 def test_training_rows_match_what_the_hook_sees():
     from types import SimpleNamespace
 
-    from able.tasks.limb.features import dense_rows
-    from able.tasks.limb.utils import RolloutLog
+    from able.tasks.limb.env.execute import RolloutLog
+    from able.tasks.limb.psi import dense_rows
 
     mpc = MPCConfig()
     repeat, steps = mpc.action_repeat, 3
@@ -219,7 +220,7 @@ def test_training_rows_match_what_the_hook_sees():
 @pytest.mark.slow
 def test_a_query_stops_short_of_the_passive_bound():
     """The whole observation model: the person stops inside their own range."""
-    from able.tasks.limb.queries import QuerySimulator
+    from able.tasks.limb.env.query import QuerySimulator
 
     theta = np.array([0.9, 1.0, 0.8])
     bounds = np.abs(theta_to_bounds(theta))
@@ -272,7 +273,7 @@ def test_an_unknown_variant_is_rejected():
 
 def test_particle_limits_are_a_chance_constraint_over_the_belief():
     """A configuration is believed inside when enough particles allow it."""
-    from able.tasks.limb.episode import ParticleLimits
+    from able.tasks.limb.env.episode import ParticleLimits
 
     select_variant(DEFAULT_VARIANT)
     joint, sign = active_joints()[0], active_signs()[0]
@@ -302,7 +303,7 @@ def test_particle_limits_are_a_chance_constraint_over_the_belief():
 
 def test_a_floor_truncates_the_belief_and_narrows_it():
     """Reaching a motion safely rules out every narrower person."""
-    belief = Belief.from_prior(DEFAULT_PRIOR)
+    belief = RoMGaussian.from_prior(DEFAULT_PRIOR)
     raised = belief.raised(1, 1.0)
     assert np.allclose(raised.lower, [DEFAULT_PRIOR.low, 1.0, DEFAULT_PRIOR.low])
     assert raised.width < belief.width
@@ -321,7 +322,7 @@ def test_the_hard_deadline_stops_any_code_at_the_limit_and_cleans_up():
     import signal
     import time
 
-    from able.tasks.limb.episode import PlanningTimeout, hard_deadline
+    from able.planners.deadline import PlanningTimeout, hard_deadline
 
     before = signal.getsignal(signal.SIGALRM)
     started = time.perf_counter()
@@ -347,23 +348,23 @@ def test_the_hard_deadline_stops_any_code_at_the_limit_and_cleans_up():
 
 def test_the_target_is_drawn_around_the_default_range_of_motion():
     """The robot does not know the person's range, so it asks around the default one."""
-    gatherer = PushToLimitGatherer()
-    belief = LimbBelief(Belief.from_prior(DEFAULT_PRIOR))
+    gatherer = LimbGatherer()
+    belief = LimbBelief(RoMGaussian.from_prior(DEFAULT_PRIOR))
     rng = np.random.default_rng(0)
     for _ in range(50):
-        motion_index, target = gatherer.choose(belief, rng)
-        boundary = default_magnitudes()[motion_index]
+        query = gatherer.choose(belief, rng)
+        target, boundary = query.target, default_magnitudes()[query.motion_index]
         assert boundary - gatherer.probe_band <= target <= boundary + gatherer.probe_band
 
 
 def test_a_raised_floor_raises_the_next_target():
     """Reaching proves only that the bound is at least there, so the next ask goes higher."""
-    gatherer = PushToLimitGatherer(probe_band=0.0)
-    belief = LimbBelief(Belief.from_prior(DEFAULT_PRIOR))
+    gatherer = LimbGatherer(probe_band=0.0)
+    belief = LimbBelief(RoMGaussian.from_prior(DEFAULT_PRIOR))
     rng = np.random.default_rng(0)
-    motion_index, target = gatherer.choose(belief, rng)
-    raised = LimbBelief(belief.gaussian.raised(motion_index, 1.1))
-    assert gatherer.choose(raised, rng)[1] > target
+    query = gatherer.choose(belief, rng)
+    raised = LimbBelief(belief.gaussian.raised(query.motion_index, 1.1))
+    assert gatherer.choose(raised, rng).target > query.target
 
 
 def test_an_execution_updates_the_belief_as_the_notebook_does():
@@ -371,7 +372,7 @@ def test_an_execution_updates_the_belief_as_the_notebook_does():
     select_variant(DEFAULT_VARIANT)
     joint, sign = active_joints()[0], active_signs()[0]
     person = np.array([0.8, 0.9, 1.0])
-    belief = Belief.from_prior(DEFAULT_PRIOR)
+    belief = RoMGaussian.from_prior(DEFAULT_PRIOR)
 
     def observe(b, scales, tau=DEFAULT_QUERY_MODEL.tau):
         q = np.zeros((len(scales), 6))
@@ -390,19 +391,19 @@ def test_an_execution_updates_the_belief_as_the_notebook_does():
 
 def test_a_goal_beyond_the_belief_is_retargeted_just_inside_it():
     """As the notebook's planner stops at the nearest point it believes reachable."""
-    from able.tasks.limb.episode import ParticleLimits
-    from able.tasks.limb.task import retarget
-    from able.tasks.limb.tasks import Task
+    from able.tasks.limb.env.episode import ParticleLimits
+    from able.tasks.limb.planner import retarget
+    from able.tasks.limb.task import LimbProblem
 
     select_variant(DEFAULT_VARIANT)
-    belief = LimbBelief(Belief.from_prior(DEFAULT_PRIOR))
+    belief = LimbBelief(RoMGaussian.from_prior(DEFAULT_PRIOR))
     limits = ParticleLimits(belief.sample(np.random.default_rng(0), 16), 0.9)
     joint, sign = active_joints()[0], active_signs()[0]
 
     def task_to(scale):
         goal = np.zeros(6)
         goal[joint] = sign * scale * default_magnitudes()[0]
-        return Task(tuple(np.zeros(6)), tuple(np.zeros(7)), tuple(goal))
+        return LimbProblem(tuple(np.zeros(6)), tuple(np.zeros(7)), tuple(goal))
 
     inside = task_to(0.5)
     assert retarget(inside, limits) == (inside, False)

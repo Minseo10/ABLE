@@ -11,8 +11,8 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.stats import truncnorm
 
-from able.api.belief import Observation
-from able.tasks.limb.human import (
+from able.api import Belief, Observation, Prior
+from able.tasks.limb.env.human import (
     DEFAULT_PRIOR,
     RoMPrior,
     active_joints,
@@ -21,14 +21,14 @@ from able.tasks.limb.human import (
     default_magnitudes,
     theta_to_bounds,
 )
-from able.tasks.limb.queries import DEFAULT_QUERY_MODEL, QueryModel, QueryOutcome
+from able.tasks.limb.env.query import DEFAULT_QUERY_MODEL, QueryModel, QueryOutcome
 
 # A floor must rise by this much (in scale) to count as new.
 FLOOR_STEP = 1e-3
 
 
 @dataclass(frozen=True)
-class Belief:
+class RoMGaussian:
     """Untruncated Gaussian per motion (closed-form update); reads truncate to `[lower, high]`."""
 
     mean: NDArray[np.float64]
@@ -65,7 +65,7 @@ class Belief:
         """Truncated stddev summed over motions."""
         return float(np.sum(self._truncated().std()))
 
-    def raised(self, motion_index: int, scale: float) -> "Belief":
+    def raised(self, motion_index: int, scale: float) -> "RoMGaussian":
         """Condition on the person having reached `scale` of a motion's default range."""
         floor = np.zeros(len(self.mean)) if self.floor is None else self.floor.copy()
         # A floor at the top would leave nothing to sample.
@@ -73,7 +73,7 @@ class Belief:
         return replace(self, floor=floor)
 
     @classmethod
-    def from_prior(cls, prior: RoMPrior) -> "Belief":
+    def from_prior(cls, prior: RoMPrior) -> "RoMGaussian":
         """Belief before any query."""
         n = len(active_motions())
         return cls(
@@ -86,7 +86,7 @@ class Belief:
 
     def updated(
         self, motion_index: int, answer: float, tau: float, short_fall: float = 0.0
-    ) -> "Belief":
+    ) -> "RoMGaussian":
         """Condition one motion on a query answer (magnitude of the stop angle)."""
         magnitude = default_magnitudes()[motion_index]
         prior_mean = self.mean[motion_index]
@@ -130,7 +130,7 @@ def execution_evidence(limb_path, person: NDArray[np.float64]) -> list[tuple[str
     return evidence
 
 
-def apply_evidence(belief: Belief, evidence, tau: float) -> tuple[Belief, list[str]]:
+def apply_evidence(belief: RoMGaussian, evidence, tau: float) -> tuple[RoMGaussian, list[str]]:
     """Crossing angle = a limit measurement; farthest reach = a floor. Returns notes too."""
     magnitudes = default_magnitudes()
     notes = []
@@ -146,10 +146,10 @@ def apply_evidence(belief: Belief, evidence, tau: float) -> tuple[Belief, list[s
 
 
 @dataclass(frozen=True)
-class LimbBelief:
-    """`Belief` behind the shared API: query answers and executions both update it."""
+class LimbBelief(Belief):
+    """`RoMGaussian` behind the shared API: query answers and executions both update it."""
 
-    gaussian: Belief
+    gaussian: RoMGaussian
     query_model: QueryModel = DEFAULT_QUERY_MODEL
 
     def sample(self, rng: np.random.Generator, n: int = 1) -> NDArray[np.float64]:
@@ -181,7 +181,7 @@ class LimbBelief:
 
 
 @dataclass(frozen=True)
-class LimbPrior:
+class LimbPrior(Prior):
     """Population prior over the range-of-motion scales."""
 
     prior: RoMPrior = DEFAULT_PRIOR
@@ -190,4 +190,4 @@ class LimbPrior:
         return self.prior.sample(rng)
 
     def belief(self, rng: np.random.Generator) -> LimbBelief:
-        return LimbBelief(Belief.from_prior(self.prior))
+        return LimbBelief(RoMGaussian.from_prior(self.prior))

@@ -9,20 +9,32 @@ from able.api import (
     Belief,
     InfoGatherer,
     Observation,
+    ParticleBelief,
     Planner,
     PlanResult,
     Prior,
     PsiSpec,
     Task,
+    TaskDistribution,
     make_learner,
     run_episode,
 )
-from able.tasks.bedside import BedsideTask, PlaceProposal, reach_distance
-from able.tasks.bedside.planner.run import (
-    _base_path,
-    build_stream_context,
-    render_frame,
+from able.planners.pddlstream import PDDLStreamPlanner
+from able.tasks.bedside import (
+    BedsideBelief,
+    BedsideDistribution,
+    BedsideGatherer,
+    BedsidePlanner,
+    BedsidePrior,
+    BedsideProblem,
+    BedsidePsi,
+    BedsideQuery,
+    BedsideTask,
+    PlaceProposal,
+    reach_distance,
 )
+from able.tasks.bedside.env.execute import _base_path, render_frame
+from able.tasks.bedside.planning.problem import build_stream_context
 
 THETA = np.array([0.7, 0.6, 0.65])
 
@@ -43,13 +55,27 @@ def test_protocols(task):
     assert task.prior.sample(rng).shape == (3,)
 
 
+def test_role_classes_inherit_the_api_bases(task):
+    rng = np.random.default_rng(0)
+    for cls, base in ((BedsideTask, Task), (BedsideDistribution, TaskDistribution), (BedsidePrior, Prior),
+                      (BedsideBelief, ParticleBelief), (BedsideGatherer, InfoGatherer),
+                      (BedsidePlanner, PDDLStreamPlanner), (BedsidePlanner, Planner), (BedsidePsi, PsiSpec)):
+        assert issubclass(cls, base)
+    assert isinstance(task.distribution, BedsideDistribution)
+    assert isinstance(task.prior.belief(rng), BedsideBelief)
+    assert isinstance(task.gatherer.choose(task.prior.belief(rng), rng), BedsideQuery)
+    problem = task.sample_problem(np.random.default_rng(3))
+    assert problem == BedsideProblem(int(np.random.default_rng(3).integers(2**31 - 1)))
+
+
 def test_query_narrows_the_belief_along_its_direction(task):
     rng = np.random.default_rng(0)
     belief = task.prior.belief(rng)
-    d = task.gatherer.choose(belief, rng)
+    query = task.gatherer.choose(belief, rng)
+    d = query.direction
     before = reach_distance(d, belief.particles).std()
     for _ in range(3):
-        belief = belief.update(task.gatherer.respond(THETA, d, rng))
+        belief = belief.update(task.gatherer.respond(THETA, query, rng))
     r = reach_distance(d, belief.particles)
     assert r.std() < before / 3
     assert abs(r.mean() - reach_distance(d, THETA)) < 0.02

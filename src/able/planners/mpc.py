@@ -9,11 +9,15 @@ those rollouts. Subclasses supply the rollouts (see the abstract methods).
 from __future__ import annotations
 
 import time
+from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
+
+from able.api import Belief, Budget, Planner, PlanResult
+from able.planners.deadline import PlanningTimeout, hard_deadline
 
 
 class NoFeasibleMotion(RuntimeError):
@@ -228,3 +232,31 @@ class PredictiveSampling:
         if rejected:
             raise NoFeasibleMotion("all MPC candidates violate constraints")
         return self._commit_best(nominal, controls)
+
+
+@dataclass
+class MPCPlanner(Planner):
+    """Times one MPC plan under a hard deadline and charges its rollouts; subclasses `solve`."""
+
+    max_time: float = 600.0
+    seed_config: SeedConfig = field(default_factory=SeedConfig)
+    effort_unit: str = "mpc_rollouts"
+
+    @abstractmethod
+    def solve(self, state: Any, belief: Belief, proposal: Any, stats: SeedStats,
+              rng: np.random.Generator) -> tuple[Any, dict]:
+        """(plan or None, info); MPCs it builds count into `stats`."""
+
+    def plan(self, state: Any, belief: Belief, proposal: Any = None, budget: Budget | None = None,
+             rng: np.random.Generator | None = None) -> PlanResult:
+        rng = rng if rng is not None else np.random.default_rng(getattr(state, "seed", None))
+        limit = budget.seconds if budget is not None and budget.seconds else self.max_time
+        stats, started = SeedStats(), time.time()
+        try:
+            with hard_deadline(limit):
+                plan, info = self.solve(state, belief, proposal, stats, rng)
+        except PlanningTimeout as timeout:
+            plan, info = None, {"failure": str(timeout)}
+        info = {**info, "seeded_steps": stats.seeded_steps, "full_steps": stats.full_steps,
+                "model_seconds": stats.model_seconds}
+        return PlanResult(plan, time.time() - started, stats.rollouts, info=info)

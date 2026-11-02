@@ -9,49 +9,38 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from able.api import Observation, Step
+from able.api import Observation, Step, Task
 from able.planners.pomcpow import POMCPOWConfig
-from able.tasks.friction.belief import FrictionBelief
+from able.tasks.friction.belief import FrictionPrior
 from able.tasks.friction.env import puckpushing_utils as pu
-from able.tasks.friction.levels import level_world, make_level_env
-from able.tasks.friction.model import PuckPushingModel, PuckRewards
-from able.tasks.friction.planner import POMCPOWPlanner
+from able.tasks.friction.env.levels import level_world, make_level_env
+from able.tasks.friction.env.video import Recorder
+from able.tasks.friction.planner import FrictionPlanner
+from able.tasks.friction.planning.model import PuckPushingModel, PuckRewards
 from able.tasks.friction.psi import FrictionPsi
-from able.tasks.friction.query import ProbeGatherer
-from able.tasks.friction.video import Recorder
-
-
-@dataclass(frozen=True)
-class FrictionPrior:
-    """Shuffled friction prior (levels dealt to floors at random) as an able.api Prior."""
-
-    world: pu.PuckWorld
-    dist: pu.FrictionPrior | pu.BoxFrictionPrior = pu.DEFAULT_FRICTION_PRIOR
-    num_particles: int = 500
-
-    def sample(self, rng: np.random.Generator) -> NDArray[np.float64]:
-        return self.dist.sample(rng)
-
-    def belief(self, rng: np.random.Generator) -> FrictionBelief:
-        low, high = self.dist.bounds
-        return FrictionBelief(self.dist.sample(rng, self.num_particles), low, high,
-                              seed=int(rng.integers(2**31)), world=self.world)
+from able.tasks.friction.query import FrictionGatherer
 
 
 @dataclass(frozen=True)
 class FrictionProblem:
+    """What FrictionDistribution samples."""
+
     seed: int  # env reset seed
 
 
 @dataclass(frozen=True)
 class FrictionState:
+    """Puck and robot positions, and pushes so far."""
+
     puck: NDArray[np.float64]
     robot: NDArray[np.float64]
     pushes: int = 0
 
 
 @dataclass
-class FrictionTask:
+class FrictionTask(Task):
+    """Push the puck to the goal; theta is the friction of each floor."""
+
     name: str = "friction"
     env: str = "2d"  # or "3d"
     level: str = "L2"
@@ -66,8 +55,13 @@ class FrictionTask:
         self.model = PuckPushingModel(self.world, rewards=self.rewards, max_pushes=self.max_pushes,
                                       stance_mode=self.stance_mode)
         self.prior = FrictionPrior(self.world, self.model.friction_prior, self.num_particles)
-        self.gatherer = ProbeGatherer(self.world.physics)
+        self.gatherer = FrictionGatherer(self.world.physics)
         self.psi = FrictionPsi(self.model)
+        from able.tasks.friction.distribution import (
+            FrictionDistribution,  # it imports FrictionProblem from here
+        )
+
+        self.distribution = FrictionDistribution()
         self._env: Any = None
         self._recorder: Any = None
 
@@ -85,11 +79,8 @@ class FrictionTask:
             self._recorder = Recorder(self.environment, self.env, header=f"{self.env.upper()} {self.level}")
         return self._recorder
 
-    def make_planner(self) -> POMCPOWPlanner:
-        return POMCPOWPlanner(self.model, self.config)
-
-    def sample_problem(self, rng: np.random.Generator) -> FrictionProblem:
-        return FrictionProblem(int(rng.integers(2**31)))
+    def make_planner(self) -> FrictionPlanner:
+        return FrictionPlanner(self.config, model=self.model)
 
     def reset(self, problem: FrictionProblem, theta: NDArray[np.float64], rng: np.random.Generator) -> FrictionState:
         del rng

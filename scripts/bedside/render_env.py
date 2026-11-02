@@ -10,12 +10,12 @@ import pybullet as p
 from PIL import Image, ImageDraw, ImageFont
 from pybullet_helpers.geometry import set_pose
 
-from able.tasks.bedside.env import (
+from able.tasks.bedside.env.bedside_stocking3d import (
     ObjectCentricBedsideStocking3DEnv,
     reach_margin,
 )
-from able.tasks.bedside.planner.run import plan_bedside
-from able.tasks.bedside.planner.stream import requested_candidate_slots
+from able.tasks.bedside.planning.problem import plan_bedside
+from able.tasks.bedside.planning.stream import requested_candidate_slots
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else "figures/bedside"
 R, C, SEED = (int(a) for a in (sys.argv[2:5] if len(sys.argv) > 4 else (4, 4, 0)))

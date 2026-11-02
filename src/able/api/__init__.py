@@ -12,10 +12,11 @@ from able.api.task import (
     PsiSpec,
     Step,
     Task,
+    TaskDistribution,
 )
 
 __all__ = [
     "Belief", "Budget", "Episode", "EpisodeStep", "Examples", "FlowMatching", "InfoGatherer",
     "Learner", "Observation", "ParticleBelief", "Planner", "PlanResult", "Prior", "PsiSpec",
-    "Regression", "Step", "Task", "make_learner", "run_episode",
+    "Regression", "Step", "Task", "TaskDistribution", "make_learner", "run_episode",
 ]

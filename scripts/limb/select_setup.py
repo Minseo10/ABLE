@@ -1,7 +1,7 @@
 """Pick a limb variant's fixed grasp and base: stage A ranks pairs by IK reach, stage B by plain MPC.
 
     python scripts/limb/select_setup.py --variant human-left-arm --out data/limb/setup
-    python scripts/limb/select_setup.py --merge data/limb/setup   # -> src/able/tasks/limb/fixed_setup.json
+    python scripts/limb/select_setup.py --merge data/limb/setup   # -> src/able/tasks/limb/planning/fixed_setup.json
 """
 
 from __future__ import annotations
@@ -19,8 +19,13 @@ import numpy as np
 
 def candidates(ctx, max_bases: int):
     """(offset, roll, grasp, base) tuples, up to `max_bases` approachable bases per grasp."""
-    from able.tasks.limb.setup import GRASP_OFFSETS, GRASP_ROLLS, approach, wrist_grasp
-    from able.tasks.limb.utils import base_candidates
+    from able.tasks.limb.planning.setup import (
+        GRASP_OFFSETS,
+        GRASP_ROLLS,
+        approach,
+        wrist_grasp,
+    )
+    from able.tasks.limb.planning.utils import base_candidates
 
     init = list(ctx.sim.limb.get_joint_positions())
     out = []
@@ -43,9 +48,9 @@ def draw_tasks(sampler, rng, n: int):
         joint_position_distance,
     )
 
-    from able.tasks.limb.human import DEFAULT_PRIOR
+    from able.tasks.limb.env.human import DEFAULT_PRIOR
 
-    dist, tasks = sampler.distribution, []
+    dist, tasks = sampler.box, []
     while len(tasks) < n:
         low, high = dist.inner_range(DEFAULT_PRIOR.sample(rng))
         init, goal = sampler._draw_limb_conf(rng, low, high), sampler._draw_limb_conf(rng, low, high)
@@ -63,7 +68,7 @@ def reach_score(sampler, grasp, base, tasks) -> float:
 def mpc_score(variant, offset, roll, base, n: int, max_time: float, seed: int) -> dict:
     """Plain MPC (prior belief) on `n` tasks reachable from the pair."""
     from able.api import Budget, run_episode
-    from able.tasks.limb.setup import FixedSetup
+    from able.tasks.limb.planning.setup import FixedSetup
     from able.tasks.limb.task import LimbTask
 
     task = LimbTask(variant, setup=FixedSetup(variant, offset, roll, (base.x, base.y, base.rot)))
@@ -91,10 +96,10 @@ def mpc_stats(runs: list[dict]) -> dict:
 
 
 def select(args) -> dict:
-    from able.tasks.limb.episode import make_sampling_context
+    from able.tasks.limb.distribution import ReachableTaskSampler
+    from able.tasks.limb.env.episode import make_sampling_context
+    from able.tasks.limb.env.variant import select as select_variant
     from able.tasks.limb.planning.run import reset_to_start
-    from able.tasks.limb.tasks import ReachableTaskSampler
-    from able.tasks.limb.variant import select as select_variant
 
     select_variant(args.variant)
     os.chdir(tempfile.mkdtemp(prefix="select-setup-"))
@@ -129,7 +134,7 @@ def select(args) -> dict:
 
 
 def merge(directory: Path) -> None:
-    from able.tasks.limb.setup import FixedSetup, save_setup
+    from able.tasks.limb.planning.setup import FixedSetup, save_setup
 
     for path in sorted(directory.glob("*.json")):
         report = json.loads(path.read_text())

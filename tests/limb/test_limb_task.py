@@ -4,16 +4,15 @@ import numpy as np
 import pytest
 
 from able.api import Planner, PsiSpec, Task, make_learner
-from able.tasks.limb.features import state_features
-from able.tasks.limb.planning.stream import MPCConfig
-from able.tasks.limb.setup import (
+from able.tasks.limb.planning.setup import (
     SETUP_PATH,
     FixedSetup,
     load_setup,
     load_setups,
     save_setup,
 )
-from able.tasks.limb.task import LimbPsi
+from able.tasks.limb.planning.stream import MPCConfig
+from able.tasks.limb.psi import LimbPsi, state_features
 
 
 def test_setups_round_trip(tmp_path):

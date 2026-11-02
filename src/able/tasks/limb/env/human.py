@@ -12,7 +12,7 @@ from kinder.envs.dynamic3d.limbs import (
 )
 from numpy.typing import NDArray
 
-from able.tasks.limb.variant import current as current_variant
+from able.tasks.limb.env.variant import current as current_variant
 
 
 def variant() -> str:

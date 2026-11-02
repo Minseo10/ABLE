@@ -17,7 +17,7 @@ from pybullet_helpers.inverse_kinematics import (
     inverse_kinematics,
 )
 
-from able.tasks.bedside.env import (
+from able.tasks.bedside.env.bedside_stocking3d import (
     ObjectCentricBedsideStocking3DEnv,
     reach_margin,
     segment_blocked,

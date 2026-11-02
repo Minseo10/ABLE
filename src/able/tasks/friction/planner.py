@@ -2,36 +2,26 @@
 
 from __future__ import annotations
 
-import dataclasses
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING
 
-import numpy as np
+from able.planners.pomcpow import POMCPOWPlanner
+from able.tasks.friction.belief import FrictionBelief
+from able.tasks.friction.planning.model import PuckPushingModel, PuckState
 
-from able.api import Budget, PlanResult
-from able.planners.pomcpow import POMCPOW, POMCPOWConfig
-from able.tasks.friction.model import PuckPushingModel
+if TYPE_CHECKING:
+    from able.tasks.friction.task import FrictionState
 
 
 @dataclass
-class POMCPOWPlanner:
-    """Plans one push from the belief's particles; psi's hook is POMCPOW's ActionProposer."""
+class FrictionPlanner(POMCPOWPlanner):
+    """Plans one push from the belief's particles; rollouts slide on the belief mean."""
 
-    model: PuckPushingModel
-    config: POMCPOWConfig = field(default_factory=POMCPOWConfig)
-    effort_unit: str = "pomcpow_sims"
+    model: PuckPushingModel = field(kw_only=True)
 
-    def plan(self, state: Any, belief: Any, proposal: Any = None, budget: Budget | None = None,
-             rng: np.random.Generator | None = None) -> PlanResult:
-        config = self.config
-        if budget is not None and budget.effort is not None:
-            config = dataclasses.replace(config, num_sims=int(budget.effort))
-        if budget is not None and budget.seconds is not None:
-            config = dataclasses.replace(config, max_time=budget.seconds)
-        model = self.model
-        model.rollout_frictions = tuple(float(f) for f in belief.mean)
-        particles = [model.initial_state(state.puck, state.robot, f, state.pushes) for f in belief.particles]
-        solver = POMCPOW(model, config, proposer=proposal, rng=rng if rng is not None else np.random.default_rng(0))
-        action, stats = solver.plan(particles)
-        return PlanResult(action, stats.seconds, stats.num_sims, trace=stats.root_values,
-                          info={"root_actions": stats.root_actions, "max_depth": stats.max_depth_reached})
+    def pomdp(self, state: FrictionState, belief: FrictionBelief) -> PuckPushingModel:
+        self.model.rollout_frictions = tuple(float(f) for f in belief.mean)
+        return self.model
+
+    def particles(self, state: FrictionState, belief: FrictionBelief) -> list[PuckState]:
+        return [self.model.initial_state(state.puck, state.robot, f, state.pushes) for f in belief.particles]

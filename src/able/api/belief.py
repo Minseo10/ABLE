@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
-from typing import Any, Protocol, runtime_checkable
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -18,38 +19,38 @@ class Observation:
     query: Any = None
 
 
-@runtime_checkable
-class Belief(Protocol):
+class Belief(ABC):
     """Immutable: `update` returns a new belief."""
 
+    @abstractmethod
     def sample(self, rng: np.random.Generator, n: int = 1) -> NDArray[np.float64]:
         """(n, dim) thetas."""
-        ...
 
+    @abstractmethod
     def update(self, observation: Observation) -> Belief: ...
 
+    @abstractmethod
     def features(self) -> NDArray[np.float64]:
         """Fixed-length vector psi is conditioned on."""
-        ...
 
+    @abstractmethod
     def summary(self) -> dict[str, Any]:
         """Small JSON-able record for logs."""
-        ...
 
 
-@runtime_checkable
-class Prior(Protocol):
+class Prior(ABC):
     """Population prior over theta."""
 
+    @abstractmethod
     def sample(self, rng: np.random.Generator) -> NDArray[np.float64]: ...
 
+    @abstractmethod
     def belief(self, rng: np.random.Generator) -> Belief:
         """The belief before any observation."""
-        ...
 
 
 @dataclass(frozen=True)
-class ParticleBelief:
+class ParticleBelief(Belief):
     """Equal-weight particles; subclasses define `log_likelihood`."""
 
     particles: NDArray[np.float64]  # (n, dim)

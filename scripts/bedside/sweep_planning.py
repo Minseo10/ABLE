@@ -18,6 +18,7 @@ from pathlib import Path
 import psutil
 
 SRC = str(Path(__file__).resolve().parents[2] / "src")
+SOLVE = str(Path(__file__).resolve().parent / "solve.py")
 PYTHONPATH = ":".join(p for p in (SRC, os.environ.get("PYTHONPATH")) if p)
 
 
@@ -37,8 +38,7 @@ def run_one(r: int, c: int, seed: int, args) -> dict:
         return json.loads(out.read_text())
     cmd = [
         sys.executable,
-        "-m",
-        "able.tasks.bedside.planner.run",
+        SOLVE,
         "--num-requested", str(r),
         "--num-clutter", str(c),
         "--seed", str(seed),

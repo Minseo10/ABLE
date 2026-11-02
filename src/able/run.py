@@ -25,7 +25,7 @@ from able.pipeline import (
 def make_task(name: str, **options):
     """Build a task from config options."""
     if name == "limb":
-        from able.tasks.limb.episode import PlannerSettings
+        from able.tasks.limb.env.episode import PlannerSettings
         from able.tasks.limb.task import LimbTask
 
         max_time = options.pop("max_time", None)

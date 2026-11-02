@@ -8,7 +8,7 @@ _ENVS = {
     "able/PuckPushing3D-threeroutes-v0": (
         "able.tasks.friction.env.puckpushing3d:PuckPushing3DEnv", {"map_name": "threeroutes"}),
     **{f"able/BedsideStocking3D-r{r}-c{c}-v0": (
-        "able.tasks.bedside.env:BedsideStocking3DEnv", {"num_requested": r, "num_clutter": c})
+        "able.tasks.bedside.env.bedside_stocking3d:BedsideStocking3DEnv", {"num_requested": r, "num_clutter": c})
        for r in (2, 4, 6, 8) for c in (0, 2, 4, 6)},
 }
 

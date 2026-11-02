@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Protocol, runtime_checkable
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,17 +12,16 @@ from numpy.typing import NDArray
 from able.api.belief import Belief, Observation, Prior
 
 
-@runtime_checkable
-class InfoGatherer(Protocol):
+class InfoGatherer(ABC):
     """Asks the person something before planning."""
 
+    @abstractmethod
     def choose(self, belief: Belief, rng: np.random.Generator) -> Any:
         """The next query, or None to ask nothing."""
-        ...
 
+    @abstractmethod
     def respond(self, theta: NDArray[np.float64], query: Any, rng: np.random.Generator) -> Observation:
         """The simulated person's answer."""
-        ...
 
 
 @dataclass(frozen=True)
@@ -45,14 +45,13 @@ class PlanResult:
         return self.plan is not None
 
 
-@runtime_checkable
-class Planner(Protocol):
-    effort_unit: str
+class Planner(ABC):
+    effort_unit: str = ""  # what PlanResult.effort counts
 
+    @abstractmethod
     def plan(self, state: Any, belief: Belief, proposal: Any = None, budget: Budget | None = None,
              rng: np.random.Generator | None = None) -> PlanResult:
         """Plan from `state` under `belief`; `proposal` is psi's hook (None = plain)."""
-        ...
 
 
 @dataclass
@@ -82,36 +81,48 @@ class Examples:
         return len(self.x)
 
 
-@runtime_checkable
-class PsiSpec(Protocol):
+class PsiSpec(ABC):
     """What psi is for a task: its features, labels and planner hook."""
 
+    @abstractmethod
     def examples(self, episode: Any, belief: Belief) -> Examples:
         """Rows from a solved episode, conditioned on `belief`."""
-        ...
 
+    @abstractmethod
     def proposal(self, learner: Any, state: Any, belief: Belief) -> Any:
         """Planner hook built from a fitted learner."""
-        ...
 
 
-@runtime_checkable
-class Task(Protocol):
+class TaskDistribution(ABC):
+    """P(problem): goals and scenes, independent of theta."""
+
+    @abstractmethod
+    def sample(self, rng: np.random.Generator) -> Any: ...
+
+
+class Task(ABC):
+    """A task: who the person is (prior), what to ask, what to plan, and psi.
+
+    Subclasses set `name`, `prior`, `gatherer`, `psi` and `distribution`.
+    """
+
     name: str
     prior: Prior
     gatherer: InfoGatherer
     psi: PsiSpec
+    distribution: TaskDistribution
 
+    @abstractmethod
     def make_planner(self) -> Planner: ...
 
     def sample_problem(self, rng: np.random.Generator) -> Any:
-        """A goal and scene, independent of theta."""
-        ...
+        """A goal and scene from `distribution`."""
+        return self.distribution.sample(rng)
 
+    @abstractmethod
     def reset(self, problem: Any, theta: NDArray[np.float64], rng: np.random.Generator) -> Any:
         """Start state for a person with `theta`."""
-        ...
 
+    @abstractmethod
     def execute(self, state: Any, plan: Any, rng: np.random.Generator, frames: list | None = None) -> Step:
         """Run `plan` on the person; append RGB frames to `frames` if given."""
-        ...

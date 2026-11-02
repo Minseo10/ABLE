@@ -17,7 +17,7 @@ from pddlstream.algorithms.meta import solve
 from pddlstream.language.constants import PDDLProblem, print_solution
 from pddlstream.language.generator import from_gen_fn, from_test
 
-from able.api import Belief, Budget, PlanResult
+from able.api import Belief, Budget, Planner, PlanResult
 
 
 @contextmanager
@@ -74,7 +74,7 @@ def solve_problem(problem: PDDLProblem, max_time: float, algorithm: str = "adapt
 
 
 @dataclass
-class PDDLStreamPlanner:
+class PDDLStreamPlanner(Planner):
     """Subclasses build the problem from (state, belief, psi); this solves it and counts stream calls."""
 
     max_time: float = 120.0

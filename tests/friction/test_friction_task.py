@@ -10,15 +10,27 @@ from able.api import (
     Episode,
     InfoGatherer,
     Observation,
+    ParticleBelief,
     Planner,
     Prior,
     PsiSpec,
     Task,
+    TaskDistribution,
     make_learner,
     run_episode,
 )
-from able.planners.pomcpow import POMCPOWConfig
-from able.tasks.friction import FrictionTask, Probe
+from able.planners.pomcpow import POMCPOWConfig, POMCPOWPlanner
+from able.tasks.friction import (
+    FrictionBelief,
+    FrictionDistribution,
+    FrictionGatherer,
+    FrictionPlanner,
+    FrictionPrior,
+    FrictionProblem,
+    FrictionPsi,
+    FrictionQuery,
+    FrictionTask,
+)
 from able.tasks.friction.env.puckpushing_utils import GRAVITY, Push
 from able.tasks.friction.psi import X_DIM, Y_DIM, encode
 from able.tasks.friction.query import probe_distance, probe_log_likelihood
@@ -49,6 +61,17 @@ def test_components_satisfy_the_protocols(task):
     assert set(belief.summary()) == {"blue", "tan", "green"}
 
 
+def test_role_classes_inherit_the_bases(task):
+    assert issubclass(FrictionTask, Task) and issubclass(FrictionDistribution, TaskDistribution)
+    assert issubclass(FrictionPrior, Prior) and issubclass(FrictionBelief, ParticleBelief)
+    assert issubclass(FrictionGatherer, InfoGatherer) and issubclass(FrictionPsi, PsiSpec)
+    assert issubclass(FrictionPlanner, POMCPOWPlanner)
+    assert isinstance(task.distribution, FrictionDistribution)
+    assert isinstance(task.gatherer.choose(task.prior.belief(np.random.default_rng(0)), None), FrictionQuery)
+    rng_a, rng_b = np.random.default_rng(3), np.random.default_rng(3)
+    assert task.sample_problem(rng_a) == FrictionProblem(int(rng_b.integers(2**31)))
+
+
 def test_probe_matches_the_slide_model(task):
     """Probe distances are PuckWorld.slide's on open floor, and the likelihood is a density."""
     world = task.world
@@ -56,7 +79,7 @@ def test_probe_matches_the_slide_model(task):
     slide = world.slide(np.array([0.8, 3.4]), 0.8, 0.0, frictions)  # along the blue corridor
     assert slide.distance == pytest.approx(float(probe_distance(0.8, 0.1)), rel=1e-6)
     assert float(probe_distance(0.8, 0.1)) == pytest.approx(0.64 / (2 * 0.1 * GRAVITY))
-    probe, mu = Probe(0, 0.8), np.array([0.1])
+    probe, mu = FrictionQuery(0, 0.8), np.array([0.1])
     grid = np.linspace(0.0, 1.0, 4001)
     density = np.exp([probe_log_likelihood(world.physics, probe, d, mu)[0] for d in grid])
     assert np.trapz(density, grid) == pytest.approx(1.0, abs=1e-3)
@@ -70,7 +93,7 @@ def test_probe_narrows_the_probed_floor(task):
     theta = np.array([0.15, 0.03, 0.08])
     belief = task.prior.belief(rng)
     query = task.gatherer.choose(belief, rng)
-    assert isinstance(query, Probe)
+    assert isinstance(query, FrictionQuery)
     before = belief
     for _ in range(2):
         belief = belief.update(task.gatherer.respond(theta, query, rng))

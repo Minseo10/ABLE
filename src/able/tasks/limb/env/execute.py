@@ -1,12 +1,10 @@
-"""Planner helpers kinder-baselines `main` renamed or dropped: `RolloutLog`, a logging `execute_plan`, wrappers."""
+"""Executing a limb plan on the simulator, with a per-step `RolloutLog` and optional RGB frames."""
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from dataclasses import dataclass, field
 
 import numpy as np
-from pybullet_helpers.geometry import Pose
 from pybullet_helpers.joint import JointPositions, JointVelocities
 
 from able.tasks.limb.planning.stream import (
@@ -24,27 +22,14 @@ from able.tasks.limb.planning.utils import (
     engage_grasp,
     exceeds_human_torque_limits,
     exceeds_robot_torque_limits,
-    grasp_ik,
     hold_torque,
     human_in_collision,
     limb_out_of_limits,
     release_grasp,
     robot_motion_violation,
-    saved_sim_state,
-)
-from able.tasks.limb.planning.utils import (
-    base_candidates as _base_candidates_for,
 )
 
-__all__ = [
-    "RolloutLog",
-    "advance_logged",
-    "base_candidates",
-    "execute_action",
-    "execute_plan",
-    "grasp_ik",
-    "saved_sim_state",
-]
+__all__ = ["RolloutLog", "advance_logged", "execute_action", "execute_plan"]
 
 
 @dataclass
@@ -146,9 +131,3 @@ def _snap(sim, frames: list | None) -> None:
     if frames is not None:
         frames.append(np.asarray(sim.render(), dtype=np.uint8)[..., :3])
 
-
-def base_candidates(
-    ctx: LimbStreamContext, grasp: Pose, limb_positions: JointPositions
-) -> Iterator:
-    """IK-screened base poses that can hold `grasp` at `limb_positions`, nearest first (lazy: one IK each)."""
-    yield from _base_candidates_for(ctx, grasp, list(limb_positions))

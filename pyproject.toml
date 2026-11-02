@@ -38,4 +38,4 @@ develop = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-able = ["**/*.pddl"]
+able = ["**/*.pddl", "**/*.json"]
