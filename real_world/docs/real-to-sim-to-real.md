@@ -170,12 +170,13 @@ python3 ~/sprout.py --execute
 
 - Settings are in the workstation repo's `.local/sprout/` folder. Edit them if needed, then generate a new preview.
 - **`live.json`:** arm/base speeds, gripper force/speed, floor clearance, collision bounds and stop thresholds. Initial settings: arm **2 cm/s**, joints **10°/s**, base **4 cm/s**, gripper force/speed **10%** (driver commands, not measured contact force).
+- Missing/null `hardware.measured_torque_limit_nm` fills automatically with `[39, 39, 39, 39, 9, 9, 9]` N·m (joints 1–7). These are Gen3 joint soft limits from [Kinova Table 44](https://www.kinovarobotics.com/uploads/User-Guide-Gen3-R07.pdf#page=104), used for absolute measured-torque monitoring including gravity. They do not bound Sprout contact force. Existing values are preserved.
 - **`detection.json`:** camera calibration, tape tracking and forearm height. Grasp position/orientation update automatically.
 - **`scene.json`:** lift/pregrasp distances, base planning and optional Sprout model paths.
 - Default `base_planning.bounds_xy` is `[[-2.0, -1.3], [2.0, 2.0]]`. Setup preserves existing `.local/sprout/scene.json`, so an existing installation must update this field locally once. Use bounds matching the clear operating area and generate a fresh preview.
 - Planning uses PRPL’s `TidyBotKinova` URDF collision geometry, base BiRRT and arm IK/path planners. Sprout stays as boxes. Preview and live base transit share the same geometry checks. Regenerate old previews after updating.
 - Templates are in `real_world/config/`. The helper fills missing initial control/model settings and preserves existing values.
-- **Currently blocked:** torque thresholds, collision bounds and physical verification remain incomplete. Changing `execution_enabled` alone does not enable motion.
+- **Real execution:** collision bounds and physical verification must be complete. Changing `execution_enabled` alone does not enable motion.
 
 ## Outputs
 

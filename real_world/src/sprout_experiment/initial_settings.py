@@ -1,7 +1,8 @@
 """Initial low-speed settings, without inventing physical verification.
 
 Driver percentages are not measured contact forces. Model-derived dimensions are
-nominal geometry. Existing non-null settings and all verification flags survive.
+nominal geometry. Kinova torque defaults are overload thresholds, not contact-force
+limits. Existing non-null settings and all verification flags survive.
 """
 
 from __future__ import annotations
@@ -16,8 +17,9 @@ def fill_initial_settings(
 ) -> list[str]:
     """Fill missing control parameters and optional model geometry in place.
 
-    Torque thresholds and obstacle/held-limb bounds require additional evidence.
-    They are deliberately not inferred from actuator ratings or a tape patch.
+    Joint torque defaults use the Gen3 7 DoF joint soft limits (User Guide R07,
+    Table 44). They include gravity and do not establish a contact-force bound.
+    Obstacle/held-limb bounds and physical verification still require evidence.
     """
     if config.get("schema") != "sprout_live_v1":
         return []
@@ -29,6 +31,10 @@ def fill_initial_settings(
         "hardware": {
             "velocity_rad_s": [math.radians(10)] * 7,
             "acceleration_rad_s2": [math.radians(20)] * 7,
+            # Kinova Gen3 User Guide R07, Table 44 and the PRPL Gen3 URDF:
+            # https://www.kinovarobotics.com/uploads/User-Guide-Gen3-R07.pdf#page=104
+            # Absolute measured torque (gravity included), not an external-force limit.
+            "measured_torque_limit_nm": [39.0] * 4 + [9.0] * 3,
             "gripper_force_percent": 10.0,
             "gripper_speed_percent": 10.0,
             "command_timeout_s": 0.5,

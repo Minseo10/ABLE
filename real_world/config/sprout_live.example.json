@@ -56,7 +56,15 @@
       0.3490658503988659,
       0.3490658503988659
     ],
-    "measured_torque_limit_nm": null,
+    "measured_torque_limit_nm": [
+      39.0,
+      39.0,
+      39.0,
+      39.0,
+      9.0,
+      9.0,
+      9.0
+    ],
     "gripper_force_percent": 10.0,
     "gripper_speed_percent": 10.0,
     "command_timeout_s": 0.5,

@@ -23,7 +23,7 @@ def test_defaults_preserve_zero_custom_limits_and_verification():
     for section in ("verified", "navigation", "obstacles", "execution_enabled"):
         assert config[section] == original[section]
     assert config["hardware"]["gripper_force_percent"] == 4
-    assert config["hardware"]["measured_torque_limit_nm"] is None
+    assert config["hardware"]["measured_torque_limit_nm"] == [39.0] * 4 + [9.0] * 3
     assert config["motion"]["open_position"] == 0.0
     assert config["motion"]["translation_speed_m_s"] == 0.005
     assert fill_initial_settings(config) == []
@@ -57,7 +57,7 @@ def test_model_bounds_and_mount_are_derived_not_joint_anchor(tmp_path):
     assert config["hardware"]["joint_max_rad"][0] == math.pi
     assert not config["execution_enabled"]
     assert "verified" not in config
-    assert "measured_torque_limit_nm" not in config["hardware"]
+    assert config["hardware"]["measured_torque_limit_nm"] == [39.0] * 4 + [9.0] * 3
 
 
 def test_invalid_model_does_not_partially_mutate_config(tmp_path):
@@ -68,3 +68,14 @@ def test_invalid_model_does_not_partially_mutate_config(tmp_path):
     with pytest.raises(KeyError):
         fill_initial_settings(config, path)
     assert config == original
+
+
+def test_configured_torque_limits_survive_setup():
+    custom = [12.0, 12.0, 12.0, 12.0, 3.0, 3.0, 3.0]
+    config = {
+        "schema": "sprout_live_v1",
+        "hardware": {"measured_torque_limit_nm": custom.copy()},
+    }
+    changed = fill_initial_settings(config)
+    assert "hardware.measured_torque_limit_nm" not in changed
+    assert config["hardware"]["measured_torque_limit_nm"] == custom
