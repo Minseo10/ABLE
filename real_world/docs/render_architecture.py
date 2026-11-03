@@ -5,6 +5,8 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
+matplotlib.rcParams["svg.fonttype"] = "none"
+matplotlib.rcParams["svg.hashsalt"] = "sprout-stack"
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
@@ -35,21 +37,23 @@ def arrow(start, end, label, *, dashed=False, color="#56647a", xy=None):
 
 
 ax.text(0.35, 10.65, "Sprout left forearm • predefined lift and set down", fontsize=23, weight="bold", color="#17263a")
-ax.text(0.35, 10.18, "Implemented: camera patch tracking + MuJoCo preview + approval gate + compliant adapter    |    Live commissioning pending", fontsize=11, color="#7a4913")
+ax.text(0.35, 10.18, "Camera tracking + original PRPL Runner / executors + Kinder shadow preview + terminal approval", fontsize=11, color="#7a4913")
 
 box(0.4, 7.1, 4.2, 2.5, "YOUR LAPTOP", "SSH: authorized workstation account\nView / download preview.mp4\nEnter or yes: approval gate\nCtrl-C: real software-stop request", "#e9f2ff", "#245685")
-box(5.5, 7.1, 10.0, 2.5, "WORKSTATION • purple box", "learning-forceful-manipulation  |  branch: real-world\nForearm + whole-body boxes → base route + arm approach\nMuJoCo: measured TidyBot + keep-out → MP4 + base/joint commands\nKinematic review; no contact-force validation; reject failed plans", "#eeebff", "#5743a9")
+box(5.5, 7.1, 10.0, 2.5, "WORKSTATION • purple box", "learning-forceful-manipulation  |  branch: real-world\nForearm + whole-body boxes → base route + arm approach\nOriginal executors + Kinder shadow → MP4 + command trace\nKinematic review; no contact-force validation; reject failed plans", "#eeebff", "#5743a9")
 arrow((4.7, 8.35), (5.4, 8.35), "SSH", xy=(5.05, 8.65))
 
-box(0.4, 3.6, 4.2, 2.3, "PERCEPTION MACHINE", "Ceiling: two calibrated views\nTape target + body/feet envelope\nFrame timestamps + calibration hash\nFresh chassis marker map pose", "#f0eee7", "#766846")
-box(5.5, 3.1, 10.0, 2.8, "ROBOT NUC • live adapter", "live_runtime → guarded base transit → ceiling servo + compliant arm\nReviewed model / recipe / limits; sampled geometry checks\nFresh feedback; measured arrival; heartbeat / stop latch\nOperator confirms grasp before lift, support before release\nPhysical calibration + force limits + stop verification pending", "#e2f4ed", "#20705b")
-arrow((10.5, 7.0), (10.5, 6.0), "reviewed artifacts via laptop; approval + fresh-state checks", dashed=True, xy=(10.5, 6.5))
+box(0.4, 3.6, 4.2, 2.3, "PERCEPTION MACHINE", "Ceiling: two calibrated views\nTape target + body/feet envelope\nCamera identity + calibration hash\nChassis markers → map pose", "#f0eee7", "#766846")
+box(5.5, 3.1, 10.0, 2.8, "ROBOT NUC • original PRPL pipeline", "RealInterface → RealTidyBotEnv → Runner\nKinematic3DPlanExecutor: Pure Pursuit base + Carrot arm\nOriginal arm/base RPC servers + compliant arm controller\nPredefined recipe + ceiling XY corrections\nSlow joint/base limits; heartbeat and Ctrl-C stop", "#e2f4ed", "#20705b")
+arrow((10.5, 7.0), (10.5, 6.0), "reviewed artifacts via laptop; approval + pose comparison", dashed=True, xy=(10.5, 6.5))
 arrow((4.7, 4.65), (5.4, 4.65), "frames", dashed=True, xy=(5.05, 4.98))
 
 box(5.5, 0.95, 10.0, 1.4, "TIDYBOT + SPROUT", "Base stops before grasp • Kinova + gripper • Sprout supine\nBody model optional in sim and real; externally movable arm assumption", "#f0f1f4", "#4a5364")
-arrow((10.5, 3.0), (10.5, 2.45), "bounded compliant commands", dashed=True, xy=(12.8, 2.7))
-ax.text(0.5, 2.6, "Code paths implemented\nHardware commissioning pending\n\nCtrl-C is a network software stop.\nIt is not a physical emergency stop.", fontsize=11.5, color="#526070", va="top", linespacing=1.5)
-ax.text(0.5, 0.36, "Cycle: base transit → stop → pregrasp ↓ align ↓ grasp → close → confirm → lift ≤15 cm ↑ → lower ↓ → confirm support → open → retreat ↑", fontsize=13, color="#24334a")
+arrow((10.5, 3.0), (10.5, 2.45), "original RPC controls", dashed=True, xy=(12.8, 2.7))
+ax.text(0.5, 2.6, "Verify camera / room alignment\nNo camera acquisition-age cutoff\n\nCtrl-C is a network software stop.\nIt is not a physical emergency stop.", fontsize=11.5, color="#526070", va="top", linespacing=1.5)
+ax.text(0.5, 0.36, "Cycle: base transit → stop → pregrasp ↓ align ↓ grasp → close → lift 15 cm ↑ → lower ↓ → open → retreat ↑", fontsize=13, color="#24334a")
 fig.savefig(OUT / "sprout-stack.png", bbox_inches="tight", facecolor=fig.get_facecolor())
-fig.savefig(OUT / "sprout-stack.svg", bbox_inches="tight", facecolor=fig.get_facecolor())
+fig.savefig(OUT / "sprout-stack.svg", bbox_inches="tight", facecolor=fig.get_facecolor(), metadata={"Date": None})
+svg = OUT / "sprout-stack.svg"
+svg.write_text("\n".join(line.rstrip() for line in svg.read_text().splitlines()) + "\n")
 plt.close(fig)

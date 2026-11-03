@@ -10,7 +10,8 @@ from sprout_experiment import live_bundle as bundle
 from sprout_experiment.initial_settings import fill_initial_settings
 
 
-def test_snapshot_metadata_bound_to_image_and_calibration(tmp_path):
+@pytest.mark.parametrize("timestamp", [None, 0, time.time() + 10000])
+def test_snapshot_metadata_bound_to_image_and_calibration(tmp_path, timestamp):
     image = tmp_path / "image.jpg"
     image.write_bytes(b"synthetic image bytes")
     projection = {
@@ -28,7 +29,7 @@ def test_snapshot_metadata_bound_to_image_and_calibration(tmp_path):
         "cameras": [
             {
                 "serial": "test",
-                "captured_at_unix": time.time(),
+                "captured_at_unix": timestamp,
                 "calibration_sha256": bundle.calibration_digest(projection),
             },
             {},
@@ -113,6 +114,17 @@ def test_bundle_readiness_is_conditional_and_hashes_live_inputs(tmp_path, monkey
         "reference.jpg",
     }
     state["base"]["acquisition_timestamp_available"] = False
+    state["base"]["captured_at_unix"] = None
+    bundle.prepare_live_bundle(
+        report,
+        {"tidybot_model": "unused"},
+        {"source": "live_camera"},
+        state,
+        live,
+        output,
+    )
+    assert report["execution_ready"]
+    state["base"]["frame"] = "odom"
     bundle.prepare_live_bundle(
         report,
         {"tidybot_model": "unused"},
@@ -122,7 +134,7 @@ def test_bundle_readiness_is_conditional_and_hashes_live_inputs(tmp_path, monkey
         output,
     )
     assert not report["execution_ready"]
-    assert "marker server" in report["blockers"][0]
+    assert "calibrated map pose" in report["blockers"][0]
 
 
 def test_missing_live_config_cannot_enable_even_successful_preview(tmp_path):

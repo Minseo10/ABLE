@@ -1,4 +1,4 @@
-"""Workstation camera -> MuJoCo preview -> explicit approval workflow.
+"""Workstation camera -> original PRPL executor preview -> approval workflow.
 
 No ABLE or private model copying. The live runtime uses reviewed calibration.
 """
@@ -362,8 +362,7 @@ def setup(check: bool = False) -> None:
         )
     if live.get("schema") == "sprout_live_v1":
         print(
-            f"Speed limits: arm tool {live['motion']['translation_speed_m_s'] * 100:g} cm/s, "
-            f"arm joints {math.degrees(max(live['hardware']['velocity_rad_s'])):g} deg/s, "
+            f"RPC speed limits: arm joints {math.degrees(max(live['hardware']['velocity_rad_s'])):g} deg/s, "
             f"base {live['navigation']['speed_m_s'] * 100:g} cm/s",
             flush=True,
         )
@@ -569,6 +568,39 @@ def preview(args: argparse.Namespace) -> None:
             },
         }
     )
+    if observation is not None and live_path and live_path.exists():
+        from sprout_experiment.map_overlay import draw_map_overlay
+
+        draw_map_overlay(
+            Path(observation["image"]),
+            read_json(live_path.parent / "detection.json"),
+            report,
+            args.output / "map-overlay.png",
+        )
+
+    if report["completed"]:
+        from prpl_tidybot.sprout.pipeline_preview import render_pipeline_preview
+
+        try:
+            if live_path and live_path.exists():
+                controls = read_json(live_path)
+            else:
+                from sprout_experiment.initial_settings import fill_initial_settings
+
+                controls = read_json(
+                    Path(__file__).resolve().parents[2]
+                    / "config/sprout_live.example.json"
+                )
+                fill_initial_settings(controls, Path(config["tidybot_model"]))
+            report.update(
+                render_pipeline_preview(
+                    report, scene, controls, trajectory, args.output, args.fps
+                )
+            )
+        except (RuntimeError, ValueError, OSError) as error:
+            report["completed"] = False
+            report["failure"] = "PRPL executor rehearsal failed: " + str(error)
+
     from sprout_experiment.live_bundle import prepare_live_bundle
 
     prepare_live_bundle(

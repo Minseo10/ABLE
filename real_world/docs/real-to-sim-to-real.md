@@ -2,6 +2,10 @@
 
 - Simple predefined limb repositioning of a Sprout robot using TidyBot. No ABLE pipeline or Sprout motor commands.
 - Capture scene → read TidyBot state → simulate → review → approve → execute.
+- Uses main's arm/base RPC servers, `RealInterface`, `RealTidyBotEnv`, `Runner`, `Kinematic3DPlanExecutor`, Pure Pursuit and Carrot arm executors. Sprout code supplies perception and the predefined recipe.
+- Preview replays the same executors offline and renders through main's `KinderSimEnv` shadow simulator. It does not run ABLE.
+
+<img src="sprout-stack.png" alt="Sprout adapter using the original PRPL real-to-sim-to-real pipeline" width="720">
 
 ## 0. Before Starting
 
@@ -93,7 +97,32 @@
     ```
 
 
-## 3. Start perception (laptop terminal 1)
+- After this pipeline update, rerun `python -m pip install -r real_world/requirements-workstation.txt` in the **workstation's activated environment**, then deploy again.
+
+### Start services with the standard launcher (laptop)
+
+```bash
+cd ~/prpl-tidybot
+export PRPL_NUC_HOST=tidybot@192.168.0.76
+export PRPL_PERCEPTION_HOST=yixuan@192.168.0.131
+./scripts/launch.sh minseo/sprout-predefined
+```
+
+- Use the updated `minseo/sprout-predefined` checkout on your laptop. If it is absent, clone that branch first.
+- Leave tmux running. The launcher starts the arm server, base server and perception server. Run the commands below in a separate laptop terminal.
+- **Do not also run `sprout.py servers` or `sprout.py perception` when the launcher has started them.** Stop your old server processes before restarting after updates. Do not overwrite another user's remote edits.
+
+## 3. Alternative: start services without the standard launcher
+
+- Skip this section if `launch.sh` is already running all services.
+- In one laptop terminal:
+
+```bash
+source ~/.sprout-env
+python3 ~/sprout.py servers
+```
+
+- In another laptop terminal:
 
 ```bash
 source ~/.sprout-env
@@ -105,7 +134,7 @@ python3 ~/sprout.py perception
 
 ### First run only: initialize tracking (laptop terminal 2)
 
-- Keep perception running in terminal 1. In laptop terminal 2, load your settings, download the latest helper, then initialize tracking:
+- Keep services running. In a separate laptop terminal, load your settings, download the latest helper, then initialize tracking:
 
     ```bash
     source ~/.sprout-env
@@ -121,6 +150,7 @@ python3 ~/sprout.py
 ```
 
 - Captures camera → reads current joints/map pose → detects taped forearm/body → searches base poses/routes → renders actions → downloads `~/Downloads/sprout-preview.mp4`. Open the file manually if a player does not launch.
+- Also downloads `~/Downloads/sprout-map-overlay.png`: gray 0.5 m map grid, orange room-model footprints, target and base path projected onto the camera image. **Verify that the room footprints match the real room before execution.** The default room placement is not fitted from the ceiling image.
 - Start here on later runs if deployment is current and perception is running.
 
 ## 5. Preview, approve and execute (laptop terminal 2)
@@ -130,8 +160,8 @@ python3 ~/sprout.py --execute
 ```
 
 - Repeats the fresh preview. Only a successful, validated review allows **Enter/yes** after watching the video.
-- Before execution, read the current robot/target state and compare it with the preview. There is no additional startup timestamp-age cutoff. Motion-time camera checks and controller watchdogs remain active.
-- Fresh checks → approved base transit → stop/recheck → pregrasp → ceiling XY alignment → descend → close → confirm grasp → lift 15 cm → lower → confirm support → open → retreat.
+- Before execution, read the current robot/target state and compare it with the preview. Camera acquisition-age checks are disabled by request. Connection/detection failures, pose comparison, controller watchdogs and Ctrl-C stop remain active.
+- Existing Pure Pursuit base transit → pregrasp → ceiling XY alignment → descend → close and dwell → lift 15 cm → lower → open and dwell → retreat. There are no added grasp/support confirmation prompts.
 
 
 ## 6. Stop or shut down
@@ -170,24 +200,25 @@ python3 ~/sprout.py --execute
 ## Commissioning inputs
 
 - Settings are in the workstation repo's `.local/sprout/` folder. Edit them if needed, then generate a new preview.
-- **`live.json`:** arm/base speeds, gripper force/speed, floor clearance, collision bounds and stop thresholds. Automatic slow limits: arm **1 cm/s**, joints **5°/s**, base **2 cm/s**, gripper force/speed **10%** (driver commands, not measured contact force).
-- Missing/null `hardware.measured_torque_limit_nm` fills automatically with `[39, 39, 39, 39, 9, 9, 9]` N·m (joints 1–7). These are Gen3 joint soft limits from [Kinova Table 44](https://www.kinovarobotics.com/uploads/User-Guide-Gen3-R07.pdf#page=104), used for absolute measured-torque monitoring including gravity. They do not bound Sprout contact force. Existing values are preserved.
+- **`live.json`:** arm/base speeds, gripper force/speed, floor clearance, collision bounds and stop thresholds. RPC speed limits: arm joints **5°/s**, base **2 cm/s**, gripper force/speed **10%** (driver commands, not measured contact force).
+- Missing/null `hardware.measured_torque_limit_nm` fills automatically with `[39, 39, 39, 39, 9, 9, 9]` N·m (joints 1–7). These are Gen3 joint soft limits from [Kinova Table 44](https://www.kinovarobotics.com/uploads/User-Guide-Gen3-R07.pdf#page=104), retained for legacy adapter compatibility. The main RPC path uses its existing hardware/controller protection. These values do not bound Sprout contact force.
 - **`detection.json`:** camera calibration, tape tracking and forearm height. Grasp position/orientation update automatically.
 - **`scene.json`:** lift/pregrasp distances, base planning and optional Sprout model paths.
 - Default `base_planning.bounds_xy` is `[[-2.0, -1.3], [2.0, 2.0]]`. Setup preserves existing `.local/sprout/scene.json`, so an existing installation must update this field locally once. Use bounds matching the clear operating area and generate a fresh preview.
-- Planning uses PRPL’s `TidyBotKinova` URDF collision geometry, base BiRRT and arm IK/path planners. Sprout stays as boxes. Preview and live base transit share the same geometry checks. Regenerate old previews after updating.
+- Planning uses PRPL’s `TidyBotKinova` URDF collision geometry, the original static PRPL room, base BiRRT and arm IK/path planners. Sprout stays as boxes. The preview replays the original executors against this plan. Regenerate old previews after updating.
 - Templates are in `real_world/config/`. Missing speed, torque and model-derived floor settings fill automatically. Older faster speeds are capped at the slow limits above. Slower custom speeds and other configured values are preserved.
 - Manual `obstacles` and `held_forearm` boxes are optional. Missing/null placeholders are skipped. Legacy `verified`, `execution_enabled` and `navigation.verified` fields no longer gate execution. A successful fresh preview and terminal approval are required.
 
 ## Outputs
 
 - Workstation `.local/sprout/detection/`: `detection.png`, `target_closeup.png`, `body_obstacle.png`, `observation.json`.
-- `.local/sprout/camera-preview/`: video, joint trajectory, scene/base path, live config and hashed review. Do not edit the review to bypass blockers.
+- `.local/sprout/camera-preview/`: video, `map-overlay.png`, joint trajectory, `executor-trace.json` (commands produced by the original executors), scene/base path, live config and hashed review.
 - Laptop video: `~/Downloads/sprout-preview.mp4`.
 
 ## Limitations
 
 - **Current:** detects the taped forearm grasp region for predefined pick-and-place. The coarse body keep-out box is not whole-body pose estimation.
 - **Goal:** estimate Sprout's whole-body pose from its model and camera views → reconstruct it in simulation → plan with ABLE → execute the reviewed plan on the real robot.
-- The camera whole-body box protects the base. It is excluded from arm collision checks so the gripper can reach the target. Without optional manual arm/held-forearm boxes, arm-to-Sprout and attached-limb collisions are not checked. Robot self-collision, floor clearance, joint/torque limits and stop guards remain active.
-- Offline kinematic checks do not validate contact forces or guarantee safe hardware motion.
+- The camera whole-body box protects the base. It is excluded from arm collision checks so the gripper can reach the target. Without optional manual arm/held-forearm boxes, arm-to-Sprout and attached-limb collisions are not checked. Planning checks robot self-collision and floor clearance. The main RPC path applies joint-speed limits and controller watchdogs.
+- This is a kinematic rehearsal with fake feedback and a Kinder shadow renderer. It does not predict contact forces, compliant tracking error or actual wall-clock motion duration. The main arm executor limits joint speed, not an independent Cartesian tool-speed cap.
+- Camera calibration and the room model's default placement are separate. A similar room shape does not establish wall alignment. Room-model collisions cannot protect against a real wall whose location differs from the model.

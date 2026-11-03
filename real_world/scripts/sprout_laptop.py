@@ -54,7 +54,7 @@ cp -a "$HOME/prpl-tidybot/src/prpl_tidybot/marker_detector/camera_params/." "$bu
 cp "$HOME/prpl-tidybot/conf/lab/prpl.yaml" "$build/conf/lab/prpl.yaml"
 ln -s "$HOME/prpl-tidybot/.venv" "$build/.venv"
 cd "$build"
-PYTHONPATH="$build/src" .venv/bin/python -c 'import mujoco, cv2, numpy; import prpl_tidybot.sprout.live_runtime; print("Live runtime imports OK")'
+PYTHONPATH="$build/src" .venv/bin/python -c 'import mujoco, cv2, numpy; import prpl_tidybot.sprout.pipeline_runtime; print("PRPL pipeline runtime imports OK")'
 PYTHONPATH="$build/src" .venv/bin/python -m prpl_tidybot.sprout.planner_check
 ln -sfn "$build" "$HOME/sprout-live"
 rm "$1/deploy.tar.gz"
@@ -71,7 +71,7 @@ rmdir "$1"
                 check=True,
             )
     print(
-        "Installed. Stop the old perception process, then run: python3 ~/sprout.py perception",
+        "Installed. Restart your services using launch.sh, or the separate servers/perception helpers. Do not run both.",
         flush=True,
     )
 
@@ -296,6 +296,18 @@ def video(args: argparse.Namespace, demo: bool = False) -> None:
         f"{args.workstation}:{args.repo}/.local/sprout/{folder}/preview.mp4",
         str(args.video),
     )
+    overlay = args.video.with_name("sprout-map-overlay.png")
+    if not demo:
+        result = subprocess.run(
+            [
+                "scp",
+                f"{args.workstation}:{args.repo}/.local/sprout/{folder}/map-overlay.png",
+                str(overlay),
+            ],
+            check=False,
+        )
+        if result.returncode == 0 and sys.platform == "darwin" and not args.no_open:
+            run("open", str(overlay))
     if sys.platform == "darwin" and not args.no_open:
         run("open", str(args.video))
 
@@ -522,6 +534,13 @@ def workflow(args: argparse.Namespace) -> None:
         deploy(args)
     elif args.action == "shutdown":
         shutdown(args)
+    elif args.action == "servers":
+        run(
+            "ssh",
+            "-tt",
+            args.nuc,
+            LIVE_PREFIX + ".venv/bin/python -u -m prpl_tidybot.sprout.server_launcher",
+        )
     elif args.action == "perception":
         perception(args)
     else:
@@ -546,6 +565,7 @@ def main() -> None:
             "demo",
             "deploy",
             "perception",
+            "servers",
             "shutdown",
         ],
     )
@@ -582,7 +602,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--runtime",
-        default="prpl_tidybot.sprout.live_runtime:create_runtime",
+        default="prpl_tidybot.sprout.pipeline_runtime:create_runtime",
         help="Installed NUC module:factory(review_path); concrete adapter is the default",
     )
     args = parser.parse_args()

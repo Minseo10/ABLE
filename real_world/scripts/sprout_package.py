@@ -11,20 +11,12 @@ def package(repo: Path, output: Path) -> None:
     sys.path.insert(0, str(tidybot / "src"))
     from prpl_tidybot.sprout.live_config import model_files
 
+    # Ship the cohesive original pipeline as well as Sprout adapters. Only
+    # Python source/public TidyBot assets are included, never private models.
     files = [tidybot / "hardware_tests/test_arm_retract.py"]
-    for folder in ("sprout", "marker_detector"):
-        files.extend((tidybot / "src/prpl_tidybot" / folder).glob("*.py"))
-    files.extend(
-        tidybot / "src/prpl_tidybot" / name
-        for name in (
-            "visual_servo/forearm_template.py",
-            "visual_servo/forearm_box.py",
-            "visual_servo/forearm_target.py",
-            "third_party/arm_controller.py",
-            "third_party/base_controller.py",
-            "third_party/kinova.py",
-            "third_party/models/gen3_robotiq_2f_85.urdf",
-        )
+    files.extend((tidybot / "src/prpl_tidybot").rglob("*.py"))
+    files.append(
+        tidybot / "src/prpl_tidybot/third_party/models/gen3_robotiq_2f_85.urdf"
     )
     scene = json.loads((repo / ".local/sprout/scene.json").read_text())
     model = Path(scene["tidybot_model"]).resolve()

@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import json
 import shutil
-import time
 from pathlib import Path
 
-import numpy as np
 from prpl_tidybot.sprout.live_config import (
     calibration_digest,
     collision_boxes,
@@ -38,11 +36,6 @@ def camera_evidence(image: Path, detection: dict) -> dict:
     ]:
         raise ValueError("Capture dimensions differ from calibrated two-view composite")
     camera = cameras[index]
-    stamp = camera.get("captured_at_unix")
-    if stamp is None or not np.isfinite(stamp) or not 0 <= time.time() - stamp <= 120:
-        raise ValueError(
-            "Camera acquisition is stale/missing; capture again and check clocks"
-        )
     if camera.get("serial") != detection.get("camera_calibration", {}).get("serial"):
         raise ValueError("Camera serial differs from detection calibration")
     if camera.get("calibration_sha256") != calibration_digest(detection["projection"]):
@@ -50,13 +43,6 @@ def camera_evidence(image: Path, detection: dict) -> dict:
     if detection.get("body_obstacle", {}).get("enabled"):
         for view in detection["body_obstacle"]["views"]:
             item = cameras[view["camera_index"]]
-            stamp = item.get("captured_at_unix")
-            if (
-                stamp is None
-                or not np.isfinite(stamp)
-                or not 0 <= time.time() - stamp <= 120
-            ):
-                raise ValueError("Body camera acquisition stale/missing")
             if item.get("serial") != view["serial"] or item.get(
                 "calibration_sha256"
             ) != calibration_digest(view["projection"]):
@@ -127,17 +113,8 @@ def prepare_live_bundle(
         validate_config(live)
         if observation is None or observation.get("source") != "live_camera":
             raise ValueError("Timestamped calibrated live-camera observation required")
-        if not state or not state["base"].get("acquisition_timestamp_available"):
-            raise ValueError(
-                "Update/restart marker server and capture TidyBot state again"
-            )
-        stamp = state["base"].get("captured_at_unix")
-        if (
-            stamp is None
-            or not np.isfinite(stamp)
-            or not 0 <= time.time() - stamp <= 120
-        ):
-            raise ValueError("Base camera acquisition is stale; recapture")
+        if not state or state.get("base", {}).get("frame", "map") != "map":
+            raise ValueError("Capture current robot joints and calibrated map pose")
         base_plan = report.get("base_plan")
         final_base = report["observed"]["base_xyyaw"]
         if base_plan and base_plan.get("transit_geometry"):

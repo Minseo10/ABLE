@@ -1,4 +1,4 @@
-# Workstation perception, shared PRPL URDF planning and MuJoCo rendering.
+# Workstation perception, PRPL planning, original Runner/executors and Kinder shadow sim.
 # Robot/perception machines use their existing prpl-tidybot environments.
 numpy>=1.26,<2
 mujoco==3.3.7
@@ -10,3 +10,12 @@ imageio-ffmpeg==0.6.0
 # Match prpl-tidybot uv.lock for URDF models, IK and BiRRT.
 pybullet-helpers==0.1.2
 setuptools<81
+
+# Pure-Python/main pipeline dependencies. Vendor motor drivers stay on the NUC.
+gymnasium
+spatialmath-python
+prpl-utils>=0.0.7
+relational-structs>=0.0.1
+kindergarden @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden.git@86c55a4e9a19f4f37cd7103d425ee88465042173
+kinder_models @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kinder-baselines.git@98a5ef6de9c5a0c59bddf1341c8e7c94201c5139#subdirectory=kinder-models
+kinder_bilevel_planning @ git+https://github.com/Princeton-Robot-Planning-and-Learning/kinder-baselines.git@98a5ef6de9c5a0c59bddf1341c8e7c94201c5139#subdirectory=kinder-bilevel-planning
