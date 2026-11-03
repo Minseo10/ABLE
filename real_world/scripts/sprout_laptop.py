@@ -1,8 +1,8 @@
 """Laptop helper: fresh camera + robot state + forearm tracking + preview by default.
 
 Standard library only; never copies private Sprout models. Default is preview only.
---execute additionally requests one commissioned real cycle after terminal
-approval. It refuses incomplete/uncommissioned previews. SSH may prompt normally.
+--execute additionally requests one reviewed real cycle after terminal
+approval. It refuses incomplete or invalid previews. SSH may prompt normally.
 """
 
 from __future__ import annotations
@@ -301,12 +301,10 @@ def video(args: argparse.Namespace, demo: bool = False) -> None:
 
 
 def validate_execution_bundle(directory: Path, viewed_video: Path) -> dict:
-    """Never execute a failed/uncommissioned preview or a different video."""
+    """Never execute a failed/invalid preview or a different video."""
     review = json.loads((directory / "review.json").read_text())
     if review.get("execution_ready") is not True:
-        blockers = review.get(
-            "blockers", ["Live scene and stop integration not commissioned"]
-        )
+        blockers = review.get("blockers", ["Live scene and runtime checks incomplete"])
         raise ValueError("Real execution unavailable: " + "; ".join(blockers))
     if review.get("completed") is not True or review.get("source") != "live_camera":
         raise ValueError(
@@ -444,6 +442,8 @@ def execute_reviewed(args: argparse.Namespace) -> None:
         for name in ("trajectory.json", "scene.json", "live.json", "reference.jpg"):
             run("scp", source + name, str(bundle / name))
         validate_execution_bundle(bundle, args.video)
+        for limitation in review.get("execution_limitations", []):
+            print("Preview coverage: " + limitation, flush=True)
         if not approval():
             print("Real execution cancelled; no motion requested.", flush=True)
             return
@@ -578,7 +578,7 @@ def main() -> None:
     parser.add_argument(
         "--execute",
         action="store_true",
-        help="After preview, request one commissioned real cycle with terminal approval",
+        help="After preview, request one reviewed real cycle with terminal approval",
     )
     parser.add_argument(
         "--runtime",

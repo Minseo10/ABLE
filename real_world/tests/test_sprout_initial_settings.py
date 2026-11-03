@@ -13,15 +13,17 @@ def test_defaults_preserve_zero_custom_limits_and_verification():
         "schema": "sprout_live_v1",
         "execution_enabled": False,
         "verified": {"physical_stop": False},
-        "navigation": {"verified": False, "speed_m_s": 0.025},
+        "navigation": {"verified": False, "speed_m_s": 0.015},
         "hardware": {"gripper_force_percent": 4, "measured_torque_limit_nm": None},
         "motion": {"open_position": 0.0, "translation_speed_m_s": 0.005},
         "obstacles": [{"center": None, "half_size": None}],
     }
     original = copy.deepcopy(config)
     assert fill_initial_settings(config)
-    for section in ("verified", "navigation", "obstacles", "execution_enabled"):
+    for section in ("verified", "obstacles", "execution_enabled"):
         assert config[section] == original[section]
+    for key, value in original["navigation"].items():
+        assert config["navigation"][key] == value
     assert config["hardware"]["gripper_force_percent"] == 4
     assert config["hardware"]["measured_torque_limit_nm"] == [39.0] * 4 + [9.0] * 3
     assert config["motion"]["open_position"] == 0.0
@@ -79,3 +81,24 @@ def test_configured_torque_limits_survive_setup():
     changed = fill_initial_settings(config)
     assert "hardware.measured_torque_limit_nm" not in changed
     assert config["hardware"]["measured_torque_limit_nm"] == custom
+
+
+def test_old_fast_settings_are_capped_and_missing_navigation_is_filled():
+    config = {
+        "schema": "sprout_live_v1",
+        "hardware": {
+            "velocity_rad_s": [math.radians(10)] * 7,
+            "acceleration_rad_s2": [math.radians(20)] * 7,
+        },
+        "motion": {"translation_speed_m_s": 0.02},
+        "navigation": {"speed_m_s": 0.04, "timeout_s": 120.0},
+    }
+    changed = fill_initial_settings(config)
+    assert config["motion"]["translation_speed_m_s"] == 0.01
+    assert config["navigation"]["speed_m_s"] == 0.02
+    assert config["navigation"]["timeout_s"] == 300.0
+    assert config["hardware"]["velocity_rad_s"] == [math.radians(5)] * 7
+    assert config["hardware"]["acceleration_rad_s2"] == [math.radians(10)] * 7
+    assert config["hardware"]["measured_torque_limit_nm"] == [39.0] * 4 + [9.0] * 3
+    assert "motion.translation_speed_m_s" in changed
+    assert fill_initial_settings(config) == []

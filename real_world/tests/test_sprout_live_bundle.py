@@ -3,9 +3,11 @@
 import hashlib
 import json
 import time
+from pathlib import Path
 
 import pytest
 from sprout_experiment import live_bundle as bundle
+from sprout_experiment.initial_settings import fill_initial_settings
 
 
 def test_snapshot_metadata_bound_to_image_and_calibration(tmp_path):
@@ -49,10 +51,18 @@ def test_bundle_readiness_is_conditional_and_hashes_live_inputs(tmp_path, monkey
     (tmp_path / "detection.json").write_text(
         json.dumps({"reference_image": str(reference)})
     )
-    config = {
-        "servo": {"camera_max_age_s": 1},
-        "revalidation_tolerances": {"grasp_xyz": 0.01},
-    }
+    config = json.loads(
+        (Path(__file__).parents[1] / "config/sprout_live.example.json").read_text()
+    )
+    config.update(
+        execution_enabled=False,
+        verified={"physical_stop": False},
+        obstacles=[{"center": None, "half_size": None}],
+        held_forearm={"center": None, "half_size": None},
+    )
+    config["hardware"]["measured_torque_limit_nm"] = None
+    fill_initial_settings(config)
+    config["servo"]["camera_max_age_s"] = 1
     live = tmp_path / "source-live.json"
     live.write_text(json.dumps(config))
     output = tmp_path / "preview"
@@ -64,7 +74,6 @@ def test_bundle_readiness_is_conditional_and_hashes_live_inputs(tmp_path, monkey
         "observed": {"base_xyyaw": [0, 0, 0], "arm_joints_rad": [0] * 7},
         "plan": {},
     }
-    monkeypatch.setattr(bundle, "validate_config", lambda _: None)
     monkeypatch.setattr(bundle, "model_digest", lambda _: "test model digest")
     checked = []
 
@@ -91,6 +100,9 @@ def test_bundle_readiness_is_conditional_and_hashes_live_inputs(tmp_path, monkey
         output,
     )
     assert report["execution_ready"] and checked
+    reviewed = json.loads((output / "live.json").read_text())
+    assert reviewed["obstacles"] == [] and reviewed["held_forearm"] is None
+    assert len(report["execution_limitations"]) == 2
     assert set(report["artifact_sha256"]) == {
         "preview.mp4",
         "trajectory.json",

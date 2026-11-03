@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 from prpl_tidybot.sprout.live_config import (
     calibration_digest,
+    collision_boxes,
     model_digest,
     validate_config,
 )
@@ -93,6 +94,30 @@ def prepare_live_bundle(
                 raise ValueError("Preview/runtime URDF models differ")
             live["collision_model_sha256"] = report["collision_model_sha256"]
         live["base_plan"] = report.get("base_plan")
+        arm_boxes, held_box = collision_boxes(live)
+        # Normalize legacy null placeholders in the reviewed bundle only.
+        live["obstacles"], live["held_forearm"] = arm_boxes, held_box
+        body_config = live["detection"].get("body_obstacle", {})
+        if observation is not None and observation.get("body_obstacle") is not None:
+            body_config["reviewed_box"] = observation["body_obstacle"]
+            live["detection"]["body_obstacle"] = body_config
+        report.setdefault("collision_coverage", {}).update(
+            {
+                "arm_obstacles": arm_boxes,
+                "held_forearm": held_box,
+                "whole_body_box_scope": "base keep-out only",
+            }
+        )
+        report["execution_limitations"] = []
+        if not arm_boxes:
+            report["execution_limitations"].append(
+                "No manual arm-obstacle boxes: arm-to-Sprout body collisions "
+                "are not checked. Whole-body camera box protects the base."
+            )
+        if held_box is None:
+            report["execution_limitations"].append(
+                "No held-forearm box: attached-limb collision geometry is not checked."
+            )
         (output / "live.json").write_text(json.dumps(live, indent=2) + "\n")
         if not report.get("completed"):
             raise ValueError(
@@ -154,6 +179,8 @@ def prepare_live_bundle(
     report["artifact_sha256"] = {
         name: digest(output / name) for name in names if (output / name).exists()
     }
+    for limitation in report.get("execution_limitations", []):
+        print("Preview coverage: " + limitation, flush=True)
     print(
         "Real execution: "
         + (

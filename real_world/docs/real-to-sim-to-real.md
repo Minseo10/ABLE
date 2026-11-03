@@ -129,7 +129,7 @@ python3 ~/sprout.py
 python3 ~/sprout.py --execute
 ```
 
-- Repeats the fresh preview. Only a successful, commissioned review allows **Enter/yes** after watching the video.
+- Repeats the fresh preview. Only a successful, validated review allows **Enter/yes** after watching the video.
 - Fresh checks → approved base transit → stop/recheck → pregrasp → ceiling XY alignment → descend → close → confirm grasp → lift 15 cm → lower → confirm support → open → retreat.
 
 
@@ -169,14 +169,14 @@ python3 ~/sprout.py --execute
 ## Commissioning inputs
 
 - Settings are in the workstation repo's `.local/sprout/` folder. Edit them if needed, then generate a new preview.
-- **`live.json`:** arm/base speeds, gripper force/speed, floor clearance, collision bounds and stop thresholds. Initial settings: arm **2 cm/s**, joints **10°/s**, base **4 cm/s**, gripper force/speed **10%** (driver commands, not measured contact force).
+- **`live.json`:** arm/base speeds, gripper force/speed, floor clearance, collision bounds and stop thresholds. Automatic slow limits: arm **1 cm/s**, joints **5°/s**, base **2 cm/s**, gripper force/speed **10%** (driver commands, not measured contact force).
 - Missing/null `hardware.measured_torque_limit_nm` fills automatically with `[39, 39, 39, 39, 9, 9, 9]` N·m (joints 1–7). These are Gen3 joint soft limits from [Kinova Table 44](https://www.kinovarobotics.com/uploads/User-Guide-Gen3-R07.pdf#page=104), used for absolute measured-torque monitoring including gravity. They do not bound Sprout contact force. Existing values are preserved.
 - **`detection.json`:** camera calibration, tape tracking and forearm height. Grasp position/orientation update automatically.
 - **`scene.json`:** lift/pregrasp distances, base planning and optional Sprout model paths.
 - Default `base_planning.bounds_xy` is `[[-2.0, -1.3], [2.0, 2.0]]`. Setup preserves existing `.local/sprout/scene.json`, so an existing installation must update this field locally once. Use bounds matching the clear operating area and generate a fresh preview.
 - Planning uses PRPL’s `TidyBotKinova` URDF collision geometry, base BiRRT and arm IK/path planners. Sprout stays as boxes. Preview and live base transit share the same geometry checks. Regenerate old previews after updating.
-- Templates are in `real_world/config/`. The helper fills missing initial control/model settings and preserves existing values.
-- **Real execution:** collision bounds and physical verification must be complete. Changing `execution_enabled` alone does not enable motion.
+- Templates are in `real_world/config/`. Missing speed, torque and model-derived floor settings fill automatically. Older faster speeds are capped at the slow limits above. Slower custom speeds and other configured values are preserved.
+- Manual `obstacles` and `held_forearm` boxes are optional. Missing/null placeholders are skipped. Legacy `verified`, `execution_enabled` and `navigation.verified` fields no longer gate execution. A successful fresh preview and terminal approval are required.
 
 ## Outputs
 
@@ -188,5 +188,5 @@ python3 ~/sprout.py --execute
 
 - **Current:** detects the taped forearm grasp region for predefined pick-and-place. The coarse body keep-out box is not whole-body pose estimation.
 - **Goal:** estimate Sprout's whole-body pose from its model and camera views → reconstruct it in simulation → plan with ABLE → execute the reviewed plan on the real robot.
-- During base transit, the whole-body box is checked against the robot. During arm manipulation, that box protects the base, while `live.json` obstacle boxes protect the arm from non-target body parts. The whole-body box alone does not establish a collision-free grasp.
+- The camera whole-body box protects the base. It is excluded from arm collision checks so the gripper can reach the target. Without optional manual arm/held-forearm boxes, arm-to-Sprout and attached-limb collisions are not checked. Robot self-collision, floor clearance, joint/torque limits and stop guards remain active.
 - Offline kinematic checks do not validate contact forces or guarantee safe hardware motion.

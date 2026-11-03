@@ -344,8 +344,7 @@ def setup(check: bool = False) -> None:
     if changed:
         write_json(live_path, live)
         print(
-            f"Filled {len(changed)} initial control/model settings. "
-            "Existing values preserved. Hardware verification is unchanged.",
+            f"Applied {len(changed)} control/model defaults and slow speed caps.",
             flush=True,
         )
     detection_path = directory / "detection.json"
@@ -359,6 +358,13 @@ def setup(check: bool = False) -> None:
         write_json(detection_path, detection)
         print(
             "Imported PRPL camera geometry; tape/grasp measurements remain unset",
+            flush=True,
+        )
+    if live.get("schema") == "sprout_live_v1":
+        print(
+            f"Speed limits: arm tool {live['motion']['translation_speed_m_s'] * 100:g} cm/s, "
+            f"arm joints {math.degrees(max(live['hardware']['velocity_rad_s'])):g} deg/s, "
+            f"base {live['navigation']['speed_m_s'] * 100:g} cm/s",
             flush=True,
         )
     if check:
@@ -455,16 +461,15 @@ def preview(args: argparse.Namespace) -> None:
     )
     live_path = getattr(args, "live_config", None)
     if live_path and live_path.exists():
-        configured = read_json(live_path).get("obstacles", [])
-        scene["arm_obstacles"] = [
-            box
-            for box in configured
-            if box.get("center") is not None and box.get("half_size") is not None
-        ]
+        from prpl_tidybot.sprout.live_config import collision_boxes
+
+        live_config = read_json(live_path)
+        scene["arm_obstacles"], _ = collision_boxes(live_config)
         scene["unconfigured_arm_obstacles"] = [
             box.get("name", "unnamed")
-            for box in configured
-            if box.get("center") is None or box.get("half_size") is None
+            for box in (live_config.get("obstacles") or [])
+            if box is not None
+            and (box.get("center") is None or box.get("half_size") is None)
         ]
     sim = Rehearsal(Path(config["tidybot_model"]), sprout_model, scene)
     if observation is None:
@@ -555,7 +560,7 @@ def preview(args: argparse.Namespace) -> None:
             "recipe": config["recipe"],
             "blockers": [
                 "Calibrated live camera/body pose and joint snapshot required",
-                "Commissioned compliant scene adapter, gripper limits, and physical stop required",
+                "Validated runtime inputs, approval and fresh state required",
                 "Kinematic preview does not validate contact forces or collision clearance",
             ],
             "artifact_sha256": {
@@ -727,7 +732,7 @@ def main() -> None:
         report = read_json(args.review)
         if not report.get("execution_ready") or not args.runtime:
             parser.error(
-                "Hardware execution remains disabled: commission the live runtime and fresh-scene checks first; offline Enter cannot enable it"
+                "Hardware execution requires a reviewed live bundle and fresh-scene checks; offline Enter cannot enable it"
             )
         module, factory = args.runtime.split(":", 1)
         # Factory must be read-only; hardware activation belongs to execute().
