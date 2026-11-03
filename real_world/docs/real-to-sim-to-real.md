@@ -130,6 +130,7 @@ python3 ~/sprout.py --execute
 ```
 
 - Repeats the fresh preview. Only a successful, validated review allows **Enter/yes** after watching the video.
+- The initial stationary-state recheck accepts samples up to 2 seconds old and retries for up to 5 seconds by default. Motion-time camera freshness limits remain unchanged. Failures show each source's age or a latched stop.
 - Fresh checks → approved base transit → stop/recheck → pregrasp → ceiling XY alignment → descend → close → confirm grasp → lift 15 cm → lower → confirm support → open → retreat.
 
 

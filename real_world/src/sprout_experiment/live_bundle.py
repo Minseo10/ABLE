@@ -15,7 +15,7 @@ from prpl_tidybot.sprout.live_config import (
     validate_config,
 )
 from prpl_tidybot.sprout.live_kinematics import LiveKinematics
-from prpl_tidybot.sprout.review import digest
+from prpl_tidybot.sprout.review import INITIAL_OBSERVATION_MAX_AGE_S, digest
 
 
 def camera_evidence(image: Path, detection: dict) -> dict:
@@ -164,7 +164,9 @@ def prepare_live_bundle(
             from prpl_tidybot.sprout.sequence import GraspPose
 
             TopDownGeometry(**live["geometry"]).validate_pose(GraspPose(**pose))
-        report["maximum_observation_age_s"] = live["servo"]["camera_max_age_s"]
+        # Initial stationary-scene approval allows processing/session overhead.
+        # Per-frame live motion guards retain the configured camera age bound.
+        report["maximum_observation_age_s"] = INITIAL_OBSERVATION_MAX_AGE_S
         report["revalidation_tolerances"] = live["revalidation_tolerances"]
         report["execution_ready"] = True
     except (ValueError, RuntimeError, KeyError, TypeError, OSError) as error:

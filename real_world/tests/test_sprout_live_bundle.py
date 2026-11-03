@@ -100,7 +100,9 @@ def test_bundle_readiness_is_conditional_and_hashes_live_inputs(tmp_path, monkey
         output,
     )
     assert report["execution_ready"] and checked
+    assert report["maximum_observation_age_s"] == 2.0
     reviewed = json.loads((output / "live.json").read_text())
+    assert reviewed["servo"]["camera_max_age_s"] == 1.0
     assert reviewed["obstacles"] == [] and reviewed["held_forearm"] is None
     assert len(report["execution_limitations"]) == 2
     assert set(report["artifact_sha256"]) == {
