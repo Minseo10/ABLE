@@ -1,19 +1,17 @@
-"""Project the unchanged main room/map onto the measured ceiling images."""
+"""Project map coordinates and the planned route onto measured ceiling images."""
 
 from pathlib import Path
 
 import cv2
 import numpy as np
 import prpl_tidybot
-import pybullet as p
 import yaml
 from prpl_tidybot.marker_detector.extrinsics import load_extrinsics
 from prpl_tidybot.marker_detector.utils import get_camera_params
-from prpl_tidybot.sprout.urdf_collision import PRPLCollisionScene
 
 
 def draw_map_overlay(image: Path, detection: dict, report: dict, output: Path) -> None:
-    """Diagnostic visualization only. Never estimate or silently change room pose."""
+    """Diagnostic visualization only. Never change measured map coordinates."""
     frame = cv2.imread(str(image))
     if frame is None or frame.shape[0] % 2:
         raise ValueError("A two-camera ceiling image is required")
@@ -26,23 +24,6 @@ def draw_map_overlay(image: Path, detection: dict, report: dict, output: Path) -
     serials[detection["camera_index"]] = detection["camera_calibration"]["serial"]
     for view in detection.get("body_obstacle", {}).get("views", []):
         serials[view["camera_index"]] = view["serial"]
-    footprints = []
-    with PRPLCollisionScene() as world:
-        for link in range(-1, p.getNumJoints(world.room, physicsClientId=world.client)):
-            low, high = np.asarray(
-                p.getAABB(world.room, link, physicsClientId=world.client)
-            )
-            if low[2] < 0.5 and high[2] > 0.02:
-                footprints.append(
-                    np.array(
-                        [
-                            [low[0], low[1], 0],
-                            [high[0], low[1], 0],
-                            [high[0], high[1], 0],
-                            [low[0], high[1], 0],
-                        ]
-                    )
-                )
     for index, serial in enumerate(serials):
         w, h, camera, _ = get_camera_params(serial)
         if (w, h) != (width, height):
@@ -66,8 +47,6 @@ def draw_map_overlay(image: Path, detection: dict, report: dict, output: Path) -
         for value in np.arange(-2, 2.01, 0.5):
             line([[value, -2, 0], [value, 2, 0]], (155, 155, 155))
             line([[-2, value, 0], [2, value, 0]], (155, 155, 155))
-        for polygon in footprints:
-            line(polygon, (0, 120, 255), closed=True, thickness=2)
         path = (
             report.get("base_plan", {}).get("path_xyyaw", [])
             if report.get("base_plan")
@@ -104,7 +83,7 @@ def draw_map_overlay(image: Path, detection: dict, report: dict, output: Path) -
         cv2.rectangle(view, (0, 0), (width, 58), (25, 30, 40), -1)
         cv2.putText(
             view,
-            "Camera/map overlay | gray grid 0.5m | orange: main room footprints",
+            "Camera/map overlay | gray grid 0.5m | target and planned base path",
             (12, 23),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.55,
@@ -113,7 +92,7 @@ def draw_map_overlay(image: Path, detection: dict, report: dict, output: Path) -
         )
         cv2.putText(
             view,
-            "Room pose is not fitted to this image. Verify alignment before real motion.",
+            "No virtual cabinets or walls. Check the real route is clear.",
             (12, 46),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.55,

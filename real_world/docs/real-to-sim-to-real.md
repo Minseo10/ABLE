@@ -150,7 +150,7 @@ python3 ~/sprout.py
 ```
 
 - Captures camera → reads current joints/map pose → detects taped forearm/body → searches base poses/routes → renders actions → downloads `~/Downloads/sprout-preview.mp4`. Open the file manually if a player does not launch.
-- Also downloads `~/Downloads/sprout-map-overlay.png`: gray 0.5 m map grid, orange room-model footprints, target and base path projected onto the camera image. **Verify that the room footprints match the real room before execution.** The default room placement is not fitted from the ceiling image.
+- Also downloads `~/Downloads/sprout-map-overlay.png`: gray 0.5 m map grid, target and base path projected onto the camera image. Check that the real route is clear.
 - Start here on later runs if deployment is current and perception is running.
 
 ## 5. Preview, approve and execute (laptop terminal 2)
@@ -205,7 +205,7 @@ python3 ~/sprout.py --execute
 - **`detection.json`:** camera calibration, tape tracking and forearm height. Grasp position/orientation update automatically.
 - **`scene.json`:** lift/pregrasp distances, base planning and optional Sprout model paths.
 - Default `base_planning.bounds_xy` is `[[-2.0, -1.3], [2.0, 2.0]]`. Setup preserves existing `.local/sprout/scene.json`, so an existing installation must update this field locally once. Use bounds matching the clear operating area and generate a fresh preview.
-- Planning uses PRPL’s `TidyBotKinova` URDF collision geometry, the original static PRPL room, base BiRRT and arm IK/path planners. Sprout stays as boxes. The preview replays the original executors against this plan. Regenerate old previews after updating.
+- Planning uses PRPL’s `TidyBotKinova` URDF collision geometry, perceived obstacle boxes, base BiRRT and arm IK/path planners. Sprout stays as boxes. The preview replays the original executors against this plan. Regenerate old previews after updating.
 - Templates are in `real_world/config/`. Missing speed, torque and model-derived floor settings fill automatically. Older faster speeds are capped at the slow limits above. Slower custom speeds and other configured values are preserved.
 - Manual `obstacles` and `held_forearm` boxes are optional. Missing/null placeholders are skipped. Legacy `verified`, `execution_enabled` and `navigation.verified` fields no longer gate execution. A successful fresh preview and terminal approval are required.
 
@@ -221,5 +221,5 @@ python3 ~/sprout.py --execute
 - **Goal:** estimate Sprout's whole-body pose from its model and camera views → reconstruct it in simulation → plan with ABLE → execute the reviewed plan on the real robot.
 - The camera whole-body box protects the base. It is excluded from arm collision checks so the gripper can reach the target. Without optional manual arm/held-forearm boxes, arm-to-Sprout and attached-limb collisions are not checked. Planning checks robot self-collision and floor clearance. The main RPC path applies joint-speed limits and controller watchdogs.
 - This is a kinematic rehearsal with fake feedback and a Kinder shadow renderer. It does not predict contact forces, compliant tracking error or actual wall-clock motion duration. The main arm executor limits joint speed, not an independent Cartesian tool-speed cap.
-- Camera calibration and the room model's default placement are separate. A similar room shape does not establish wall alignment. Room-model collisions cannot protect against a real wall whose location differs from the model.
-- The shadow uses main's `prpl3d-o1` room and background defaults. Its fixed `lab_pose=(-1, 2, 0)` is not a ceiling-camera calibration result. Sprout and TidyBot retain their measured map coordinates.
+- Virtual cabinets and the decorative room background are removed from the preview and planning. Supplied obstacle boxes, including Sprout, remain checked. Unmodeled real walls/furniture are not checked.
+- The shadow retains main's TidyBot renderer and measured map coordinates on an empty floor.

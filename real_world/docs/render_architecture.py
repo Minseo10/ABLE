@@ -50,7 +50,7 @@ arrow((4.7, 4.65), (5.4, 4.65), "frames", dashed=True, xy=(5.05, 4.98))
 
 box(5.5, 0.95, 10.0, 1.4, "TIDYBOT + SPROUT", "Base stops before grasp • Kinova + gripper • Sprout supine\nBody model optional in sim and real; externally movable arm assumption", "#f0f1f4", "#4a5364")
 arrow((10.5, 3.0), (10.5, 2.45), "original RPC controls", dashed=True, xy=(12.8, 2.7))
-ax.text(0.5, 2.6, "Verify camera / room alignment\nNo camera acquisition-age cutoff\n\nCtrl-C is a network software stop.\nIt is not a physical emergency stop.", fontsize=11.5, color="#526070", va="top", linespacing=1.5)
+ax.text(0.5, 2.6, "Verify target / base map positions\nNo camera acquisition-age cutoff\n\nCtrl-C is a network software stop.\nIt is not a physical emergency stop.", fontsize=11.5, color="#526070", va="top", linespacing=1.5)
 ax.text(0.5, 0.36, "Cycle: base transit → stop → pregrasp ↓ align ↓ grasp → close → lift 15 cm ↑ → lower ↓ → open → retreat ↑", fontsize=13, color="#24334a")
 fig.savefig(OUT / "sprout-stack.png", bbox_inches="tight", facecolor=fig.get_facecolor())
 fig.savefig(OUT / "sprout-stack.svg", bbox_inches="tight", facecolor=fig.get_facecolor(), metadata={"Date": None})
